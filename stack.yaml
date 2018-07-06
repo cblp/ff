@@ -15,17 +15,3 @@ extra-deps:
       commit: '2b6d790'  # 'v10.2' + 2018-07-06
       subdirs:
         - crdt-test
-  # ff-qt:
-    # - qtah-cpp-qt5-0.4.0
-    # - qtah-generator-0.4.0
-    # - qtah-qt5-0.4.0
-    # - git: https://gitlab.com/khumba/qtah.git
-    #   commit: 'b2220a6'  # 0.4.0 + 2018-04-09
-    #   subdirs:
-    #     - qtah
-    #     - qtah-cpp
-    #     - qtah-generator
-  # qtah:
-    - hoppy-generator-0.4.0
-    - hoppy-runtime-0.4.0
-    - hoppy-std-0.4.0
