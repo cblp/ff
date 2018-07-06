@@ -5,6 +5,9 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Compatible Versioning](https://github.com/staltz/comver).
 
 ## [Unreleased]
+
+## [0.5] - 2018-07-06
+### Added
 - Subcommand `github` to synchronize issues with GitHub
 - Group tasks by due day
 - Use pipe as the metadata delimiter to simplify mouse selection
@@ -74,7 +77,8 @@ and this project adheres to [Compatible Versioning](https://github.com/staltz/co
 - Subcommand `done`
 - Subcommand `new`
 
-[Unreleased]: https://github.com/ff-notes/ff/compare/v0.3...HEAD
+[Unreleased]: https://github.com/ff-notes/ff/compare/v0.5...HEAD
+[0.5]: https://github.com/ff-notes/ff/compare/v0.4...v0.5
 [0.4]: https://github.com/ff-notes/ff/compare/v0.3...v0.4
 [0.3]: https://github.com/ff-notes/ff/compare/v0.2...v0.3
 [0.2]: https://github.com/ff-notes/ff/compare/0.1...v0.2
