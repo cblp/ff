@@ -6,11 +6,13 @@ packages:
   # - ff-qt
 
 extra-deps:
+  # crdt-test:
+    - QuickCheck-GenT-0.2.0
   # ff:
-    - crdt-10.0
+    - crdt-10.2
   # ff:test:
     - git: https://github.com/cblp/crdt.git
-      commit: 'v10.0'
+      commit: '2b6d790'  # 'v10.2' + 2018-07-06
       subdirs:
         - crdt-test
   # ff-qt:

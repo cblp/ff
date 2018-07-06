@@ -15,6 +15,7 @@ import           Control.Monad.State.Strict (StateT, get, modify, runStateT)
 import           CRDT.LamportClock (Clock, LamportTime, Pid (Pid), Process)
 import           CRDT.LamportClock.Simulation (ProcessSim, runLamportClockSim,
                                                runProcessSim)
+import           CRDT.Laws (cvrdtLaws)
 import           Data.Aeson (FromJSON, ToJSON,
                              Value (Array, Number, Object, String), object,
                              parseJSON, toJSON, (.=))
@@ -339,3 +340,6 @@ issues = pure $ Issue
             URL "https://avatars0.githubusercontent.com/u/63495?v=4"
         , simpleUserUrl = URL "https://api.github.com/users/cblp"
         }
+
+test_CvRDT_Note :: [TestTree]
+test_CvRDT_Note = cvrdtLaws @Note
