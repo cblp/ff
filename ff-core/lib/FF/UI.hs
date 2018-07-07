@@ -14,7 +14,7 @@ import qualified Text.PrettyPrint.Mainland as Pretty
 import           Text.PrettyPrint.Mainland.Class (Pretty, ppr)
 
 import           FF.Types (ModeMap, NoteView (..), Sample (..), TaskMode (..),
-                           omitted)
+                           Tracked (..), omitted)
 
 type Template a = a -> String
 
@@ -70,14 +70,17 @@ prettySample mode = \case
         Starting _ -> "ff search --starting"
 
 noteView :: NoteView -> Doc
-noteView NoteView { nid, text, start, end } = noteText </> fieldsSep fields
+noteView NoteView { nid, text, start, end, extId, source } =
+    noteText </> fieldsSep fields1 </> fieldsSep fields2
   where
     noteText =
         stack . map (sep . map strictText . Text.words) $ Text.lines text
-    fields =
+    fields1 =
         "id"
             .= pshow nid
             :  "start"
             .= pshow start
-            :  [ "end" .= pshow e | Just e <- pure end ]
+            :  [ "end"   .= pshow e | Just e <- pure end ]
+    fields2 =  [ "extId" .= pshow x | Just x <- pure extId]
+            ++ [ "url"   .= pshow u | Just u <- pure source]
     fieldsSep docs = sep (intersperse "|" docs) <|> stack docs

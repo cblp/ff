@@ -17,7 +17,7 @@ import           Data.Text (Text)
 import qualified Data.Text as Text
 import           Data.Time (Day, UTCTime (..))
 import           GitHub (FetchCount (..), Id, Issue (..), IssueState (..),
-                         Milestone (..), URL (..), executeRequest',
+                         Milestone (..), executeRequest', getUrl,
                          issueCreatedAt, issueHtmlUrl, issueId, issueMilestone,
                          issueState, issueTitle, mkOwnerName, mkRepoName,
                          untagId)
@@ -69,14 +69,13 @@ toNoteView :: Issue -> NoteView
 toNoteView Issue{..} = NoteView
     { nid    = toNoteId issueId
     , status = toStatus issueState
-    , text   = issueTitle <> maybeUrl
+    , text   = issueTitle
     , start  = utctDay issueCreatedAt
     , end    = maybeMilestone
+    , extId  = pure . Text.pack . show . untagId $ issueId
+    , source = getUrl <$> issueHtmlUrl
     }
   where
-    maybeUrl = case issueHtmlUrl of
-        Just (URL url) -> "\nurl " <> url
-        Nothing        -> ""
     maybeMilestone = case issueMilestone of
         Just Milestone{milestoneDueOn = Just UTCTime{utctDay}} -> Just utctDay
         _                                                      -> Nothing

@@ -45,10 +45,11 @@ data CmdAction
     | CmdSearch     Search
     | CmdUnarchive  NoteId
 
-data CmdGithub = GithubList
-    { address  :: Maybe Text
-    , limit    :: Maybe Limit
-    }
+data CmdGithub = GithubTrack (Maybe Text)
+               | GithubList
+                  { address :: Maybe Text
+                  , limit   :: Maybe Limit
+                  }
 
 data Config = ConfigDataDir (Maybe DataDir) | ConfigUI (Maybe Shuffle)
 
@@ -86,7 +87,7 @@ parseOptions = execParser $ i parser "A note taker and task tracker"
         , command "delete"    iCmdDelete
         , command "done"      iCmdDone
         , command "edit"      iCmdEdit
-        , command "github"    iCmdGithub
+        , command "track"     iCmdGithub
         , command "new"       iCmdNew
         , command "postpone"  iCmdPostpone
         , command "search"    iCmdSearch
@@ -100,7 +101,7 @@ parseOptions = execParser $ i parser "A note taker and task tracker"
     iCmdDelete    = i pCmdDelete    "delete a task"
     iCmdDone      = i pCmdDone      "mark a task done (archive)"
     iCmdEdit      = i pCmdEdit      "edit a task or a note"
-    iCmdGithub    = i pCmdGithub    "synchronize issues with GitHub"
+    iCmdGithub    = i pCmdGithub    "list issues from GitHub"
     iCmdNew       = i pCmdNew       "synonym for `add`"
     iCmdPostpone  = i pCmdPostpone  "make a task start later"
     iCmdSearch    = i pCmdSearch    "search for notes with the given text"
@@ -116,15 +117,18 @@ parseOptions = execParser $ i parser "A note taker and task tracker"
     pCmdSearch    = CmdAction . CmdSearch    <$> pSearch
     pCmdUnarchive = CmdAction . CmdUnarchive <$> idArgument
 
-    list     = subparser (command "list" iCmdList)
-    iCmdList = i pCmdList "list issues from a repository"
-    pCmdList = GithubList <$> optional pRepo <*> optional limitOption
+    list   = list' <|> pTrack
+    list'  = subparser (command "list" iList)
+    iList  = i pList "track issues from a repository"
+    pList  = GithubList  <$> optional pRepo <*> optional limitOption
+    pTrack = GithubTrack <$> optional pRepo
 
     pRepo  = strOption $
         long "repo" <> short 'r' <> metavar "USER/REPO" <>
         help "User or organization/repository"
 
     pNew = New <$> textArgument <*> optional startOption <*> optional endOption
+
     pEdit = Edit
         <$> idArgument
         <*> optional textOption
