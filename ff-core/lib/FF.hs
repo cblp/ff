@@ -57,7 +57,7 @@ import           System.Random (StdGen, mkStdGen, randoms, split)
 import           FF.Config (ConfigUI (..))
 import           FF.Options (Edit (..), New (..))
 import           FF.Storage (Collection, DocId, Document (..), MonadStorage,
-                             Storage, listDocuments, load, modify, saveNew)
+                             Storage, create, listDocuments, load, modify)
 import           FF.Types (Limit, ModeMap, Note (..), NoteId, NoteView (..),
                            Sample (..), Status (Active, Archived, Deleted),
                            Tracked (..), noteView, singletonTaskModeMap)
@@ -198,7 +198,7 @@ cmdNew New { newText, newStart, newEnd } today = do
         Just end -> assertStartBeforeEnd newStart' end
         _        -> pure ()
     note <- newNote Active newText newStart' newEnd
-    nid  <- saveNew note
+    nid  <- create note
     pure $ noteView nid note
 
 cmdDelete :: NoteId -> Storage NoteView

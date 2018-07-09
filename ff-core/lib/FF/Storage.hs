@@ -140,8 +140,8 @@ save docId doc = do
     time <- getTime
     createFile docId time doc
 
-saveNew :: (Collection doc, MonadStorage m) => doc -> m (DocId doc)
-saveNew doc = do
+create :: (Collection doc, MonadStorage m) => doc -> m (DocId doc)
+create doc = do
     docId <- DocId . lamportTimeToFileName <$> getTime
     save docId doc
     pure docId
