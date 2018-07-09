@@ -137,32 +137,35 @@ takeSamples (Just limit) = (`evalState` limit) . traverse takeSample
         | otherwise = a - b
 
 newTracks
-    :: Clock m
+    :: MonadStorage m
     => NoteView
     -> m Note
-newTracks NoteView { nid, status, text, start, end, extId, source} = do
-        noteStatus <- LWW.initialize status
-        noteText   <- rgaFromText text
-        noteStart  <- LWW.initialize start
-        noteEnd    <- LWW.initialize end
-        noteTrack  <- pure $ Just $ Max.initial $ Tracked
-            (fromMaybe "" extId)
-            (fromMaybe "" source)
-        pure Note {..}
-        -- Just doc -> do
-        --     noteStatus' <- LWW.assign status (LWW.initialize status)
-        --     noteText'   <- rgaEditText text <$> rgaFromText text
-        --     noteStart'  <- LWW.assign start (LWW.initialize start)
-        --     noteEnd'    <- LWW.assign end (LWW.initialize end)
-        --     noteTrack'  <- pure <$> (Tracked
-        --         <$> LWW.assign (fromMaybe "" extId) (maybe "" (\(Tracked x _) -> x) noteTrack)
-        --         <*> LWW.assign (fromMaybe "" source) (maybe "" (\(Tracked _ u) -> u) noteTrack))
-        --     pure note { noteStatus = noteStatus'
-        --               , noteText   = noteText'
-        --               , noteStart  = noteStart'
-        --               , noteEnd    = noteEnd'
-        --               , noteTrack  = noteTrack'
-        --               }
+newTracks NoteView { nid, status, text, start, end, extId, source} =
+    modify nid $ \case
+      Nothing -> do
+          noteStatus <- LWW.initialize status
+          noteText   <- rgaFromText text
+          noteStart  <- LWW.initialize start
+          noteEnd    <- LWW.initialize end
+          noteTrack  <- pure $ Just $ Max.initial $ Tracked
+              (fromMaybe "" extId)
+              (fromMaybe "" source)
+          pure (Note {..}, Note {..})
+      Just docOld -> do
+            noteStatus' <- LWW.assign status (noteStatus docOld)
+            noteText'   <- rgaEditText text (noteText docOld)
+            noteStart'  <- LWW.assign start (noteStart docOld)
+            noteEnd'    <- LWW.assign end (noteEnd docOld)
+            noteTrack'  <- pure $ noteTrack docOld
+            --     <$> LWW.assign (fromMaybe "" extId) (maybe "" (\(Tracked x _) -> x) (noteTrack docOld))
+            --     <*> LWW.assign (fromMaybe "" source) (maybe "" (\(Tracked _ u) -> u) (noteTrack docOld))
+            let newNote = Note { noteStatus = noteStatus'
+                               , noteText   = noteText'
+                               , noteStart  = noteStart'
+                               , noteEnd    = noteEnd'
+                               , noteTrack  = noteTrack'
+                               }
+            pure (newNote, newNote)
 
 cmdTrack :: MonadStorage m => [NoteView] -> m ()
 cmdTrack nvs = do
