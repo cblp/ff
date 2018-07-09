@@ -61,16 +61,13 @@ trackList
     -> Maybe Limit
     -> Day
     -> ExceptT Text IO (ModeMap Sample)
-trackList mAddress mlimit today = do
-    response <- handleInput mAddress mlimit
-    pure $ sampleMaps mlimit today response
+trackList mAddress mlimit today =
+    sampleMaps mlimit today <$> handleInput mAddress mlimit
 
 trackCopy
     :: Maybe Text
     -> ExceptT Text IO [NoteView]
-trackCopy mAddress = do
-    response <- handleInput mAddress Nothing
-    pure $ noteViewList response
+trackCopy mAddress = noteViewList <$> handleInput mAddress Nothing
 
 sampleMaps :: Foldable t => Maybe Limit -> Day -> t Issue -> ModeMap Sample
 sampleMaps mlimit today issues =

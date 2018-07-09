@@ -29,7 +29,6 @@ import           Control.Arrow ((&&&))
 import           Control.Monad (unless)
 import           Control.Monad.IO.Class (MonadIO, liftIO)
 import           Control.Monad.State.Strict (evalState, state)
-import           CRDT.Cv.Max (Max)
 import qualified CRDT.Cv.Max as Max
 import           CRDT.Cv.RGA (RgaString)
 import qualified CRDT.Cv.RGA as RGA
@@ -143,29 +142,32 @@ newTracks
 newTracks NoteView { nid, status, text, start, end, extId, source} =
     modify nid $ \case
       Nothing -> do
-          noteStatus <- LWW.initialize status
-          noteText   <- rgaFromText text
-          noteStart  <- LWW.initialize start
-          noteEnd    <- LWW.initialize end
-          noteTrack  <- pure $ Just $ Max.initial $ Tracked
-              (fromMaybe "" extId)
-              (fromMaybe "" source)
-          pure (Note {..}, Note {..})
+          noteStatus' <- LWW.initialize status
+          noteText'   <- rgaFromText text
+          noteStart'  <- LWW.initialize start
+          noteEnd'    <- LWW.initialize end
+          let noteTrack = Just $ Max.initial $ Tracked
+                              (fromMaybe "" extId) (fromMaybe "" source)
+          let nNote = Note { noteStatus = noteStatus'
+                           , noteText   = noteText'
+                           , noteStart  = noteStart'
+                           , noteEnd    = noteEnd'
+                           , noteTrack
+                           }
+          pure (nNote, nNote)
       Just docOld -> do
             noteStatus' <- LWW.assign status (noteStatus docOld)
             noteText'   <- rgaEditText text (noteText docOld)
             noteStart'  <- LWW.assign start (noteStart docOld)
             noteEnd'    <- LWW.assign end (noteEnd docOld)
-            noteTrack'  <- pure $ noteTrack docOld
-            --     <$> LWW.assign (fromMaybe "" extId) (maybe "" (\(Tracked x _) -> x) (noteTrack docOld))
-            --     <*> LWW.assign (fromMaybe "" source) (maybe "" (\(Tracked _ u) -> u) (noteTrack docOld))
-            let newNote = Note { noteStatus = noteStatus'
-                               , noteText   = noteText'
-                               , noteStart  = noteStart'
-                               , noteEnd    = noteEnd'
-                               , noteTrack  = noteTrack'
-                               }
-            pure (newNote, newNote)
+            let noteTrack' = noteTrack docOld
+            let jNote = Note { noteStatus = noteStatus'
+                              , noteText   = noteText'
+                              , noteStart  = noteStart'
+                              , noteEnd    = noteEnd'
+                              , noteTrack  = noteTrack'
+                              }
+            pure (jNote, jNote)
 
 cmdTrack :: MonadStorage m => [NoteView] -> m ()
 cmdTrack nvs = do
@@ -184,7 +186,7 @@ newNote status text start end = do
     noteText   <- rgaFromText text
     noteStart  <- LWW.initialize start
     noteEnd    <- LWW.initialize end
-    noteTrack  <- pure Nothing
+    let noteTrack = Nothing
     pure Note {..}
 
 cmdNew :: MonadStorage m => New -> Day -> m NoteView
