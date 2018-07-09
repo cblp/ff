@@ -27,11 +27,11 @@ import           Text.PrettyPrint.Mainland (prettyLazyText)
 import           Text.PrettyPrint.Mainland.Class (Pretty, ppr)
 
 import           FF (cmdDelete, cmdDone, cmdEdit, cmdNew, cmdPostpone,
-                     cmdSearch, cmdUnarchive, getSamples, getUtcToday)
+                     cmdSearch, cmdTrack, cmdUnarchive, getSamples, getUtcToday)
 import           FF.Config (Config (..), ConfigUI (..), appName, loadConfig,
                             printConfig, saveConfig)
-import           FF.Github (runCmdGithub)
-import           FF.Options (Cmd (..), CmdAction (..), CmdGithub (..),
+import           FF.Github (trackCopy, trackList)
+import           FF.Options (Cmd (..), CmdAction (..), CmdTrack (..),
                              DataDir (..), Search (..), Shuffle (..),
                              parseOptions)
 import qualified FF.Options as Options
@@ -123,16 +123,22 @@ runCmdAction ui cmd = do
         CmdEdit edit -> do
             nv <- cmdEdit edit
             pprint $ withHeader "edited:" $ UI.noteView nv
-        CmdGithub GithubList { address, limit } -> liftIO $ do
+        CmdTrack TrackList { address, limit } -> liftIO $ do
             hPutStr stderr "fetching"
             possibleIssues <- fromEither <$> race
-                (runExceptT $ runCmdGithub address limit today)
+                (runExceptT $ trackList address limit today)
                 (forever $ hPutChar stderr '.' >> threadDelay 500000)
             hPutStrLn stderr ""
             case possibleIssues of
                 Left err      -> hPutStrLn stderr err
                 Right samples -> pprint $ UI.prettySamplesBySections samples
-        CmdGithub (GithubTrack _)-> liftIO $ hPutStrLn stderr "Issues copied to local base"
+        CmdTrack (TrackCopy address) -> do
+            nvs <- liftIO $ runExceptT $ trackCopy address
+            case nvs of
+              Left err   -> liftIO $ hPutStrLn stderr err
+              Right nvs' -> do
+                  cmdTrack nvs'
+                  liftIO $ putStrLn "Issues copied to local base"
         CmdNew new -> do
             nv <- cmdNew new today
             pprint $ withHeader "added:" $ UI.noteView nv

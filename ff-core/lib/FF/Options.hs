@@ -7,7 +7,7 @@
 module FF.Options
     ( Cmd (..)
     , CmdAction (..)
-    , CmdGithub (..)
+    , CmdTrack (..)
     , Config (..)
     , DataDir (..)
     , Edit (..)
@@ -39,14 +39,14 @@ data CmdAction
     | CmdDelete     NoteId
     | CmdDone       NoteId
     | CmdEdit       Edit
-    | CmdGithub     CmdGithub
+    | CmdTrack      CmdTrack
     | CmdNew        New
     | CmdPostpone   NoteId
     | CmdSearch     Search
     | CmdUnarchive  NoteId
 
-data CmdGithub = GithubTrack (Maybe Text)
-               | GithubList
+data CmdTrack = TrackCopy (Maybe Text)
+              | TrackList
                   { address :: Maybe Text
                   , limit   :: Maybe Limit
                   }
@@ -87,7 +87,7 @@ parseOptions = execParser $ i parser "A note taker and task tracker"
         , command "delete"    iCmdDelete
         , command "done"      iCmdDone
         , command "edit"      iCmdEdit
-        , command "track"     iCmdGithub
+        , command "track"     iCmdTrack
         , command "new"       iCmdNew
         , command "postpone"  iCmdPostpone
         , command "search"    iCmdSearch
@@ -101,7 +101,7 @@ parseOptions = execParser $ i parser "A note taker and task tracker"
     iCmdDelete    = i pCmdDelete    "delete a task"
     iCmdDone      = i pCmdDone      "mark a task done (archive)"
     iCmdEdit      = i pCmdEdit      "edit a task or a note"
-    iCmdGithub    = i pCmdGithub    "list issues from GitHub"
+    iCmdTrack     = i pCmdTrack    "list issues from GitHub"
     iCmdNew       = i pCmdNew       "synonym for `add`"
     iCmdPostpone  = i pCmdPostpone  "make a task start later"
     iCmdSearch    = i pCmdSearch    "search for notes with the given text"
@@ -111,17 +111,17 @@ parseOptions = execParser $ i parser "A note taker and task tracker"
     pCmdDelete    = CmdAction . CmdDelete    <$> idArgument
     pCmdDone      = CmdAction . CmdDone      <$> idArgument
     pCmdEdit      = CmdAction . CmdEdit      <$> pEdit
-    pCmdGithub    = CmdAction . CmdGithub    <$> list
+    pCmdTrack     = CmdAction . CmdTrack     <$> track
     pCmdNew       = CmdAction . CmdNew       <$> pNew
     pCmdPostpone  = CmdAction . CmdPostpone  <$> idArgument
     pCmdSearch    = CmdAction . CmdSearch    <$> pSearch
     pCmdUnarchive = CmdAction . CmdUnarchive <$> idArgument
 
-    list   = list' <|> pTrack
-    list'  = subparser (command "list" iList)
+    track  = list <|> pTrack
+    list   = subparser (command "list" iList)
     iList  = i pList "track issues from a repository"
-    pList  = GithubList  <$> optional pRepo <*> optional limitOption
-    pTrack = GithubTrack <$> optional pRepo
+    pList  = TrackList  <$> optional pRepo <*> optional limitOption
+    pTrack = TrackCopy <$> optional pRepo
 
     pRepo  = strOption $
         long "repo" <> short 'r' <> metavar "USER/REPO" <>

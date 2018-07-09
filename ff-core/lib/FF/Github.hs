@@ -4,8 +4,8 @@
 {-# LANGUAGE RecordWildCards #-}
 
 module FF.Github
-    ( runCmdGithub
-    , sampleMaps
+    ( trackList
+    , trackCopy
     ) where
 
 import           Control.Error (failWith)
@@ -16,6 +16,7 @@ import           Data.Semigroup ((<>))
 import           Data.Text (Text)
 import qualified Data.Text as Text
 import           Data.Time (Day, UTCTime (..))
+import           Data.Vector (Vector)
 import           GitHub (FetchCount (..), Id, Issue (..), IssueState (..),
                          Milestone (..), executeRequest', getUrl,
                          issueCreatedAt, issueHtmlUrl, issueId, issueMilestone,
@@ -29,12 +30,11 @@ import           FF.Storage (DocId (..))
 import           FF.Types (Limit, ModeMap, NoteId, NoteView (..), Sample (..),
                            Status (..))
 
-runCmdGithub
+handleInput
     :: Maybe Text
     -> Maybe Limit
-    -> Day  -- ^ today
-    -> ExceptT Text IO (ModeMap Sample)
-runCmdGithub mAddress mlimit today = do
+    -> ExceptT Text IO (Vector Issue)
+handleInput mAddress mlimit = do
     address <- case mAddress of
         Just address -> pure address
         Nothing -> do
@@ -49,13 +49,28 @@ runCmdGithub mAddress mlimit today = do
         _ -> throwError $
             "Something is wrong with " <> address <>
             ". Please, check correctness of input. Right format is OWNER/REPO"
-    response <- withExceptT (Text.pack . show) $ ExceptT $
+    withExceptT (Text.pack . show) $ ExceptT $
         executeRequest' $ issuesForRepoR
             (mkOwnerName owner)
             (mkRepoName repo)
             mempty
             (maybe FetchAll (FetchAtLeast . fromIntegral) mlimit)
+
+trackList
+    :: Maybe Text
+    -> Maybe Limit
+    -> Day
+    -> ExceptT Text IO (ModeMap Sample)
+trackList mAddress mlimit today = do
+    response <- handleInput mAddress mlimit
     pure $ sampleMaps mlimit today response
+
+trackCopy
+    :: Maybe Text
+    -> ExceptT Text IO [NoteView]
+trackCopy mAddress = do
+    response <- handleInput mAddress Nothing
+    pure $ noteViewList response
 
 sampleMaps :: Foldable t => Maybe Limit -> Day -> t Issue -> ModeMap Sample
 sampleMaps mlimit today issues =
@@ -65,6 +80,9 @@ sampleMaps mlimit today issues =
     . maybe id (take . fromIntegral) mlimit
     $ toList issues
 
+noteViewList :: Foldable t => t Issue -> [NoteView]
+noteViewList issues = map toNoteView $ toList issues
+
 toNoteView :: Issue -> NoteView
 toNoteView Issue{..} = NoteView
     { nid    = toNoteId issueId
@@ -72,7 +90,7 @@ toNoteView Issue{..} = NoteView
     , text   = issueTitle
     , start  = utctDay issueCreatedAt
     , end    = maybeMilestone
-    , extId  = pure . Text.pack . show . untagId $ issueId
+    , extId  = Just . Text.pack . show . untagId $ issueId
     , source = getUrl <$> issueHtmlUrl
     }
   where

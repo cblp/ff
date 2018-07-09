@@ -11,7 +11,7 @@ and this project adheres to [Compatible Versioning](https://github.com/staltz/co
 - Unlimited note listing by default
 - Use pager for output
 - Delete merged version files
-- Add tracking issues of github
+- Add tracking of github issues
 
 ## [0.4] - 2018-06-06
 ### Added

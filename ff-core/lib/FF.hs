@@ -14,6 +14,7 @@ module FF
     , cmdNew
     , cmdPostpone
     , cmdSearch
+    , cmdTrack
     , cmdUnarchive
     , getSamples
     , getUtcToday
@@ -28,6 +29,8 @@ import           Control.Arrow ((&&&))
 import           Control.Monad (unless)
 import           Control.Monad.IO.Class (MonadIO, liftIO)
 import           Control.Monad.State.Strict (evalState, state)
+import           CRDT.Cv.Max (Max)
+import qualified CRDT.Cv.Max as Max
 import           CRDT.Cv.RGA (RgaString)
 import qualified CRDT.Cv.RGA as RGA
 import           CRDT.LamportClock (Clock)
@@ -58,8 +61,7 @@ import           FF.Storage (Collection, DocId, Document (..), MonadStorage,
                              Storage, listDocuments, load, modify, saveNew)
 import           FF.Types (Limit, ModeMap, Note (..), NoteId, NoteView (..),
                            Sample (..), Status (Active, Archived, Deleted),
-                           noteView, singletonTaskModeMap)
-                          --  Tracked (..), noteView, singletonTaskModeMap)
+                           Tracked (..), noteView, singletonTaskModeMap)
 
 getSamples
     :: MonadStorage m
@@ -134,25 +136,38 @@ takeSamples (Just limit) = (`evalState` limit) . traverse takeSample
         | a <= b    = 0
         | otherwise = a - b
 
--- newTrack
---     :: Clock m
---     => NoteView
---     -> m Note
--- newTrack NoteView { status, text, start, end, extId, source} = do
---     noteStatus <- LWW.initialize status
---     noteText   <- rgaFromText text
---     noteStart  <- LWW.initialize start
---     noteEnd    <- LWW.initialize end
---     noteTrack  <- LWW.initialize $ pure $ Tracked
---         (fromMaybe "" extId)
---         (fromMaybe "" source)
---     pure Note {..}
+newTracks
+    :: Clock m
+    => NoteView
+    -> m Note
+newTracks NoteView { nid, status, text, start, end, extId, source} = do
+        noteStatus <- LWW.initialize status
+        noteText   <- rgaFromText text
+        noteStart  <- LWW.initialize start
+        noteEnd    <- LWW.initialize end
+        noteTrack  <- pure $ Just $ Max.initial $ Tracked
+            (fromMaybe "" extId)
+            (fromMaybe "" source)
+        pure Note {..}
+        -- Just doc -> do
+        --     noteStatus' <- LWW.assign status (LWW.initialize status)
+        --     noteText'   <- rgaEditText text <$> rgaFromText text
+        --     noteStart'  <- LWW.assign start (LWW.initialize start)
+        --     noteEnd'    <- LWW.assign end (LWW.initialize end)
+        --     noteTrack'  <- pure <$> (Tracked
+        --         <$> LWW.assign (fromMaybe "" extId) (maybe "" (\(Tracked x _) -> x) noteTrack)
+        --         <*> LWW.assign (fromMaybe "" source) (maybe "" (\(Tracked _ u) -> u) noteTrack))
+        --     pure note { noteStatus = noteStatus'
+        --               , noteText   = noteText'
+        --               , noteStart  = noteStart'
+        --               , noteEnd    = noteEnd'
+        --               , noteTrack  = noteTrack'
+        --               }
 
--- cmdTrack :: MonadStorage m => NoteView -> m NoteView
--- cmdTrack noteList = do
---     note <- newTrack noteList
---     nid  <- saveNew note
---     pure $ noteView nid note
+cmdTrack :: MonadStorage m => [NoteView] -> m ()
+cmdTrack nvs = do
+    notes <- mapM newTracks nvs
+    mapM_ saveNew notes
 
 newNote
     :: Clock m
@@ -166,7 +181,7 @@ newNote status text start end = do
     noteText   <- rgaFromText text
     noteStart  <- LWW.initialize start
     noteEnd    <- LWW.initialize end
-    noteTrack  <- LWW.initialize Nothing
+    noteTrack  <- pure Nothing
     pure Note {..}
 
 cmdNew :: MonadStorage m => New -> Day -> m NoteView
@@ -185,12 +200,10 @@ cmdDelete nid = modifyAndView nid $ \note@Note {..} -> do
     noteText'   <- rgaEditText Text.empty noteText
     noteStart'  <- LWW.assign (fromGregorian 0 1 1) noteStart
     noteEnd'    <- LWW.assign Nothing noteEnd
-    -- tracked'    <- LWW.assign Nothing tracked
     pure note { noteStatus = noteStatus'
               , noteText   = noteText'
               , noteStart  = noteStart'
               , noteEnd    = noteEnd'
-              -- , tracked    = tracked'
               }
 
 cmdDone :: NoteId -> Storage NoteView
