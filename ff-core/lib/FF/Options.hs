@@ -101,7 +101,7 @@ parseOptions = execParser $ i parser "A note taker and task tracker"
     iCmdDelete    = i pCmdDelete    "delete a task"
     iCmdDone      = i pCmdDone      "mark a task done (archive)"
     iCmdEdit      = i pCmdEdit      "edit a task or a note"
-    iCmdTrack     = i pCmdTrack     "track or list issues from GitHub"
+    iCmdTrack     = i pCmdTrack     "track issues from GitHub"
     iCmdNew       = i pCmdNew       "synonym for `add`"
     iCmdPostpone  = i pCmdPostpone  "make a task start later"
     iCmdSearch    = i pCmdSearch    "search for notes with the given text"
@@ -111,18 +111,19 @@ parseOptions = execParser $ i parser "A note taker and task tracker"
     pCmdDelete    = CmdAction . CmdDelete    <$> idArgument
     pCmdDone      = CmdAction . CmdDone      <$> idArgument
     pCmdEdit      = CmdAction . CmdEdit      <$> pEdit
-    pCmdTrack     = CmdAction . CmdTrack     <$> track
+    pCmdTrack     = CmdAction . CmdTrack     <$> tracked
     pCmdNew       = CmdAction . CmdNew       <$> pNew
     pCmdPostpone  = CmdAction . CmdPostpone  <$> idArgument
     pCmdSearch    = CmdAction . CmdSearch    <$> pSearch
     pCmdUnarchive = CmdAction . CmdUnarchive <$> idArgument
 
-    track  = list <|> pTrack
-    list   = subparser (command "list" iList)
-    iList  = i pList "list issues from a github repository"
-    iTrack = i pTrack "track issues from a github repository"
-    pList  = TrackList  <$> optional pRepo <*> optional limitOption
-    pTrack = TrackCopy <$> optional pRepo
+    tracked = list <|> get <|> pTrack
+    list    = subparser (command "list" iList)
+    get     = subparser (command "get" iTrack)
+    iList   = i pList "list issues from a github repository"
+    iTrack  = i pTrack "track issues from a github repository"
+    pList   = TrackList <$> optional pRepo <*> optional limitOption
+    pTrack  = TrackCopy <$> optional pRepo
 
     pRepo  = strOption $
         long "repo" <> short 'r' <> metavar "USER/REPO" <>
