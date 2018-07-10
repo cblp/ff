@@ -101,7 +101,7 @@ parseOptions = execParser $ i parser "A note taker and task tracker"
     iCmdDelete    = i pCmdDelete    "delete a task"
     iCmdDone      = i pCmdDone      "mark a task done (archive)"
     iCmdEdit      = i pCmdEdit      "edit a task or a note"
-    iCmdTrack     = i pCmdTrack    "list issues from GitHub"
+    iCmdTrack     = i pCmdTrack     "track or list issues from GitHub"
     iCmdNew       = i pCmdNew       "synonym for `add`"
     iCmdPostpone  = i pCmdPostpone  "make a task start later"
     iCmdSearch    = i pCmdSearch    "search for notes with the given text"
@@ -119,7 +119,8 @@ parseOptions = execParser $ i parser "A note taker and task tracker"
 
     track  = list <|> pTrack
     list   = subparser (command "list" iList)
-    iList  = i pList "track issues from a repository"
+    iList  = i pList "list issues from a github repository"
+    iTrack = i pTrack "track issues from a github repository"
     pList  = TrackList  <$> optional pRepo <*> optional limitOption
     pTrack = TrackCopy <$> optional pRepo
 

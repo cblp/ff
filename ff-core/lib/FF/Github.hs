@@ -12,6 +12,7 @@ import           Control.Error (failWith)
 import           Control.Monad.Except (ExceptT (..), liftIO, throwError,
                                        withExceptT)
 import           Data.Foldable (toList)
+import           Data.Maybe (maybe)
 import           Data.Semigroup ((<>))
 import           Data.Text (Text)
 import qualified Data.Text as Text
@@ -30,11 +31,11 @@ import           FF.Storage (DocId (..))
 import           FF.Types (Limit, ModeMap, NoteId, NoteView (..), Sample (..),
                            Status (..))
 
-handleInput
+getIssues
     :: Maybe Text
     -> Maybe Limit
     -> ExceptT Text IO (Vector Issue)
-handleInput mAddress mlimit = do
+getIssues mAddress mlimit = do
     address <- case mAddress of
         Just address -> pure address
         Nothing -> do
@@ -62,12 +63,12 @@ trackList
     -> Day
     -> ExceptT Text IO (ModeMap Sample)
 trackList mAddress mlimit today =
-    sampleMaps mlimit today <$> handleInput mAddress mlimit
+    sampleMaps mlimit today <$> getIssues mAddress mlimit
 
 trackCopy
     :: Maybe Text
     -> ExceptT Text IO [NoteView]
-trackCopy mAddress = noteViewList <$> handleInput mAddress Nothing
+trackCopy mAddress = noteViewList <$> getIssues mAddress Nothing
 
 sampleMaps :: Foldable t => Maybe Limit -> Day -> t Issue -> ModeMap Sample
 sampleMaps mlimit today issues =
@@ -82,15 +83,21 @@ noteViewList issues = map toNoteView $ toList issues
 
 toNoteView :: Issue -> NoteView
 toNoteView Issue{..} = NoteView
-    { nid    = toNoteId issueId
-    , status = toStatus issueState
-    , text   = issueTitle
-    , start  = utctDay issueCreatedAt
-    , end    = maybeMilestone
-    , extId  = Just . Text.pack . show . untagId $ issueId
-    , source = getUrl <$> issueHtmlUrl
+    { nid      = toNoteId issueId
+    , status   = toStatus issueState
+    , text     = issueTitle
+    , start    = utctDay issueCreatedAt
+    , end      = maybeMilestone
+    , provider = "github"
+    , source   = maybeSource
+    , extId    = Text.pack . show $ issueNumber
+    , url      = maybeUrl
     }
   where
+    maybeUrl = getUrl <$> issueHtmlUrl
+    maybeSource = maybe ""
+        (Text.intercalate "/" . take 2 . Text.splitOn "/")
+        (Text.stripPrefix "https://github.com/" =<< maybeUrl)
     maybeMilestone = case issueMilestone of
         Just Milestone{milestoneDueOn = Just UTCTime{utctDay}} -> Just utctDay
         _                                                      -> Nothing

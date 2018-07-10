@@ -70,7 +70,7 @@ prettySample mode = \case
         Starting _ -> "ff search --starting"
 
 noteView :: NoteView -> Doc
-noteView NoteView { nid, text, start, end, extId, source } =
+noteView NoteView { nid, text, start, end, provider, source, extId, url } =
     noteText </> fieldsSep fields1 </> fieldsSep fields2
   where
     noteText =
@@ -81,6 +81,12 @@ noteView NoteView { nid, text, start, end, extId, source } =
             :  "start"
             .= pshow start
             :  [ "end"   .= pshow e | Just e <- pure end ]
-    fields2 =  [ "extId" .= pshow x | Just x <- pure extId]
-            ++ [ "url"   .= pshow u | Just u <- pure source]
+    fields2 =
+        "provider"
+            .= pshow provider
+            :  "source"
+            .= pshow source
+            :  "extId"
+            .= pshow extId
+            :  [ "url"   .= pshow u | Just u <- pure url ]
     fieldsSep docs = sep (intersperse "|" docs) <|> stack docs

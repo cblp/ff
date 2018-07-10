@@ -14,13 +14,13 @@ module FF
     , cmdNew
     , cmdPostpone
     , cmdSearch
-    , cmdTrack
     , cmdUnarchive
     , getSamples
     , getUtcToday
     , loadAllNotes
     , loadActiveNotes
     , newNote
+    , newTrackedNote
     , splitModes
     , takeSamples
     ) where
@@ -135,44 +135,41 @@ takeSamples (Just limit) = (`evalState` limit) . traverse takeSample
         | a <= b    = 0
         | otherwise = a - b
 
-newTracks
+newTrackedNote
     :: MonadStorage m
     => NoteView
     -> m Note
-newTracks NoteView { nid, status, text, start, end, extId, source} =
+newTrackedNote NoteView {..} =
     modify nid $ \case
-      Nothing -> do
-          noteStatus' <- LWW.initialize status
-          noteText'   <- rgaFromText text
-          noteStart'  <- LWW.initialize start
-          noteEnd'    <- LWW.initialize end
-          let noteTrack = Just $ Max.initial $ Tracked
-                              (fromMaybe "" extId) (fromMaybe "" source)
-          let nNote = Note { noteStatus = noteStatus'
-                           , noteText   = noteText'
-                           , noteStart  = noteStart'
-                           , noteEnd    = noteEnd'
-                           , noteTrack
-                           }
-          pure (nNote, nNote)
-      Just docOld -> do
-            noteStatus' <- LWW.assign status (noteStatus docOld)
-            noteText'   <- rgaEditText text (noteText docOld)
-            noteStart'  <- LWW.assign start (noteStart docOld)
-            noteEnd'    <- LWW.assign end (noteEnd docOld)
-            let noteTrack' = noteTrack docOld
-            let jNote = Note { noteStatus = noteStatus'
-                              , noteText   = noteText'
-                              , noteStart  = noteStart'
-                              , noteEnd    = noteEnd'
-                              , noteTrack  = noteTrack'
-                              }
-            pure (jNote, jNote)
-
-cmdTrack :: MonadStorage m => [NoteView] -> m ()
-cmdTrack nvs = do
-    notes <- mapM newTracks nvs
-    mapM_ saveNew notes
+        Nothing -> do
+            noteStatus' <- LWW.initialize status
+            noteText'   <- rgaFromText text
+            noteStart'  <- LWW.initialize start
+            noteEnd'    <- LWW.initialize end
+            let noteTrack' = Just $ Max.initial $ Tracked
+                                provider source extId (fromMaybe "" url)
+            let nNote = Note { noteStatus = noteStatus'
+                             , noteText   = noteText'
+                             , noteStart  = noteStart'
+                             , noteEnd    = noteEnd'
+                             , noteTrack  = noteTrack'
+                             }
+            pure (nNote, nNote)
+        Just docOld -> do
+              noteStatus' <- LWW.assign status (noteStatus docOld)
+              noteText'   <- rgaEditText text (noteText docOld)
+              noteStart'  <- LWW.assign start (noteStart docOld)
+              noteEnd'    <- LWW.assign end (noteEnd docOld)
+              -- let noteTrack' = noteTrack docOld
+              let noteTrack' = Just $ Max.initial $ Tracked
+                                  provider source extId (fromMaybe "" url)
+              let jNote = Note { noteStatus = noteStatus'
+                                , noteText   = noteText'
+                                , noteStart  = noteStart'
+                                , noteEnd    = noteEnd'
+                                , noteTrack  = noteTrack'
+                                }
+              pure (jNote, jNote)
 
 newNote
     :: Clock m

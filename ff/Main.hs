@@ -27,7 +27,8 @@ import           Text.PrettyPrint.Mainland (prettyLazyText)
 import           Text.PrettyPrint.Mainland.Class (Pretty, ppr)
 
 import           FF (cmdDelete, cmdDone, cmdEdit, cmdNew, cmdPostpone,
-                     cmdSearch, cmdTrack, cmdUnarchive, getSamples, getUtcToday)
+                     cmdSearch, cmdUnarchive, getSamples, getUtcToday,
+                     newTrackedNote)
 import           FF.Config (Config (..), ConfigUI (..), appName, loadConfig,
                             printConfig, saveConfig)
 import           FF.Github (trackCopy, trackList)
@@ -135,10 +136,11 @@ runCmdAction ui cmd = do
         CmdTrack (TrackCopy address) -> do
             nvs <- liftIO $ runExceptT $ trackCopy address
             case nvs of
-              Left err   -> liftIO $ hPutStrLn stderr err
-              Right nvs' -> do
-                  cmdTrack nvs'
-                  liftIO $ putStrLn "Issues copied to local base"
+                Left err   -> liftIO $ hPutStrLn stderr err
+                Right nvs' -> do
+                    mapM_ newTrackedNote nvs'
+                    let nvsLength = show $ length nvs'
+                    liftIO $ putStrLn $ nvsLength ++ " issues copied to local base"
         CmdNew new -> do
             nv <- cmdNew new today
             pprint $ withHeader "added:" $ UI.noteView nv
