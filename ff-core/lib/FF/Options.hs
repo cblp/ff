@@ -44,6 +44,7 @@ data CmdAction
     | CmdPostpone   NoteId
     | CmdSearch     Search
     | CmdUnarchive  NoteId
+    | CmdServe
 
 data CmdTrack = TrackGet (Maybe Text)
               | TrackList Bool (Maybe Text) (Maybe Limit)
@@ -92,6 +93,7 @@ parseOptions = execParser $ i parser "A note taker and task tracker"
         , command "postpone"  iCmdPostpone
         , command "search"    iCmdSearch
         , command "unarchive" iCmdUnarchive
+        , command "serve"     iCmdServe
         ]
 
     iCmdAdd       = i pCmdNew       "add a new task or note"
@@ -106,6 +108,7 @@ parseOptions = execParser $ i parser "A note taker and task tracker"
     iCmdPostpone  = i pCmdPostpone  "make a task start later"
     iCmdSearch    = i pCmdSearch    "search for notes with the given text"
     iCmdUnarchive = i pCmdUnarchive "restore the note from archive"
+    iCmdServe     = i pCmdServe "serve application through the http"
 
     pCmdAgenda    = CmdAction . CmdAgenda    <$> optional limitOption
     pCmdDelete    = CmdAction . CmdDelete    <$> idArgument
@@ -116,6 +119,7 @@ parseOptions = execParser $ i parser "A note taker and task tracker"
     pCmdPostpone  = CmdAction . CmdPostpone  <$> idArgument
     pCmdSearch    = CmdAction . CmdSearch    <$> pSearch
     pCmdUnarchive = CmdAction . CmdUnarchive <$> idArgument
+    pCmdServe     = pure $ CmdAction CmdServe
 
     track = pTrackList <|> pTrackList
     -- tCommands  = command "dry-run" iTrackList

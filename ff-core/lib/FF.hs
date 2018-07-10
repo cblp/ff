@@ -15,6 +15,7 @@ module FF
     , cmdPostpone
     , cmdSearch
     , cmdUnarchive
+    , cmdServe
     , getSamples
     , getUtcToday
     , loadAllNotes
@@ -222,6 +223,9 @@ cmdUnarchive :: NoteId -> Storage NoteView
 cmdUnarchive nid = modifyAndView nid $ \note@Note { noteStatus } -> do
     noteStatus' <- LWW.assign Active noteStatus
     pure note { noteStatus = noteStatus' }
+
+cmdServe :: MonadStorage m => m ()
+cmdServe = pure ()
 
 cmdEdit :: Edit -> Storage NoteView
 cmdEdit (Edit nid Nothing Nothing Nothing) =
