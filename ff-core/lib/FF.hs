@@ -147,7 +147,10 @@ newTrackedNote NoteView {..} =
             noteStart'  <- LWW.initialize start
             noteEnd'    <- LWW.initialize end
             let noteTrack' = Just $ Max.initial $ Tracked
-                                provider source extId (fromMaybe "" url)
+                                (fromMaybe "" provider)
+                                (fromMaybe "" source)
+                                (fromMaybe "" extId)
+                                (fromMaybe "" url)
             let nNote = Note { noteStatus = noteStatus'
                              , noteText   = noteText'
                              , noteStart  = noteStart'
@@ -160,9 +163,11 @@ newTrackedNote NoteView {..} =
               noteText'   <- rgaEditText text (noteText docOld)
               noteStart'  <- LWW.assign start (noteStart docOld)
               noteEnd'    <- LWW.assign end (noteEnd docOld)
-              -- let noteTrack' = noteTrack docOld
               let noteTrack' = Just $ Max.initial $ Tracked
-                                  provider source extId (fromMaybe "" url)
+                                  (fromMaybe "" provider)
+                                  (fromMaybe "" source)
+                                  (fromMaybe "" extId)
+                                  (fromMaybe "" url)
               let jNote = Note { noteStatus = noteStatus'
                                 , noteText   = noteText'
                                 , noteStart  = noteStart'

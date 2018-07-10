@@ -81,12 +81,9 @@ noteView NoteView { nid, text, start, end, provider, source, extId, url } =
             :  "start"
             .= pshow start
             :  [ "end"   .= pshow e | Just e <- pure end ]
-    fields2 =
-        "provider"
-            .= pshow provider
-            :  "source"
-            .= pshow source
-            :  "extId"
-            .= pshow extId
-            :  [ "url"   .= pshow u | Just u <- pure url ]
+    fields2 = concat [ [ "provider" .= pshow p | Just p <- pure provider ]
+                     , [ "source"   .= pshow s | Just s <- pure source ]
+                     , [ "extId"    .= pshow x | Just x <- pure extId ]
+                     , [ "url"      .= pshow u | Just u <- pure url ]
+                     ]
     fieldsSep docs = sep (intersperse "|" docs) <|> stack docs

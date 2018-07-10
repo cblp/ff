@@ -31,7 +31,7 @@ import           FF (cmdDelete, cmdDone, cmdEdit, cmdNew, cmdPostpone,
                      newTrackedNote)
 import           FF.Config (Config (..), ConfigUI (..), appName, loadConfig,
                             printConfig, saveConfig)
-import           FF.Github (trackCopy, trackList)
+import           FF.Github (exceptNoteView, exceptSampleMap)
 import           FF.Options (Cmd (..), CmdAction (..), CmdTrack (..),
                              DataDir (..), Search (..), Shuffle (..),
                              parseOptions)
@@ -127,14 +127,14 @@ runCmdAction ui cmd = do
         CmdTrack TrackList { address, limit } -> liftIO $ do
             hPutStr stderr "fetching"
             possibleIssues <- fromEither <$> race
-                (runExceptT $ trackList address limit today)
+                (runExceptT $ exceptSampleMap address limit today)
                 (forever $ hPutChar stderr '.' >> threadDelay 500000)
             hPutStrLn stderr ""
             case possibleIssues of
                 Left err      -> hPutStrLn stderr err
                 Right samples -> pprint $ UI.prettySamplesBySections samples
-        CmdTrack (TrackCopy address) -> do
-            nvs <- liftIO $ runExceptT $ trackCopy address
+        CmdTrack (TrackGet address) -> do
+            nvs <- liftIO $ runExceptT $ exceptNoteView address
             case nvs of
                 Left err   -> liftIO $ hPutStrLn stderr err
                 Right nvs' -> do

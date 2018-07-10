@@ -45,7 +45,7 @@ data CmdAction
     | CmdSearch     Search
     | CmdUnarchive  NoteId
 
-data CmdTrack = TrackCopy (Maybe Text)
+data CmdTrack = TrackGet (Maybe Text)
               | TrackList
                   { address :: Maybe Text
                   , limit   :: Maybe Limit
@@ -111,19 +111,18 @@ parseOptions = execParser $ i parser "A note taker and task tracker"
     pCmdDelete    = CmdAction . CmdDelete    <$> idArgument
     pCmdDone      = CmdAction . CmdDone      <$> idArgument
     pCmdEdit      = CmdAction . CmdEdit      <$> pEdit
-    pCmdTrack     = CmdAction . CmdTrack     <$> tracked
+    pCmdTrack     = CmdAction . CmdTrack     <$> track
     pCmdNew       = CmdAction . CmdNew       <$> pNew
     pCmdPostpone  = CmdAction . CmdPostpone  <$> idArgument
     pCmdSearch    = CmdAction . CmdSearch    <$> pSearch
     pCmdUnarchive = CmdAction . CmdUnarchive <$> idArgument
 
-    tracked = list <|> get <|> pTrack
-    list    = subparser (command "list" iList)
-    get     = subparser (command "get" iTrack)
-    iList   = i pList "list issues from a github repository"
-    iTrack  = i pTrack "track issues from a github repository"
-    pList   = TrackList <$> optional pRepo <*> optional limitOption
-    pTrack  = TrackCopy <$> optional pRepo
+    track      = subparser tCommands <|> pTrackGet
+    tCommands  = command "list" iTrackList <> command "get" iTrackGet
+    iTrackList = i pTrackList "list issues from a github repository"
+    iTrackGet  = i pTrackGet "track issues from a github repository"
+    pTrackList = TrackList <$> optional pRepo <*> optional limitOption
+    pTrackGet  = TrackGet <$> optional pRepo
 
     pRepo  = strOption $
         long "repo" <> short 'r' <> metavar "USER/REPO" <>

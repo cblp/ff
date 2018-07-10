@@ -78,9 +78,9 @@ data NoteView = NoteView
     , text     :: Text
     , start    :: Day
     , end      :: Maybe Day
-    , provider :: Text
-    , source   :: Text
-    , extId    :: Text
+    , provider :: Maybe Text
+    , source   :: Maybe Text
+    , extId    :: Maybe Text
     , url      :: Maybe Text
     }
     deriving (Eq, Show)
@@ -149,10 +149,10 @@ noteView nid Note {..} = NoteView
     , text     = Text.pack $ RGA.toString noteText
     , start    = LWW.query noteStart
     , end      = LWW.query noteEnd
-    , provider = maybe "" ((\(Tracked p _ _ _) -> p) . Max.query) noteTrack
-    , source   = maybe "" ((\(Tracked _ s _ _) -> s) . Max.query) noteTrack
-    , extId    = maybe "" ((\(Tracked _ _ x _) -> x) . Max.query) noteTrack
-    , url      = pure $ maybe "" ((\(Tracked _ _ _ u) -> u) . Max.query) noteTrack
+    , provider = fmap (trackedProvider . Max.query) noteTrack
+    , source   = fmap (trackedSource . Max.query) noteTrack
+    , extId    = fmap (trackedExtId . Max.query) noteTrack
+    , url      = fmap (trackedUrl . Max.query) noteTrack
     }
 
 type Limit = Natural

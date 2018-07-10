@@ -4,8 +4,8 @@
 {-# LANGUAGE RecordWildCards #-}
 
 module FF.Github
-    ( trackList
-    , trackCopy
+    ( exceptNoteView
+    , exceptSampleMap
     ) where
 
 import           Control.Error (failWith)
@@ -57,45 +57,45 @@ getIssues mAddress mlimit = do
             mempty
             (maybe FetchAll (FetchAtLeast . fromIntegral) mlimit)
 
-trackList
+exceptSampleMap
     :: Maybe Text
     -> Maybe Limit
     -> Day
     -> ExceptT Text IO (ModeMap Sample)
-trackList mAddress mlimit today =
-    sampleMaps mlimit today <$> getIssues mAddress mlimit
+exceptSampleMap mAddress mlimit today =
+    sampleMap mlimit today <$> getIssues mAddress mlimit
 
-trackCopy
+exceptNoteView
     :: Maybe Text
     -> ExceptT Text IO [NoteView]
-trackCopy mAddress = noteViewList <$> getIssues mAddress Nothing
+exceptNoteView mAddress = noteViewList <$> getIssues mAddress Nothing
 
-sampleMaps :: Foldable t => Maybe Limit -> Day -> t Issue -> ModeMap Sample
-sampleMaps mlimit today issues =
+sampleMap :: Foldable t => Maybe Limit -> Day -> t Issue -> ModeMap Sample
+sampleMap mlimit today issues =
     takeSamples mlimit
     . splitModes today
-    . map toNoteView
+    . map issueToNoteView
     . maybe id (take . fromIntegral) mlimit
     $ toList issues
 
 noteViewList :: Foldable t => t Issue -> [NoteView]
-noteViewList issues = map toNoteView $ toList issues
+noteViewList issues = map issueToNoteView $ toList issues
 
-toNoteView :: Issue -> NoteView
-toNoteView Issue{..} = NoteView
+issueToNoteView :: Issue -> NoteView
+issueToNoteView Issue{..} = NoteView
     { nid      = toNoteId issueId
     , status   = toStatus issueState
     , text     = issueTitle
     , start    = utctDay issueCreatedAt
     , end      = maybeMilestone
-    , provider = "github"
+    , provider = Just "github"
     , source   = maybeSource
-    , extId    = Text.pack . show $ issueNumber
+    , extId    = pure . Text.pack . show $ issueNumber
     , url      = maybeUrl
     }
   where
     maybeUrl = getUrl <$> issueHtmlUrl
-    maybeSource = maybe ""
+    maybeSource = fmap
         (Text.intercalate "/" . take 2 . Text.splitOn "/")
         (Text.stripPrefix "https://github.com/" =<< maybeUrl)
     maybeMilestone = case issueMilestone of
