@@ -1,15 +1,16 @@
+{-# OPTIONS -Wno-orphans #-}
+
 {-# LANGUAGE LambdaCase #-}
 {-# LANGUAGE NamedFieldPuns #-}
 {-# LANGUAGE OverloadedStrings #-}
 
 module FF.UI where
 
-import           Data.List (genericLength, intersperse)
+import           Data.List (genericLength)
 import qualified Data.Map.Strict as Map
 import qualified Data.Text as Text
 import           Text.PrettyPrint.Mainland (Doc, hang, indent, sep, stack, star,
-                                            strictText, (<+/>), (</>), (<>),
-                                            (<|>))
+                                            string, (<+/>), (</>), (<>))
 import qualified Text.PrettyPrint.Mainland as Pretty
 import           Text.PrettyPrint.Mainland.Class (Pretty, ppr)
 
@@ -25,10 +26,10 @@ withHeader :: Pretty a => String -> a -> Doc
 withHeader header value = hang indentation $ Pretty.text header </> ppr value
 
 indentation :: Int
-indentation = 4
+indentation = 2
 
 pshow :: Show a => a -> Doc
-pshow = Pretty.text . show
+pshow = Pretty.string . show
 
 prettySamplesBySections :: ModeMap Sample -> Doc
 prettySamplesBySections samples = stack $
@@ -70,20 +71,10 @@ prettySample mode = \case
         Starting _ -> "ff search --starting"
 
 noteView :: NoteView -> Doc
-noteView NoteView { nid, text, start, end, provider, source, extId, url } =
-    noteText </> fieldsSep fields1 </> fieldsSep fields2
+noteView NoteView{nid, text, start, end} =
+    string (Text.unpack text) </> sep fields
   where
-    noteText =
-        stack . map (sep . map strictText . Text.words) $ Text.lines text
-    fields1 =
-        "id"
-            .= pshow nid
-            :  "start"
-            .= pshow start
-            :  [ "end"   .= pshow e | Just e <- pure end ]
-    fields2 = concat [ [ "provider" .= pshow p | Just p <- pure provider ]
-                     , [ "source"   .= pshow s | Just s <- pure source ]
-                     , [ "extId"    .= pshow x | Just x <- pure extId ]
-                     , [ "url"      .= pshow u | Just u <- pure url ]
-                     ]
-    fieldsSep docs = sep (intersperse "|" docs) <|> stack docs
+    fields
+        =  "| id "    <> pshow nid
+        :  "| start " <> pshow start
+        : ["| end "   <> pshow e | Just e <- [end]]
