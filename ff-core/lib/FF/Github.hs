@@ -4,8 +4,8 @@
 {-# LANGUAGE RecordWildCards #-}
 
 module FF.Github
-    ( exceptNoteView
-    , exceptSampleMap
+    ( getIssueViews
+    , getIssueSamples
     ) where
 
 import           Control.Error (failWith)
@@ -57,18 +57,18 @@ getIssues mAddress mlimit = do
             mempty
             (maybe FetchAll (FetchAtLeast . fromIntegral) mlimit)
 
-exceptSampleMap
+getIssueSamples
     :: Maybe Text
     -> Maybe Limit
     -> Day
     -> ExceptT Text IO (ModeMap Sample)
-exceptSampleMap mAddress mlimit today =
+getIssueSamples mAddress mlimit today =
     sampleMap mlimit today <$> getIssues mAddress mlimit
 
-exceptNoteView
+getIssueViews
     :: Maybe Text
     -> ExceptT Text IO [NoteView]
-exceptNoteView mAddress = noteViewList <$> getIssues mAddress Nothing
+getIssueViews mAddress = noteViewList <$> getIssues mAddress Nothing
 
 sampleMap :: Foldable t => Maybe Limit -> Day -> t Issue -> ModeMap Sample
 sampleMap mlimit today issues =
