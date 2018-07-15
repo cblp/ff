@@ -71,10 +71,16 @@ prettySample mode = \case
         Starting _ -> "ff search --starting"
 
 noteView :: NoteView -> Doc
-noteView NoteView{nid, text, start, end} =
+noteView NoteView{nid, text, start, end, provider, source, extId, url} =
     string (Text.unpack text) </> sep fields
   where
     fields
         =  "| id "    <> pshow nid
         :  "| start " <> pshow start
-        : ["| end "   <> pshow e | Just e <- [end]]
+        : concat
+        [ ["| end "      <> pshow e | Just e <- [end]]
+        , ["| provider " <> pshow p | Just p <- [provider]]
+        , ["| source "   <> pshow s | Just s <- [source]]
+        , ["| extId "    <> pshow x | Just x <- [extId]]
+        , ["| url "      <> pshow u | Just u <- [url]]
+        ]

@@ -67,8 +67,9 @@ getIssueSamples mAddress mlimit today =
 
 getIssueViews
     :: Maybe Text
+    -> Maybe Limit
     -> ExceptT Text IO [NoteView]
-getIssueViews mAddress = noteViewList <$> getIssues mAddress Nothing
+getIssueViews mAddress mlimit = noteViewList mlimit <$> getIssues mAddress mlimit
 
 sampleMap :: Foldable t => Maybe Limit -> Day -> t Issue -> ModeMap Sample
 sampleMap mlimit today issues =
@@ -78,8 +79,11 @@ sampleMap mlimit today issues =
     . maybe id (take . fromIntegral) mlimit
     $ toList issues
 
-noteViewList :: Foldable t => t Issue -> [NoteView]
-noteViewList issues = map issueToNoteView $ toList issues
+noteViewList :: Foldable t => Maybe Limit -> t Issue -> [NoteView]
+noteViewList mlimit issues =
+    map issueToNoteView
+    . maybe id (take . fromIntegral) mlimit
+    $ toList issues
 
 issueToNoteView :: Issue -> NoteView
 issueToNoteView Issue{..} = NoteView

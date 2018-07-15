@@ -22,7 +22,6 @@ import           Data.Aeson.TH (defaultOptions, deriveJSON, fieldLabelModifier,
 import           Data.List (genericLength)
 import           Data.Map.Strict (Map)
 import qualified Data.Map.Strict as Map
-import           Data.Maybe (maybe)
 import           Data.Semigroup (Semigroup, (<>))
 import           Data.Semilattice (Semilattice)
 import           Data.Text (Text)

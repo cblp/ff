@@ -124,7 +124,7 @@ runCmdAction ui cmd = do
         CmdEdit edit -> do
             nv <- cmdEdit edit
             pprint $ withHeader "edited:" $ UI.noteView nv
-        CmdTrack (TrackList True address limit ) -> liftIO $ do
+        CmdTrack (Track True address limit ) -> liftIO $ do
             hPutStr stderr "fetching"
             possibleIssues <- fromEither <$> race
                 (runExceptT $ getIssueSamples address limit today)
@@ -133,8 +133,8 @@ runCmdAction ui cmd = do
             case possibleIssues of
                 Left err      -> hPutStrLn stderr err
                 Right samples -> pprint $ UI.prettySamplesBySections samples
-        CmdTrack (TrackGet address) -> do
-            nvs <- liftIO $ runExceptT $ getIssueViews address
+        CmdTrack (Track False address limit) -> do
+            nvs <- liftIO $ runExceptT $ getIssueViews address limit
             case nvs of
                 Left err   -> liftIO $ hPutStrLn stderr err
                 Right nvs' -> do

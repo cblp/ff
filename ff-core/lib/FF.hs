@@ -147,35 +147,37 @@ newTrackedNote NoteView {..} =
             noteText'   <- rgaFromText text
             noteStart'  <- LWW.initialize start
             noteEnd'    <- LWW.initialize end
-            let noteTrack' = Just $ Max.initial $ Tracked
-                                (fromMaybe "" provider)
-                                (fromMaybe "" source)
-                                (fromMaybe "" extId)
-                                (fromMaybe "" url)
-            let nNote = Note { noteStatus = noteStatus'
-                             , noteText   = noteText'
-                             , noteStart  = noteStart'
-                             , noteEnd    = noteEnd'
-                             , noteTrack  = noteTrack'
-                             }
+            let noteTrack' = Just $ Max.initial Tracked
+                              { trackedProvider = fromMaybe "" provider
+                              , trackedSource   = fromMaybe "" source
+                              , trackedExtId    = fromMaybe "" extId
+                              , trackedUrl      = fromMaybe "" url
+                              }
+            let nNote = Note  { noteStatus = noteStatus'
+                              , noteText   = noteText'
+                              , noteStart  = noteStart'
+                              , noteEnd    = noteEnd'
+                              , noteTrack  = noteTrack'
+                              }
             pure (nNote, nNote)
         Just docOld -> do
-              noteStatus' <- LWW.assign status (noteStatus docOld)
-              noteText'   <- rgaEditText text (noteText docOld)
-              noteStart'  <- LWW.assign start (noteStart docOld)
-              noteEnd'    <- LWW.assign end (noteEnd docOld)
-              let noteTrack' = Just $ Max.initial $ Tracked
-                                  (fromMaybe "" provider)
-                                  (fromMaybe "" source)
-                                  (fromMaybe "" extId)
-                                  (fromMaybe "" url)
-              let jNote = Note { noteStatus = noteStatus'
-                                , noteText   = noteText'
-                                , noteStart  = noteStart'
-                                , noteEnd    = noteEnd'
-                                , noteTrack  = noteTrack'
-                                }
-              pure (jNote, jNote)
+            noteStatus' <- LWW.assign status (noteStatus docOld)
+            noteText'   <- rgaEditText text (noteText docOld)
+            noteStart'  <- LWW.assign start (noteStart docOld)
+            noteEnd'    <- LWW.assign end (noteEnd docOld)
+            let noteTrack' = Just $ Max.initial Tracked
+                              { trackedProvider = fromMaybe "" provider
+                              , trackedSource   = fromMaybe "" source
+                              , trackedExtId    = fromMaybe "" extId
+                              , trackedUrl      = fromMaybe "" url
+                              }
+            let jNote = Note  { noteStatus = noteStatus'
+                              , noteText   = noteText'
+                              , noteStart  = noteStart'
+                              , noteEnd    = noteEnd'
+                              , noteTrack  = noteTrack'
+                              }
+            pure (jNote, jNote)
 
 newNote
     :: Clock m

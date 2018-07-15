@@ -24,7 +24,8 @@ import           Data.Time (Day)
 import           Options.Applicative (auto, command, execParser, flag',
                                       fullDesc, help, helper, info, long,
                                       metavar, option, progDesc, short,
-                                      strArgument, strOption, subparser, (<**>))
+                                      strArgument, strOption, subparser, switch,
+                                      (<**>))
 
 import           FF.Storage (DocId (DocId))
 import           FF.Types (Limit, NoteId)
@@ -46,11 +47,11 @@ data CmdAction
     | CmdUnarchive  NoteId
     | CmdServe
 
-data CmdTrack = TrackGet (Maybe Text)
-              | TrackList Bool (Maybe Text) (Maybe Limit)
-                  -- { address :: Maybe Text
-                  -- , limit   :: Maybe Limit
-                  -- }
+data CmdTrack = Track
+    { dryrun  :: Bool
+    , address :: Maybe Text
+    , limit   :: Maybe Limit
+    }
 
 data Config = ConfigDataDir (Maybe DataDir) | ConfigUI (Maybe Shuffle)
 
@@ -108,7 +109,7 @@ parseOptions = execParser $ i parser "A note taker and task tracker"
     iCmdPostpone  = i pCmdPostpone  "make a task start later"
     iCmdSearch    = i pCmdSearch    "search for notes with the given text"
     iCmdUnarchive = i pCmdUnarchive "restore the note from archive"
-    iCmdServe     = i pCmdServe "serve application through the http"
+    iCmdServe     = i pCmdServe     "serve application through the http"
 
     pCmdAgenda    = CmdAction . CmdAgenda    <$> optional limitOption
     pCmdDelete    = CmdAction . CmdDelete    <$> idArgument
@@ -121,13 +122,14 @@ parseOptions = execParser $ i parser "A note taker and task tracker"
     pCmdUnarchive = CmdAction . CmdUnarchive <$> idArgument
     pCmdServe     = pure $ CmdAction CmdServe
 
-    track = pTrackList <|> pTrackList
-    -- tCommands  = command "dry-run" iTrackList
-    -- iTrackList = i pTrackList "list issues from a github repository"
-    pTrackList = TrackList <$> pDryRun <*> optional pRepo <*> optional limitOption
-    pTrackGet  = TrackGet <$> optional pRepo
+    track = Track
+        <$> pDryRun
+        <*> optional pRepo
+        <*> optional limitOption
 
-    pDryRun = flag' True (long "dry-run" <> help "list issues from github")
+    pDryRun = switch
+        (long "dry-run" <> short 'd' <>
+        help "List issues from github")
 
     pRepo  = strOption $
         long "repo" <> short 'r' <> metavar "USER/REPO" <>
