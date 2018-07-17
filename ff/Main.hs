@@ -124,23 +124,28 @@ runCmdAction ui cmd = do
         CmdEdit edit -> do
             nv <- cmdEdit edit
             pprint $ withHeader "edited:" $ UI.noteView nv
-        CmdTrack (Track True address limit ) -> liftIO $ do
-            hPutStr stderr "fetching"
-            possibleIssues <- fromEither <$> race
-                (runExceptT $ getIssueSamples address limit today)
-                (forever $ hPutChar stderr '.' >> threadDelay 500000)
-            hPutStrLn stderr ""
-            case possibleIssues of
-                Left err      -> hPutStrLn stderr err
-                Right samples -> pprint $ UI.prettySamplesBySections samples
-        CmdTrack (Track False address limit) -> do
-            nvs <- liftIO $ runExceptT $ getIssueViews address limit
-            case nvs of
-                Left err   -> liftIO $ hPutStrLn stderr err
-                Right nvs' -> do
-                    mapM_ newTrackedNote nvs'
-                    let nvsLength = show $ length nvs'
-                    liftIO $ putStrLn $ nvsLength ++ " issues copied to local base"
+        CmdTrack (Track dryRun address limit ) -> if dryRun
+            then liftIO $ do
+                hPutStr stderr "fetching"
+                possibleIssues <- fromEither <$> race
+                    (runExceptT $ getIssueSamples address limit today)
+                    (forever $ hPutChar stderr '.' >> threadDelay 500000)
+                hPutStrLn stderr ""
+                case possibleIssues of
+                    Left err      -> hPutStrLn stderr err
+                    Right samples -> pprint $ UI.prettySamplesBySections samples
+            else do
+                liftIO $ hPutStr stderr "fetching"
+                nvs <- liftIO $ fromEither <$> race
+                    (runExceptT $ getIssueViews address limit)
+                    (forever $ hPutChar stderr '.' >> threadDelay 500000)
+                liftIO $ hPutStrLn stderr ""
+                case nvs of
+                    Left err   -> liftIO $ hPutStrLn stderr err
+                    Right nvs' -> do
+                        mapM_ newTrackedNote nvs'
+                        let nvsLength = show $ length nvs'
+                        liftIO $ putStrLn $ nvsLength ++ " issues copied to local base"
         CmdNew new -> do
             nv <- cmdNew new today
             pprint $ withHeader "added:" $ UI.noteView nv

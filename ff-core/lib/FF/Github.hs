@@ -87,7 +87,7 @@ noteViewList mlimit issues =
 
 issueToNoteView :: Issue -> NoteView
 issueToNoteView Issue{..} = NoteView
-    { nid      = toNoteId issueId
+    { nid      = Nothing
     , status   = toStatus issueState
     , text     = issueTitle
     , start    = utctDay issueCreatedAt

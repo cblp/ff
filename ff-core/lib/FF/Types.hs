@@ -72,7 +72,7 @@ instance Collection Note where
     collectionName = "note"
 
 data NoteView = NoteView
-    { nid      :: NoteId
+    { nid      :: Maybe NoteId
     , status   :: Status
     , text     :: Text
     , start    :: Day
@@ -143,7 +143,7 @@ singletonTaskModeMap today note = Map.singleton (taskMode today note) [note]
 
 noteView :: NoteId -> Note -> NoteView
 noteView nid Note {..} = NoteView
-    { nid      = nid
+    { nid      = pure nid
     , status   = LWW.query noteStatus
     , text     = Text.pack $ RGA.toString noteText
     , start    = LWW.query noteStart

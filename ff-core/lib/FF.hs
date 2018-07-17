@@ -39,7 +39,7 @@ import qualified CRDT.LWW as LWW
 import           Data.Foldable (asum)
 import           Data.List (genericLength, sortOn)
 import qualified Data.Map.Strict as Map
-import           Data.Maybe (fromMaybe)
+import           Data.Maybe (fromMaybe, isJust, listToMaybe)
 import           Data.Semigroup ((<>))
 import           Data.Text (Text)
 import qualified Data.Text as Text
@@ -89,6 +89,17 @@ loadAllNotes = do
         | (noteId, Just Document{value}) <- zip docs mnotes
         ]
 
+loadTrackedNotes :: MonadStorage m => m [(NoteId, Note)]
+loadTrackedNotes = do
+    docs   <- listDocuments
+    mnotes <- for docs load
+    let notes = [ (noteId, value) | (noteId, Just Document{value}) <- zip docs mnotes]
+    pure $ filter (\(_, Note {noteTrack}) ->
+        all isJust [ fmap (trackedSource . Max.query) noteTrack
+                   , fmap (trackedSource . Max.query) noteTrack
+                   , fmap (trackedExtId . Max.query) noteTrack
+                   ]) notes
+
 loadActiveNotes :: MonadStorage m => m [NoteView]
 loadActiveNotes =
     filter (\NoteView { status } -> status == Active) <$> loadAllNotes
@@ -136,22 +147,21 @@ takeSamples (Just limit) = (`evalState` limit) . traverse takeSample
         | a <= b    = 0
         | otherwise = a - b
 
-newTrackedNote
-    :: MonadStorage m
-    => NoteView
-    -> m Note
-newTrackedNote NoteView {..} =
-    modify nid $ \case
+newTrackedNote :: NoteView -> Storage Note
+newTrackedNote nv = do
+    mNoteViews <- loadTrackedNotes
+    let check = listToMaybe $ filter (\ (_, Note {noteTrack}) -> provider nv == fmap (trackedProvider . Max.query) noteTrack && source nv == fmap (trackedSource . Max.query) noteTrack && extId nv == fmap (trackedExtId . Max.query) noteTrack) mNoteViews
+    case check of
         Nothing -> do
-            noteStatus' <- LWW.initialize status
-            noteText'   <- rgaFromText text
-            noteStart'  <- LWW.initialize start
-            noteEnd'    <- LWW.initialize end
+            noteStatus' <- LWW.initialize (status nv)
+            noteText'   <- rgaFromText (text nv)
+            noteStart'  <- LWW.initialize (start nv)
+            noteEnd'    <- LWW.initialize (end nv)
             let noteTrack' = Just $ Max.initial Tracked
-                              { trackedProvider = fromMaybe "" provider
-                              , trackedSource   = fromMaybe "" source
-                              , trackedExtId    = fromMaybe "" extId
-                              , trackedUrl      = fromMaybe "" url
+                              { trackedProvider = fromMaybe "" (provider nv)
+                              , trackedSource   = fromMaybe "" (source nv)
+                              , trackedExtId    = fromMaybe "" (extId nv)
+                              , trackedUrl      = fromMaybe "" (url nv)
                               }
             let nNote = Note  { noteStatus = noteStatus'
                               , noteText   = noteText'
@@ -159,25 +169,29 @@ newTrackedNote NoteView {..} =
                               , noteEnd    = noteEnd'
                               , noteTrack  = noteTrack'
                               }
-            pure (nNote, nNote)
-        Just docOld -> do
-            noteStatus' <- LWW.assign status (noteStatus docOld)
-            noteText'   <- rgaEditText text (noteText docOld)
-            noteStart'  <- LWW.assign start (noteStart docOld)
-            noteEnd'    <- LWW.assign end (noteEnd docOld)
-            let noteTrack' = Just $ Max.initial Tracked
-                              { trackedProvider = fromMaybe "" provider
-                              , trackedSource   = fromMaybe "" source
-                              , trackedExtId    = fromMaybe "" extId
-                              , trackedUrl      = fromMaybe "" url
-                              }
-            let jNote = Note  { noteStatus = noteStatus'
-                              , noteText   = noteText'
-                              , noteStart  = noteStart'
-                              , noteEnd    = noteEnd'
-                              , noteTrack  = noteTrack'
-                              }
-            pure (jNote, jNote)
+            _ <- create nNote
+            pure nNote
+        Just checked ->
+            modifyOrFail (fst checked) $ \jNote -> update jNote
+  where
+    update Note { noteStatus, noteEnd, noteStart, noteText } = do
+        noteStatus' <- LWW.assign (status nv) noteStatus
+        noteText'   <- rgaEditText (text nv) noteText
+        noteStart'  <- LWW.assign (start nv) noteStart
+        noteEnd'    <- LWW.assign (end nv) noteEnd
+        let noteTrack' = Just $ Max.initial Tracked
+                          { trackedProvider = fromMaybe "" (provider nv)
+                          , trackedSource   = fromMaybe "" (source nv)
+                          , trackedExtId    = fromMaybe "" (extId nv)
+                          , trackedUrl      = fromMaybe "" (url nv)
+                          }
+        let jNote = Note  { noteStatus = noteStatus'
+                          , noteText   = noteText'
+                          , noteStart  = noteStart'
+                          , noteEnd    = noteEnd'
+                          , noteTrack  = noteTrack'
+                          }
+        pure jNote
 
 newNote
     :: Clock m
@@ -322,3 +336,4 @@ rgaFromText = RGA.fromString . Text.unpack
 
 rgaToText :: RgaString -> Text
 rgaToText = Text.pack . RGA.toString
+

@@ -75,12 +75,12 @@ noteView NoteView{nid, text, start, end, provider, source, extId, url} =
     string (Text.unpack text) </> sep fields
   where
     fields
-        =  "| id "    <> pshow nid
-        :  "| start " <> pshow start
-        : concat
-        [ ["| end "      <> pshow e | Just e <- [end]]
-        , ["| provider " <> pshow p | Just p <- [provider]]
-        , ["| source "   <> pshow s | Just s <- [source]]
-        , ["| extId "    <> pshow x | Just x <- [extId]]
-        , ["| url "      <> pshow u | Just u <- [url]]
-        ]
+        = concat
+            [ ["| id "       <> pshow i | Just i <- [nid]]
+            , ["| start "    <> pshow start]
+            , ["| end "      <> pshow e | Just e <- [end]]
+            , ["| provider " <> pshow p | Just p <- [provider]]
+            , ["| source "   <> pshow s | Just s <- [source]]
+            , ["| extId "    <> pshow x | Just x <- [extId]]
+            , ["| url "      <> pshow u | Just u <- [url]]
+            ]
