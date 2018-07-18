@@ -18,17 +18,15 @@ import           Data.Text (Text)
 import qualified Data.Text as Text
 import           Data.Time (Day, UTCTime (..))
 import           Data.Vector (Vector)
-import           GitHub (FetchCount (..), Id, Issue (..), IssueState (..),
+import           GitHub (FetchCount (..), Issue (..), IssueState (..),
                          Milestone (..), executeRequest', getUrl,
                          issueCreatedAt, issueHtmlUrl, issueId, issueMilestone,
-                         issueState, issueTitle, mkOwnerName, mkRepoName,
-                         untagId)
+                         issueState, issueTitle, mkOwnerName, mkRepoName)
 import           GitHub.Endpoints.Issues (issuesForRepoR)
 import           System.Process (readProcess)
 
 import           FF (splitModes, takeSamples)
-import           FF.Storage (DocId (..))
-import           FF.Types (Limit, ModeMap, NoteId, NoteView (..), Sample (..),
+import           FF.Types (Limit, ModeMap, NoteView (..), Sample (..),
                            Status (..))
 
 getIssues
@@ -69,7 +67,8 @@ getIssueViews
     :: Maybe Text
     -> Maybe Limit
     -> ExceptT Text IO [NoteView]
-getIssueViews mAddress mlimit = noteViewList mlimit <$> getIssues mAddress mlimit
+getIssueViews mAddress mlimit =
+    noteViewList mlimit <$> getIssues mAddress mlimit
 
 sampleMap :: Foldable t => Maybe Limit -> Day -> t Issue -> ModeMap Sample
 sampleMap mlimit today issues =
@@ -105,9 +104,6 @@ issueToNoteView Issue{..} = NoteView
     maybeMilestone = case issueMilestone of
         Just Milestone{milestoneDueOn = Just UTCTime{utctDay}} -> Just utctDay
         _                                                      -> Nothing
-
-toNoteId :: Id Issue -> NoteId
-toNoteId = DocId . show . untagId
 
 toStatus :: IssueState -> Status
 toStatus = \case

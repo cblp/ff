@@ -27,8 +27,8 @@ import           Text.PrettyPrint.Mainland (prettyLazyText)
 import           Text.PrettyPrint.Mainland.Class (Pretty, ppr)
 
 import           FF (cmdDelete, cmdDone, cmdEdit, cmdNew, cmdPostpone,
-                     cmdSearch, cmdServe, cmdUnarchive, getSamples, getUtcToday,
-                     newTrackedNote)
+                     cmdSearch, cmdServe, cmdTrack, cmdUnarchive, getSamples,
+                     getUtcToday)
 import           FF.Config (Config (..), ConfigUI (..), appName, loadConfig,
                             printConfig, saveConfig)
 import           FF.Github (getIssueSamples, getIssueViews)
@@ -124,28 +124,8 @@ runCmdAction ui cmd = do
         CmdEdit edit -> do
             nv <- cmdEdit edit
             pprint $ withHeader "edited:" $ UI.noteView nv
-        CmdTrack (Track dryRun address limit ) -> if dryRun
-            then liftIO $ do
-                hPutStr stderr "fetching"
-                possibleIssues <- fromEither <$> race
-                    (runExceptT $ getIssueSamples address limit today)
-                    (forever $ hPutChar stderr '.' >> threadDelay 500000)
-                hPutStrLn stderr ""
-                case possibleIssues of
-                    Left err      -> hPutStrLn stderr err
-                    Right samples -> pprint $ UI.prettySamplesBySections samples
-            else do
-                liftIO $ hPutStr stderr "fetching"
-                nvs <- liftIO $ fromEither <$> race
-                    (runExceptT $ getIssueViews address limit)
-                    (forever $ hPutChar stderr '.' >> threadDelay 500000)
-                liftIO $ hPutStrLn stderr ""
-                case nvs of
-                    Left err   -> liftIO $ hPutStrLn stderr err
-                    Right nvs' -> do
-                        mapM_ newTrackedNote nvs'
-                        let nvsLength = show $ length nvs'
-                        liftIO $ putStrLn $ nvsLength ++ " issues copied to local base"
+        CmdTrack (Track dryRun address limit) ->
+            track dryRun address limit today
         CmdNew new -> do
             nv <- cmdNew new today
             pprint $ withHeader "added:" $ UI.noteView nv
@@ -159,6 +139,30 @@ runCmdAction ui cmd = do
             nv <- cmdUnarchive noteId
             pprint . withHeader "unarchived:" $ UI.noteView nv
         CmdServe -> cmdServe
+  where
+    track dryRun address limit today =
+      if dryRun
+      then liftIO $ do
+          hPutStr stderr "fetching"
+          possibleIssues <- fromEither <$> race
+              (runExceptT $ getIssueSamples address limit today)
+              (forever $ hPutChar stderr '.' >> threadDelay 500000)
+          hPutStrLn stderr ""
+          case possibleIssues of
+              Left err      -> hPutStrLn stderr err
+              Right samples -> pprint $ UI.prettySamplesBySections samples
+      else do
+          liftIO $ hPutStr stderr "fetching"
+          nvs <- liftIO $ fromEither <$> race
+              (runExceptT $ getIssueViews address limit)
+              (forever $ hPutChar stderr '.' >> threadDelay 500000)
+          liftIO $ hPutStrLn stderr ""
+          case nvs of
+              Left err   -> liftIO $ hPutStrLn stderr err
+              Right nvs' -> do
+                  cmdTrack nvs'
+                  let nvsLength = show $ length nvs'
+                  liftIO $ putStrLn $ nvsLength ++ " issues copied to local base"
 
 -- Template taken from stack:
 -- "Version 1.7.1, Git revision 681c800873816c022739ca7ed14755e8 (5807 commits)"

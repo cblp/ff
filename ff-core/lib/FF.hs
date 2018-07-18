@@ -16,12 +16,12 @@ module FF
     , cmdSearch
     , cmdUnarchive
     , cmdServe
+    , cmdTrack
     , getSamples
     , getUtcToday
     , loadAllNotes
     , loadActiveNotes
     , newNote
-    , newTrackedNote
     , splitModes
     , takeSamples
     ) where
@@ -37,6 +37,7 @@ import           CRDT.LamportClock (Clock)
 import           CRDT.LWW (LWW)
 import qualified CRDT.LWW as LWW
 import           Data.Foldable (asum)
+import           Data.Function (on)
 import           Data.List (genericLength, sortOn)
 import qualified Data.Map.Strict as Map
 import           Data.Maybe (fromMaybe, isJust, listToMaybe)
@@ -89,16 +90,14 @@ loadAllNotes = do
         | (noteId, Just Document{value}) <- zip docs mnotes
         ]
 
-loadTrackedNotes :: MonadStorage m => m [(NoteId, Note)]
+loadTrackedNotes :: MonadStorage m => m [(NoteId, NoteView)]
 loadTrackedNotes = do
     docs   <- listDocuments
     mnotes <- for docs load
-    let notes = [ (noteId, value) | (noteId, Just Document{value}) <- zip docs mnotes]
-    pure $ filter (\(_, Note {noteTrack}) ->
-        all isJust [ fmap (trackedSource . Max.query) noteTrack
-                   , fmap (trackedSource . Max.query) noteTrack
-                   , fmap (trackedExtId . Max.query) noteTrack
-                   ]) notes
+    pure  [ (noteId, noteView noteId value)
+          | (noteId, Just Document{value}) <- zip docs mnotes
+          , isJust (noteTrack value)
+          ]
 
 loadActiveNotes :: MonadStorage m => m [NoteView]
 loadActiveNotes =
@@ -147,51 +146,48 @@ takeSamples (Just limit) = (`evalState` limit) . traverse takeSample
         | a <= b    = 0
         | otherwise = a - b
 
-newTrackedNote :: NoteView -> Storage Note
-newTrackedNote nv = do
-    mNoteViews <- loadTrackedNotes
-    let check = listToMaybe $ filter (\ (_, Note {noteTrack}) -> provider nv == fmap (trackedProvider . Max.query) noteTrack && source nv == fmap (trackedSource . Max.query) noteTrack && extId nv == fmap (trackedExtId . Max.query) noteTrack) mNoteViews
-    case check of
+newTrackedNote :: [(NoteId, NoteView)] -> NoteView -> Storage Note
+newTrackedNote mOldNotes nvNew =
+    case same of
         Nothing -> do
-            noteStatus' <- LWW.initialize (status nv)
-            noteText'   <- rgaFromText (text nv)
-            noteStart'  <- LWW.initialize (start nv)
-            noteEnd'    <- LWW.initialize (end nv)
-            let noteTrack' = Just $ Max.initial Tracked
-                              { trackedProvider = fromMaybe "" (provider nv)
-                              , trackedSource   = fromMaybe "" (source nv)
-                              , trackedExtId    = fromMaybe "" (extId nv)
-                              , trackedUrl      = fromMaybe "" (url nv)
-                              }
-            let nNote = Note  { noteStatus = noteStatus'
-                              , noteText   = noteText'
-                              , noteStart  = noteStart'
-                              , noteEnd    = noteEnd'
-                              , noteTrack  = noteTrack'
-                              }
-            _ <- create nNote
-            pure nNote
-        Just checked ->
-            modifyOrFail (fst checked) $ \jNote -> update jNote
+            noteStatus' <- LWW.initialize (status nvNew)
+            noteText'   <- rgaFromText (text nvNew)
+            noteStart'  <- LWW.initialize (start nvNew)
+            noteEnd'    <- LWW.initialize (end nvNew)
+            _ <- create $ note noteStatus' noteText' noteStart' noteEnd'
+            pure $ note noteStatus' noteText' noteStart' noteEnd'
+        Just (n, _) ->
+            modifyOrFail n $ \jNote -> update jNote
   where
-    update Note { noteStatus, noteEnd, noteStart, noteText } = do
-        noteStatus' <- LWW.assign (status nv) noteStatus
-        noteText'   <- rgaEditText (text nv) noteText
-        noteStart'  <- LWW.assign (start nv) noteStart
-        noteEnd'    <- LWW.assign (end nv) noteEnd
-        let noteTrack' = Just $ Max.initial Tracked
-                          { trackedProvider = fromMaybe "" (provider nv)
-                          , trackedSource   = fromMaybe "" (source nv)
-                          , trackedExtId    = fromMaybe "" (extId nv)
-                          , trackedUrl      = fromMaybe "" (url nv)
-                          }
-        let jNote = Note  { noteStatus = noteStatus'
-                          , noteText   = noteText'
-                          , noteStart  = noteStart'
-                          , noteEnd    = noteEnd'
-                          , noteTrack  = noteTrack'
-                          }
-        pure jNote
+    update Note {..} = do
+        noteStatus' <- LWW.assign (status nvNew) noteStatus
+        noteText'   <- rgaEditText (text nvNew) noteText
+        noteStart'  <- LWW.assign (start nvNew) noteStart
+        noteEnd'    <- LWW.assign (end nvNew) noteEnd
+        pure $ note noteStatus' noteText' noteStart' noteEnd'
+    noteTrack' = Just $ Max.initial Tracked
+        { trackedProvider = fromMaybe "" (provider nvNew)
+        , trackedSource   = fromMaybe "" (source nvNew)
+        , trackedExtId    = fromMaybe "" (extId nvNew)
+        , trackedUrl      = fromMaybe "" (url nvNew)
+        }
+    note noteStatus' noteText' noteStart' noteEnd' = Note
+        { noteStatus = noteStatus'
+        , noteText   = noteText'
+        , noteStart  = noteStart'
+        , noteEnd    = noteEnd'
+        , noteTrack  = noteTrack'
+        }
+    isSame nvN nvO
+        =  ((==) `on` provider) nvN nvO
+        && ((==) `on` source) nvN nvO
+        && ((==) `on`  extId) nvN nvO
+    same = listToMaybe $ filter (isSame nvNew . snd) mOldNotes
+
+cmdTrack :: [NoteView] -> Storage ()
+cmdTrack newNotes = do
+    mOldNotes <- loadTrackedNotes
+    mapM_ (newTrackedNote mOldNotes) newNotes
 
 newNote
     :: Clock m
