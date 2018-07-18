@@ -96,7 +96,7 @@ loadTrackedNotes = do
     mnotes <- for docs load
     pure  [ (noteId, noteView noteId value)
           | (noteId, Just Document{value}) <- zip docs mnotes
-          , isJust (Max.query $ noteTrack value)
+          , isJust (Max.query <$> noteTrack value)
           ]
 
 loadActiveNotes :: MonadStorage m => m [NoteView]
@@ -165,7 +165,7 @@ newTrackedNote mOldNotes nvNew =
         noteStart'  <- LWW.assign (start nvNew) noteStart
         noteEnd'    <- LWW.assign (end nvNew) noteEnd
         pure $ note noteStatus' noteText' noteStart' noteEnd'
-    noteTrack' = Max.initial $ track nvNew
+    noteTrack' = Max.initial <$> track nvNew
     note noteStatus' noteText' noteStart' noteEnd' = Note
         { noteStatus = noteStatus'
         , noteText   = noteText'
@@ -193,7 +193,7 @@ newNote status text start end = do
     noteText   <- rgaFromText text
     noteStart  <- LWW.initialize start
     noteEnd    <- LWW.initialize end
-    let noteTrack = Max.initial Nothing
+    let noteTrack = Nothing
     pure Note {..}
 
 cmdNew :: MonadStorage m => New -> Day -> m NoteView

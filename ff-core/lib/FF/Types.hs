@@ -42,7 +42,7 @@ data Note = Note
     , noteText   :: RgaString
     , noteStart  :: LWW Day
     , noteEnd    :: LWW (Maybe Day)
-    , noteTrack  :: Max (Maybe Track)
+    , noteTrack  :: Maybe (Max Track)
     }
     deriving (Eq, Show)
 
@@ -145,7 +145,7 @@ noteView nid Note {..} = NoteView
     , text   = Text.pack $ RGA.toString noteText
     , start  = LWW.query noteStart
     , end    = LWW.query noteEnd
-    , track  = Max.query noteTrack
+    , track  = Max.query <$> noteTrack
     }
 
 type Limit = Natural
