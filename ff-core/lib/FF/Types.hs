@@ -42,19 +42,19 @@ data Note = Note
     , noteText   :: RgaString
     , noteStart  :: LWW Day
     , noteEnd    :: LWW (Maybe Day)
-    , noteTrack  :: Maybe (Max Tracked)
+    , noteTrack  :: Max (Maybe Track)
     }
     deriving (Eq, Show)
 
-data Tracked = Tracked
-    { trackedProvider :: Text
-    , trackedSource   :: Text
-    , trackedExtId    :: Text
-    , trackedUrl      :: Text
+data Track = Track
+    { provider :: Text
+    , source   :: Text
+    , extId    :: Text
+    , url      :: Text
     }
     deriving (Eq, Show, Ord)
 
-deriveJSON defaultOptions{fieldLabelModifier = camelTo2 '_' . drop 7} ''Tracked
+deriveJSON defaultOptions{fieldLabelModifier = camelTo2 '_'} ''Track
 
 type NoteId = DocId Note
 
@@ -72,15 +72,12 @@ instance Collection Note where
     collectionName = "note"
 
 data NoteView = NoteView
-    { nid      :: Maybe NoteId
-    , status   :: Status
-    , text     :: Text
-    , start    :: Day
-    , end      :: Maybe Day
-    , provider :: Maybe Text
-    , source   :: Maybe Text
-    , extId    :: Maybe Text
-    , url      :: Maybe Text
+    { nid    :: Maybe NoteId
+    , status :: Status
+    , text   :: Text
+    , start  :: Day
+    , end    :: Maybe Day
+    , track  :: Maybe Track
     }
     deriving (Eq, Show)
 
@@ -143,15 +140,12 @@ singletonTaskModeMap today note = Map.singleton (taskMode today note) [note]
 
 noteView :: NoteId -> Note -> NoteView
 noteView nid Note {..} = NoteView
-    { nid      = pure nid
-    , status   = LWW.query noteStatus
-    , text     = Text.pack $ RGA.toString noteText
-    , start    = LWW.query noteStart
-    , end      = LWW.query noteEnd
-    , provider = fmap (trackedProvider . Max.query) noteTrack
-    , source   = fmap (trackedSource . Max.query) noteTrack
-    , extId    = fmap (trackedExtId . Max.query) noteTrack
-    , url      = fmap (trackedUrl . Max.query) noteTrack
+    { nid    = pure nid
+    , status = LWW.query noteStatus
+    , text   = Text.pack $ RGA.toString noteText
+    , start  = LWW.query noteStart
+    , end    = LWW.query noteEnd
+    , track  = Max.query noteTrack
     }
 
 type Limit = Natural

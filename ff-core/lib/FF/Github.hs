@@ -12,7 +12,7 @@ import           Control.Error (failWith)
 import           Control.Monad.Except (ExceptT (..), liftIO, throwError,
                                        withExceptT)
 import           Data.Foldable (toList)
-import           Data.Maybe (maybe)
+import           Data.Maybe (fromMaybe)
 import           Data.Semigroup ((<>))
 import           Data.Text (Text)
 import qualified Data.Text as Text
@@ -27,7 +27,7 @@ import           System.Process (readProcess)
 
 import           FF (splitModes, takeSamples)
 import           FF.Types (Limit, ModeMap, NoteView (..), Sample (..),
-                           Status (..))
+                           Status (..), Track (..))
 
 getIssues
     :: Maybe Text
@@ -71,30 +71,32 @@ getIssueViews mAddress mlimit =
     noteViewList mlimit <$> getIssues mAddress mlimit
 
 sampleMap :: Foldable t => Maybe Limit -> Day -> t Issue -> ModeMap Sample
-sampleMap mlimit today issues =
+sampleMap mlimit today vIssues =
     takeSamples mlimit
     . splitModes today
     . map issueToNoteView
     . maybe id (take . fromIntegral) mlimit
-    $ toList issues
+    $ toList vIssues
 
 noteViewList :: Foldable t => Maybe Limit -> t Issue -> [NoteView]
-noteViewList mlimit issues =
+noteViewList mlimit vIssues =
     map issueToNoteView
     . maybe id (take . fromIntegral) mlimit
-    $ toList issues
+    $ toList vIssues
 
 issueToNoteView :: Issue -> NoteView
 issueToNoteView Issue{..} = NoteView
-    { nid      = Nothing
-    , status   = toStatus issueState
-    , text     = issueTitle
-    , start    = utctDay issueCreatedAt
-    , end      = maybeMilestone
-    , provider = Just "github"
-    , source   = maybeSource
-    , extId    = pure . Text.pack . show $ issueNumber
-    , url      = maybeUrl
+    { nid    = Nothing
+    , status = toStatus issueState
+    , text   = issueTitle
+    , start  = utctDay issueCreatedAt
+    , end    = maybeMilestone
+    , track  = Just Track
+        { provider = "github"
+        , source   = source'
+        , extId    = Text.pack . show $ issueNumber
+        , url      = url'
+        }
     }
   where
     maybeUrl = getUrl <$> issueHtmlUrl
@@ -104,6 +106,8 @@ issueToNoteView Issue{..} = NoteView
     maybeMilestone = case issueMilestone of
         Just Milestone{milestoneDueOn = Just UTCTime{utctDay}} -> Just utctDay
         _                                                      -> Nothing
+    source' = fromMaybe "no source" maybeSource
+    url' = fromMaybe "no url" maybeUrl
 
 toStatus :: IssueState -> Status
 toStatus = \case

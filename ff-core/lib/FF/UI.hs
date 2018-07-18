@@ -3,6 +3,7 @@
 {-# LANGUAGE LambdaCase #-}
 {-# LANGUAGE NamedFieldPuns #-}
 {-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE RecordWildCards #-}
 
 module FF.UI where
 
@@ -15,7 +16,7 @@ import qualified Text.PrettyPrint.Mainland as Pretty
 import           Text.PrettyPrint.Mainland.Class (Pretty, ppr)
 
 import           FF.Types (ModeMap, NoteView (..), Sample (..), TaskMode (..),
-                           omitted)
+                           Track (..), omitted)
 
 type Template a = a -> String
 
@@ -71,7 +72,7 @@ prettySample mode = \case
         Starting _ -> "ff search --starting"
 
 noteView :: NoteView -> Doc
-noteView NoteView{nid, text, start, end, provider, source, extId, url} =
+noteView NoteView{..} =
     string (Text.unpack text) </> sep fields
   where
     fields
@@ -79,8 +80,8 @@ noteView NoteView{nid, text, start, end, provider, source, extId, url} =
             [ ["| id "       <> pshow i | Just i <- [nid]]
             , ["| start "    <> pshow start]
             , ["| end "      <> pshow e | Just e <- [end]]
-            , ["| provider " <> pshow p | Just p <- [provider]]
-            , ["| source "   <> pshow s | Just s <- [source]]
-            , ["| extId "    <> pshow x | Just x <- [extId]]
-            , ["| url "      <> pshow u | Just u <- [url]]
+            , ["| provider " <> pshow (provider t) | Just t <- [track]]
+            , ["| source "   <> pshow (source t) | Just t <- [track]]
+            , ["| extId "    <> pshow (extId t) | Just t <- [track]]
+            , ["| url "      <> pshow (url t) | Just t <- [track]]
             ]
