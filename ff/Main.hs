@@ -54,16 +54,16 @@ import           Paths_ff (version)
 main :: IO ()
 main = do
     cfg@Config { ui } <- loadConfig
-    Options {..}      <- parseOptions
+    hClock <- newTVarIO =<< getRealLocalTime
+    hDataDir <- getDataDir cfg
+    let h = Storage.Handle{..}
+    Options {..}      <- parseOptions h
     case optionCmd of
         CmdConfig param  -> runCmdConfig cfg param
-        CmdAction action -> do
-            hClock <- newTVarIO =<< getRealLocalTime
-            hDataDir <- getDataDir cfg
-            let h = Storage.Handle{..}
+        CmdAction action ->
             runStorage h $ runCmdAction h ui action optionBrief
         CmdVersion -> runCmdVersion
-
+    
 getDataDir :: Config -> IO FilePath
 getDataDir cfg = do
     cur <- getCurrentDirectory

@@ -21,12 +21,12 @@ import           Data.Semigroup ((<>))
 import           Data.Text (Text)
 import           Data.Time (Day)
 import           Options.Applicative (auto, command, execParser, flag',
-                                      fullDesc, help, helper, info, long,
+                                      fullDesc, help, helper, info, completer, listIOCompleter, long,
                                       metavar, option, progDesc, short,
                                       strArgument, strOption, subparser, switch,
                                       (<**>))
 
-import           FF.Storage (DocId (DocId))
+import           FF.Storage (DocId (DocId), Handle, Storage, listDocuments, rawDocId, runStorage)
 import           FF.Types (Limit, NoteId)
 
 data Cmd
@@ -87,8 +87,8 @@ data Search = Search
     , searchLimit :: Maybe Limit
     }
 
-parseOptions :: IO Options
-parseOptions = execParser $ i parser "A note taker and task tracker"
+parseOptions :: Handle -> IO Options
+parseOptions h = execParser $ i parser "A note taker and task tracker"
   where
     parser   = Options <$> brief <*>
         (version <|> subparser commands <|> (CmdAction <$> cmdAgenda))
@@ -161,7 +161,8 @@ parseOptions = execParser $ i parser "A note taker and task tracker"
         <*> optional start
         <*> optional maybeEnd
     search = Search <$> strArgument (metavar "TEXT") <*> optional limit
-    noteid = DocId <$> strArgument (metavar "ID" <> help "note id")
+    noteid = DocId <$> strArgument 
+        (metavar "ID" <> help "note id" <> completer (ids h))
     text = strArgument $ metavar "TEXT" <> help "note text"
     end = dateOption $ long "end" <> short 'e' <> help "end date"
     limit = option auto $ long "limit" <> short 'l' <> help "Number of issues"
@@ -196,3 +197,6 @@ parseOptions = execParser $ i parser "A note taker and task tracker"
         (long "version" <> short 'V' <> help "Current ff-note version")
 
     i prsr desc = info (prsr <**> helper) $ fullDesc <> progDesc desc
+
+    ids handle = listIOCompleter $ 
+        map rawDocId <$> runStorage handle (listDocuments :: Storage [NoteId])
