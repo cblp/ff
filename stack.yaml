@@ -6,11 +6,9 @@ packages:
   - ff-test
   - ron-storage-fs
 
-  # - ../ron/ron
-
 extra-deps:
   # ff:
   - crdt-10.3
   - git: https://github.com/ff-notes/ron.git
-    commit: '4da2335'
+    commit: '54ff19a'
     subdirs: [ron]

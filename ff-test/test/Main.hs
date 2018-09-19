@@ -6,39 +6,40 @@
 {-# LANGUAGE LambdaCase #-}
 {-# LANGUAGE NamedFieldPuns #-}
 {-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE PatternSynonyms #-}
 {-# LANGUAGE QuasiQuotes #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE TypeApplications #-}
-{-# LANGUAGE ViewPatterns #-}
 
 module Main (main) where
 
-import           Control.Error ((?:))
 import           Control.Monad.Fail (MonadFail)
 import qualified Control.Monad.Fail as MonadFail
-import           Data.Aeson (FromJSON, ToJSON,
-                             Value (Array, Number, Object, String), decode,
-                             encode, object, parseJSON, toJSON, (.=))
+import           Data.Aeson (FromJSON, ToJSON, parseJSON, toJSON)
 import           Data.Aeson.Types (parseEither)
-import           Data.Foldable (toList)
-import           Data.HashMap.Strict ((!))
+import qualified Data.ByteString.Lazy.Char8 as BSLC
 import qualified Data.Map.Strict as Map
+import           Data.Maybe (fromMaybe)
 import           Data.Semigroup ((<>))
 import           Data.String.Interpolate.IsString (i)
 import qualified Data.Text as Text
+import           Data.Text.Lazy.Encoding (encodeUtf8)
 import           Data.Time (Day, UTCTime (..), fromGregorian)
-import qualified Data.Vector as Vector
+import           Data.Word (Word64)
 import           GHC.Stack (HasCallStack, withFrozenCallStack)
 import           GitHub (Issue (..), IssueState (..), Milestone (..), URL (..))
 import           GitHub.Data.Definitions (SimpleUser (..))
 import           GitHub.Data.Id (Id (..))
 import           GitHub.Data.Name (Name (..))
-import           Hedgehog (Gen, MonadTest, Property, PropertyT, annotateShow,
-                           failure, forAll, property, (===))
-import qualified Hedgehog.Gen as Gen
+import           Hedgehog (Gen, MonadTest, Property, PropertyT, forAll,
+                           property, (===))
 import           Hedgehog.Internal.Property (failWith)
-import qualified Hedgehog.Range as Range
+import           RON.Event (Event (..), LocalTime (TEpoch), applicationSpecific,
+                            encodeEvent)
+import           RON.Internal.Word (ls60)
+import           RON.Storage.Test (TestDB, runStorageSim)
+import           RON.Types (UUID)
 import           Test.Tasty (TestTree, testGroup)
 import           Test.Tasty.Hedgehog (testProperty)
 import           Test.Tasty.TH (defaultMainGenerator)
@@ -47,13 +48,14 @@ import           FF (cmdNewNote, getNoteSamples)
 import           FF.Config (ConfigUI (..))
 import qualified FF.Github as Github
 import           FF.Options (New (..))
-import           FF.Storage (DocId (DocId))
-import           FF.Test (TestDB, runStorageSim)
-import           FF.Types (Limit, NoteStatus (..), NoteView (..), Sample (..),
-                           Status (Active), TaskMode (Overdue), Tracked (..))
+import           FF.Types (Limit, TaskMode (Overdue))
+import           FF.Types2 (pattern Entity, Note (..), NoteStatus (TaskStatus),
+                            Sample (..), Status (Active), Track (..), entityVal)
 import           FF.Upgrade (upgradeDatabase)
 
 import qualified Gen
+
+-- type ByteStringL = BSL.ByteString
 
 main :: IO ()
 main = $defaultMainGenerator
@@ -61,45 +63,68 @@ main = $defaultMainGenerator
 prop_not_exist :: Property
 prop_not_exist = property $ do
     (agenda, fs') <-
-        either fail pure $ runStorageSim fs $ getNoteSamples ui agendaLimit today
+        either fail pure $
+        runStorageSim fs $
+        getNoteSamples ui agendaLimit today
     agenda === Map.empty
     fs' === fs
-    where fs = Map.empty
+  where
+    fs = Map.empty
 
 prop_smoke :: Property
 prop_smoke = property $ do
     (agenda, fs') <-
-        either fail pure $ runStorageSim fs123 $ getNoteSamples ui agendaLimit today
+        either fail pure $
+        runStorageSim fs123 $
+        getNoteSamples ui agendaLimit today
     agenda ===
         Map.singleton
             (Overdue 365478)
             Sample
-                { docs = pure NoteView
-                    { nid     = Just $ DocId "1"
-                    , status  = TaskStatus Active
-                    , text    = "helloworld"
-                    , start   = fromGregorian 22 11 24
-                    , end     = Just $ fromGregorian 17 06 19
-                    , tracked = Nothing
-                    }
-                , total = 1
+                { sample_items =
+                    [Entity
+                        (event 2 98)
+                        Note
+                            { note_status = TaskStatus Active
+                            , note_text   = "helloworld"
+                            , note_start  = fromGregorian 22 11 24
+                            , note_end    = Just $ fromGregorian 17 06 19
+                            , note_track  = Nothing
+                            }]
+                , sample_total = 1
                 }
     fs' === fs123
 
 fs123 :: TestDB
-fs123 = Map.singleton "note" $ Map.singleton "1" $ Map.fromList
-    [ "2" -: encode $ object
-        [ "end"    .= ["17-06-19", Number 20, Number 21]
-        , "start"  .= ["22-11-24", Number 25, Number 26]
-        , "status" .= ["Active",   Number 29, Number 30]
-        , "text"   .= ["hello",    Number  6, Number  7]
-        ]
-    , "3" -: encode $ object
-        [ "end"    .= ["12-01-14", Number 15, Number 16]
-        , "start"  .= ["9-10-11",  Number  7, Number  8]
-        , "status" .= ["Active",   Number 27, Number 28]
-        , "text"   .= ["world",    Number  4, Number  5]
-        ]
+fs123 = Map.singleton "note" $ Map.singleton (event 2 98) $ Map.fromList
+    [ event 2 93 -: BSLC.lines [i|
+        *lww #B/0000000002+000000001Y !
+            @20+21  :end    >some =17 =06 =19
+            @25+26  :start  =22 =11 =24
+            @29+30  :status >Active
+            @07+07  :text   >2+I9
+                    :track  >none
+        *rga #2+I9 :0 !
+            @6+7            'h'
+            @7+7            'e'
+            @8+7            'l'
+            @9+7            'l'
+            @A+7            'o'
+        |]
+    , event 3 99 -: BSLC.lines [i|
+        *lww #B/0000000002+000000001Y !
+            @15+16  :end    >some =12 =01 =14
+            @07+08  :start  =09 =10 =11
+            @27+28  :status >Active
+            @04+05  :text   >2+I9
+                    :track  >none
+        *rga #2+I9 :0 !
+            @4+5            'w'
+            @5+5            'o'
+            @6+5            'r'
+            @7+5            'l'
+            @8+5            'd'
+        |]
     ]
 
 agendaLimit :: Maybe Limit
@@ -110,44 +135,34 @@ today = fromGregorian 1018 02 10
 
 prop_new :: Property
 prop_new = property $ do
-    newText  <-
-        forAll $
-        Gen.text (Range.linear 0 10000) $ Gen.filter (/= '\0') Gen.unicode
-    newStart <- forAll $ Gen.maybe Gen.day
-    newEnd   <-
-        forAll $
-        Gen.filter (\newEnd -> newStart <= newEnd && Just today <= newEnd) $
-        Gen.maybe Gen.day
-    (nv, fs') <-
-        evalEitherS $
-        runStorageSim mempty $
+    (note, fs') <-
+        evalEitherS $ runStorageSim mempty $
         cmdNewNote New{newText, newStart, newEnd, newWiki = False} today
-    case nv of
-        NoteView{text, start, end} -> do
-            text  === newText
-            start === (newStart ?: today)
-            end   === newEnd
-    case fs' of
-        (toList -> [toList -> [toList -> [decode -> Just (Object note)]]]) -> do
-            note ! "status"
-                === array ["Active", Number 17091260, Number 314159]
-            case note ! "text" of
-                Array (toList ->
-                        [Array (toList ->
-                            [Number _, Number 314159, String text])])
-                        | not $ Text.null newText ->
-                    text === newText
-                Array (toList -> []) -> "" === newText
-                _ -> failure
-            let start = note ! "start"
-            Array (toList -> [start', Number _, Number 314159]) <- pure start
-            start' === toJSON (newStart ?: today)
-            let end = note ! "end"
-            Array (toList -> [end', Number _, Number 314159]) <- pure end
-            end' === toJSON newEnd
-        _ -> do
-            annotateShow fs'
-            failure
+    let Note{note_text, note_start, note_end} = entityVal note
+    note_text  === Text.unpack newText
+    note_start === fromMaybe today newStart
+    note_end   === newEnd
+    fs'        === fs
+  where
+    newText  = "Мир"
+    newStart = Just $ fromGregorian 2154 5 6
+    newEnd   = Just $ fromGregorian 3150 1 2
+    fs =
+        Map.singleton "note" $ Map.singleton (event 5 34) $
+        Map.singleton (event 6 34) $
+        map encodeUtf8
+            [ "*lww #B/)5+)Y @` !"
+            ,   "\t:end >some =3150 =1 =2 ,"
+            ,   "\t:start =2154 =5 =6 ,"
+            ,   "\t:status >Active ,"
+            ,   "\t:text >)4 ,"
+            ,   "\t:track >none ,"
+            , "*rga #)4 @)3 :0 !"
+            ,   "\t@)1 'М' ,"
+            ,   "\t@)2 'и' ,"
+            ,   "\t@)3 'р' ,"
+            , "."
+            ]
 
 evalEitherS :: (MonadTest m, HasCallStack) => Either String a -> m a
 evalEitherS = \case
@@ -164,14 +179,11 @@ jsonRoundtrip genA = property $ do
 test_JSON_Tests :: [TestTree]
 test_JSON_Tests =
     [ testProperty "Config" $ jsonRoundtrip Gen.config
-    -- , testProperty "Note"   $ jsonRoundtrip Gen.note
+    -- , testProperty "Note"   $ ronRoundtrip Gen.note
     ]
 
 ui :: ConfigUI
 ui = ConfigUI {shuffle = False}
-
--- instance Arbitrary NoContainNul where
---     arbitrary = NoContainNul . Text.filter ('\NUL' /=) <$> arbitrary
 
 prop_repo :: Property
 prop_repo = property $
@@ -180,20 +192,19 @@ prop_repo = property $
     ideal = Map.singleton
         (Overdue 10)
         Sample
-            { docs = pure NoteView
-                { nid     = Nothing
-                , status  = TaskStatus Active
-                , text    = "import issues (GitHub -> ff)"
-                , start   = fromGregorian 2018 06 21
-                , end     = Just $ fromGregorian 2018 06 15
-                , tracked = Just Tracked
-                    { trackedProvider = "github"
-                    , trackedSource = "ff-notes/ff"
-                    , trackedExternalId = "60"
-                    , trackedUrl = "https://github.com/ff-notes/ff/issues/60"
+            { sample_items = pure Note
+                { note_status = TaskStatus Active
+                , note_text   = "import issues (GitHub -> ff)"
+                , note_start  = fromGregorian 2018 06 21
+                , note_end    = Just $ fromGregorian 2018 06 15
+                , note_track  = Just Track
+                    { track_provider = "github"
+                    , track_source = "ff-notes/ff"
+                    , track_externalId = "60"
+                    , track_url = "https://github.com/ff-notes/ff/issues/60"
                     }
                 }
-            , total = 1
+            , sample_total = 1
             }
 
 todayForIssues :: Day
@@ -246,15 +257,11 @@ issues = pure Issue
         , simpleUserUrl = URL "https://api.github.com/users/cblp"
         }
 
--- TODO(cblp, 2018-10-01) enable back
--- test_CvRDT_Note :: [TestTree]
--- test_CvRDT_Note = cvrdtLaws @Note
-
 prop_json2ron :: Property
 prop_json2ron = property $ do
 
     -- read JSON, merge, write RON
-    do  ((), db') <- either fail pure $ runStorageSim fs123 upgradeDatabase
+    do  ((), db') <- either fail pure $ runStorageSim fs123json upgradeDatabase
         db' === fs123merged
 
     -- idempotency
@@ -262,23 +269,54 @@ prop_json2ron = property $ do
             either fail pure $ runStorageSim fs123merged upgradeDatabase
         db' === fs123merged
 
-  where
-    fs123merged = Map.singleton "note" $ Map.singleton "1" $
-        Map.singleton "a6bp8-6qen" $ norm [i|
-            { "status":     ["Active", 29, 30]
-            , "text.trace": ["helloworld"]
-            , "text":       [[6, 7, "hello"], [4, 5, "world"]]
-            , "start":      ["0022-11-24", 25, 26]
-            , "end":        ["0017-06-19", 20, 21]
-            } |]
-    norm = encode . decode @Value
+fs123json :: TestDB
+fs123json = Map.singleton "note" $ Map.singleton (event 2 98) $ Map.fromList
+    [ event 2 72 -: BSLC.lines [i|{
+        "end"   : ["17-06-19", 20, 21],
+        "start" : ["22-11-24", 25, 26],
+        "status": ["Active",   29, 30],
+        "text"  : ["hello",     6,  7]
+        } |]
+    , event 2 78 -: BSLC.lines [i|{
+        "end"   : ["12-01-14", 15, 16],
+        "start" : ["9-10-11",   7,  8],
+        "status": ["Active",   27, 28],
+        "text"  : ["world",     4,  5]
+        } |]
+    ]
+
+fs123merged :: TestDB
+fs123merged =
+    Map.singleton "note" $ Map.singleton (event 2 98) $
+    Map.singleton (event 1 34)
+        [ "*lww #B/)2+]1Y @B/6n7T8JWK0T+)U !"
+        ,   "\t@)K+)L :end >some =17 =6 =19 ,"
+        ,   "\t@)P+)Q :start =22 =11 =24 ,"
+        ,   "\t@)T+)U :status >Active ,"
+        ,   "\t@`)3 :text >)3 ,"
+        , "*rga #)3 @6n7T8JWK0A+]07 :0 !"
+        ,   "\t@)6 'h' ,"
+        ,   "\t@)7 'e' ,"
+        ,   "\t@)8 'l' ,"
+        ,   "\t@)9 'l' ,"
+        ,   "\t@)A 'o' ,"
+        ,   "\t@)4+)5 'w' ,"
+        ,   "\t@)5 'o' ,"
+        ,   "\t@)6 'r' ,"
+        ,   "\t@)7 'l' ,"
+        ,   "\t@)8 'd' ,"
+        , "."
+        ]
 
 (-:) :: a -> b -> (a, b)
 a -: b = (a, b)
 infixr 0 -:
 
-array :: [Value] -> Value
-array = Array . Vector.fromList
-
 instance Monad m => MonadFail (PropertyT m) where
     fail = fail  -- MonadFail.fail via Monad.fail
+
+-- uuid :: HasCallStack => ByteString -> UUID
+-- uuid = either (error "Bad UUID") id . parseUuid
+
+event :: Word64 -> Word64 -> UUID
+event x y = encodeEvent $ Event (TEpoch $ ls60 x) $ applicationSpecific y

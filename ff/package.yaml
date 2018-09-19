@@ -8,6 +8,7 @@ executable:
   other-modules: Paths_ff
 
 dependencies:
+  # global
   - async
   - base
   - crdt
@@ -23,4 +24,8 @@ dependencies:
   - text
   - time
 
+  # organization
+  - ron-storage-fs
+
+  # project
   - ff-core

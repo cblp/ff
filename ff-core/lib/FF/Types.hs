@@ -18,44 +18,26 @@ import qualified CRDT.Cv.RGA as RGA
 import           CRDT.LamportClock (Clock)
 import           CRDT.LWW (LWW)
 import qualified CRDT.LWW as LWW
-import           Data.Aeson (FromJSON (..), ToJSON (..), Value (Object),
-                             camelTo2)
-import           Data.Aeson.TH (defaultOptions, deriveFromJSON, deriveJSON,
-                                fieldLabelModifier, mkToJSON)
-import qualified Data.HashMap.Strict as HashMap
-import           Data.List (genericLength)
+import           Data.Aeson (camelTo2)
+import           Data.Aeson.TH (defaultOptions, deriveJSON, fieldLabelModifier)
 import           Data.Map.Strict (Map)
-import qualified Data.Map.Strict as Map
 import           Data.Semigroup (Semigroup, (<>))
 import           Data.Semigroup.Generic (gmappend)
 import           Data.Semilattice (Semilattice)
 import           Data.Text (Text)
 import qualified Data.Text as Text
-import           Data.Time (Day, diffDays)
+import           Data.Time (Day)
 import           GHC.Generics (Generic)
 import           Numeric.Natural (Natural)
 
 import           FF.CrdtAesonInstances ()
-import           FF.Storage (Collection, DocId, collectionName)
-import           FF.Types.Internal (noteJsonOptions)
+import           FF.Storage (DocId)
 
 data Status = Active | Archived | Deleted
     deriving (Bounded, Enum, Eq, Show)
 
-deriveJSON defaultOptions ''Status
-
 data NoteStatus = TaskStatus Status | Wiki
     deriving (Eq, Show)
-
-instance ToJSON NoteStatus where
-    toJSON = \case
-        TaskStatus a -> toJSON a
-        Wiki         -> "Wiki"
-
-instance FromJSON NoteStatus where
-    parseJSON v = case v of
-        "Wiki" -> pure Wiki
-        _ -> TaskStatus <$> parseJSON v
 
 data Tracked = Tracked
     { trackedProvider   :: Text
@@ -72,8 +54,6 @@ data Contact = Contact
     , contactName   :: RgaString
     }
     deriving (Eq, Show, Generic)
-
-deriveJSON defaultOptions{fieldLabelModifier = camelTo2 '_' . drop 7} ''Contact
 
 data Note = Note
     { noteStatus  :: LWW NoteStatus
@@ -98,23 +78,6 @@ instance Semigroup Contact where
 
 instance Semilattice Contact
 
-deriveFromJSON noteJsonOptions ''Note
-
-instance ToJSON Note where
-    toJSON note@Note{noteText} =
-        case $(mkToJSON noteJsonOptions ''Note) note of
-            Object obj ->
-                Object $
-                HashMap.insert
-                    "text.trace" (toJSON $ lines $ RGA.toString noteText) obj
-            value -> error $ "expected Object, but got " ++ show value
-
-instance Collection Note where
-    collectionName = "note"
-
-instance Collection Contact where
-    collectionName = "contact"
-
 data NoteView = NoteView
     { nid     :: Maybe NoteId
     , status  :: NoteStatus
@@ -131,23 +94,6 @@ data ContactView = ContactView
     , contactViewName   :: Text
     }
     deriving (Eq, Show)
-
-data Sample a = Sample
-    { docs  :: [a]
-    , total :: Natural
-    }
-    deriving (Eq, Show)
-
-type ContactSample = Sample ContactView
-
-type NoteSample = Sample NoteView
-
-emptySample :: Sample a
-emptySample = Sample {docs = [], total = 0}
-
--- | Number of notes omitted from the sample.
-omitted :: Sample a -> Natural
-omitted Sample { docs, total } = total - genericLength docs
 
 -- | Sub-status of an 'Active' task from the perspective of the user.
 data TaskMode
@@ -172,26 +118,7 @@ instance Ord TaskMode where
     Starting n <= Starting m = n <= m
     m1         <= m2         = taskModeOrder m1 <= taskModeOrder m2
 
-taskMode :: Day -> NoteView -> TaskMode
-taskMode today NoteView{start, end} = case end of
-    Nothing
-        | start <= today -> Actual
-        | otherwise      -> starting start today
-    Just e -> case compare e today of
-        LT -> overdue today e
-        EQ -> EndToday
-        GT | start <= today -> endSoon e today
-           | otherwise      -> starting start today
-  where
-    overdue  = helper Overdue
-    endSoon  = helper EndSoon
-    starting = helper Starting
-    helper m x y = m . fromIntegral $ diffDays x y
-
 type ModeMap = Map TaskMode
-
-singletonTaskModeMap :: Day -> NoteView -> ModeMap [NoteView]
-singletonTaskModeMap today note = Map.singleton (taskMode today note) [note]
 
 noteView :: NoteId -> Note -> NoteView
 noteView nid Note {..} = NoteView

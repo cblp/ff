@@ -1,22 +1,56 @@
+{-# LANGUAGE DeriveAnyClass #-}
+{-# LANGUAGE DeriveGeneric #-}
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE LambdaCase #-}
+{-# LANGUAGE NamedFieldPuns #-}
 {-# LANGUAGE OverloadedLists #-}
 {-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE PatternSynonyms #-}
+{-# LANGUAGE RecordWildCards #-}
+{-# LANGUAGE ScopedTypeVariables #-}
+{-# LANGUAGE StandaloneDeriving #-}
 {-# LANGUAGE TemplateHaskell #-}
+{-# LANGUAGE TypeApplications #-}
 
 module FF.Types2 where
 
+import           Control.Monad ((>=>))
+import qualified CRDT.Cv.RGA as CRDT
+import qualified CRDT.LamportClock as CRDT
+import qualified CRDT.LWW as CRDT
+import           Data.Aeson (FromJSON, eitherDecode, parseJSON, withObject,
+                             (.:))
+import           Data.Aeson.TH (defaultOptions, deriveFromJSON)
+import           Data.Aeson.Types (parseEither)
+import           Data.ByteString.Lazy (ByteString)
+import           Data.Functor.Identity (Identity (Identity))
+import           Data.Hashable (Hashable)
+import           Data.List (genericLength)
+import qualified Data.Map.Strict as Map
 import           Data.Maybe (fromJust)
-import           RON.Data (Replicated (..), ReplicatedAsPayload (..),
-                           payloadEncoding)
-import           RON.Data.Time (Day, day)
-import           RON.Schema (Declaration (..), OpaqueAnnotations (..),
-                             RonType (..), StructAnnotations (..),
-                             StructLww (..), TAtom (..), def, field,
-                             opaqueAtoms, rgaString)
+import           Data.Time (Day, diffDays)
+import           GHC.Generics (Generic)
+import           Numeric.Natural (Natural)
+import           RON.Data (Replicated, ReplicatedAsPayload, encoding,
+                           fromPayload, payloadEncoding, stateFromChunk,
+                           stateToChunk, toPayload)
+import           RON.Data.Internal (mkStateChunk)
+import           RON.Data.LWW (lwwType)
+import           RON.Data.RGA (RgaRaw, rgaType)
+import           RON.Data.Time (day)
+import           RON.Event (Event (Event), applicationSpecific, encodeEvent,
+                            localEpochTimeFromUnix)
+import           RON.Schema (Declaration (DStructLww), StructLww (StructLww),
+                             atomString, def, field, oaHaskellType, opaqueAtoms,
+                             option, rgaString, saHaskellDeriving,
+                             saHaskellFieldPrefix, structLww)
 import           RON.Schema.TH (mkReplicated)
-import           RON.Types (Atom (..), UUID)
+import           RON.Storage (Collection, DocId, collectionName, fallbackParse)
+import           RON.Types (Atom (AUuid), Object (Object), Op (Op), UUID,
+                            objectFrame, objectId)
 import qualified RON.UUID as UUID
+
+import           FF.Types (TaskMode (Actual, EndSoon, EndToday, Overdue, Starting))
 
 data Status = Active | Archived | Deleted
     deriving (Bounded, Enum, Eq, Read, Show)
@@ -67,23 +101,24 @@ EDN version from future:
         (opaque Status)  ; TODO enum
         (opaque NoteStatus)  ; TODO transparent enum?
 
-        (struct_lww Tracked
-            (provider    String)
-            (source      String)
-            (externalId  String)
-            (url         String))
+        (struct_lww Track
+            (provider   String)
+            (source     String)
+            (externalId String)
+            (url        String)
+            #Haskell {field_prefix "track_"})
 
         (struct_lww Contact
-            (status  Status)
-            (name    RgaString)
+            (status Status)
+            (name   RgaString)
             #Haskell {field_prefix "contact_"})
 
         (struct_lww Note
-            (status  NoteStatus)
-            (text    RgaString)
-            (start   Day)
-            (end     (Option Day))
-            (tracked (Option Tracked))
+            (status NoteStatus)
+            (text   RgaString)
+            (start  Day)
+            (end    (Option Day))
+            (track  (Option Track))
             #Haskell {field_prefix "note_"})
     )
 -}
@@ -91,13 +126,15 @@ EDN version from future:
 $(let
     status = opaqueAtoms def{oaHaskellType = Just "Status"}
     noteStatus = opaqueAtoms def{oaHaskellType = Just "NoteStatus"}
-    tracked = StructLww "Tracked"
-        [ ("provider",   field $ TAtom TAString)
-        , ("source",     field $ TAtom TAString)
-        , ("externalId", field $ TAtom TAString)
-        , ("url",        field $ TAtom TAString)
+    track = StructLww "Track"
+        [ ("provider",   field atomString)
+        , ("source",     field atomString)
+        , ("externalId", field atomString)
+        , ("url",        field atomString)
         ]
-        def
+        def { saHaskellDeriving    = ["Eq", "Generic", "Hashable", "Show"]
+            , saHaskellFieldPrefix = "track_"
+            }
     contact = StructLww "Contact"
         [("status", field status), ("name", field rgaString)]
         def{saHaskellFieldPrefix = "contact_"}
@@ -105,8 +142,127 @@ $(let
         [ ("status",  field noteStatus)
         , ("text",    field rgaString)
         , ("start",   field day)
-        , ("end",     field $ TOption day)
-        , ("tracked", field $ TOption $ TStructLww tracked)
+        , ("end",     field $ option day)
+        , ("track",   field $ option $ structLww track)
         ]
-        def{saHaskellFieldPrefix = "note_"}
-    in mkReplicated [DStructLww tracked, DStructLww contact, DStructLww note])
+        def{saHaskellDeriving = ["Eq", "Show"], saHaskellFieldPrefix = "note_"}
+    in mkReplicated [DStructLww track, DStructLww contact, DStructLww note])
+
+instance Collection Contact where
+    collectionName = "contact"
+    fallbackParse = parseContactV1
+
+instance Collection Note where
+    collectionName = "note"
+    fallbackParse = parseNoteV1
+
+type ContactId = DocId Contact
+
+type NoteId = DocId Note
+
+taskMode :: Day -> Note -> TaskMode
+taskMode today Note{note_start, note_end} = case note_end of
+    Nothing
+        | note_start <= today -> Actual
+        | otherwise           -> starting note_start today
+    Just e -> case compare e today of
+        LT -> overdue today e
+        EQ -> EndToday
+        GT | note_start <= today -> endSoon e today
+           | otherwise           -> starting note_start today
+  where
+    overdue  = helper Overdue
+    endSoon  = helper EndSoon
+    starting = helper Starting
+    helper m x y = m . fromIntegral $ diffDays x y
+
+data EntityF f a = EntityF{entityId :: f UUID, entityVal :: a}
+deriving instance (Eq a, Eq (f UUID)) => Eq (EntityF f a)
+deriving instance (Show a, Show (f UUID)) => Show (EntityF f a)
+
+-- TODO(2018-10-26, cblp) remove redundant morphism, on `track --dry-run` show
+-- temporary UUIDs.
+type Entity = EntityF Identity
+
+pattern Entity :: UUID -> a -> Entity a
+pattern Entity uuid a = EntityF (Identity uuid) a
+{-# COMPLETE Entity #-}
+
+data Sample a = Sample
+    { sample_items  :: [a]
+    , sample_total :: Natural
+    }
+    deriving (Eq, Show)
+
+type EntitySample a = Sample (Entity a)
+
+type ContactSample = EntitySample Contact
+
+type NoteSample = EntitySample Note
+
+emptySample :: Sample a
+emptySample = Sample{sample_items = [], sample_total = 0}
+
+-- | Number of notes omitted from the sample.
+omitted :: Sample a -> Natural
+omitted Sample{..} = sample_total - genericLength sample_items
+
+-- * Legacy, v1
+
+parseContactV1 :: UUID -> ByteString -> Either String (Object Contact)
+parseContactV1 = undefined
+
+parseNoteV1 :: UUID -> ByteString -> Either String (Object Note)
+parseNoteV1 objectId = eitherDecode >=> parseEither p where
+    p = withObject "Note" $ \obj -> do
+        CRDT.LWW (endValue    :: Maybe Day) endTime    <- obj .: "end"
+        CRDT.LWW (startValue  :: Day)       startTime  <- obj .: "start"
+        CRDT.LWW (statusValue :: Status)    statusTime <- obj .: "status"
+        textValue :: CRDT.RgaString <- obj .: "text"
+        let endTime'    = timeFromV1 endTime
+            startTime'  = timeFromV1 startTime
+            statusTime' = timeFromV1 statusTime
+        let objectFrame = Map.fromList
+                [   ( (lwwType, objectId)
+                    , mkStateChunk
+                        [ Op endTime'    endName    (toPayload endValue)
+                        , Op startTime'  startName  (toPayload startValue)
+                        , Op statusTime' statusName (toPayload statusValue)
+                        , Op textTime    textName   (toPayload textId)
+                        ]
+                    )
+                ,   ( (rgaType, textId)
+                    , stateToChunk $ rgaFromV1 textValue
+                    )
+                ]
+        pure Object{objectId, objectFrame}
+    textId = textTime
+    textTime = UUID.succValue objectId
+    endName    = fromJust $ UUID.mkName "end"
+    startName  = fromJust $ UUID.mkName "start"
+    statusName = fromJust $ UUID.mkName "status"
+    textName   = fromJust $ UUID.mkName "text"
+
+timeFromV1 :: CRDT.LamportTime -> UUID
+timeFromV1 (CRDT.LamportTime unixTime (CRDT.Pid pid)) =
+    encodeEvent $
+    Event (localEpochTimeFromUnix unixTime) (applicationSpecific pid)
+
+rgaFromV1 :: CRDT.RgaString -> RgaRaw
+rgaFromV1 (CRDT.RGA oldRga) = stateFromChunk
+    [ Op event ref (toPayload a)
+    | (vid, a) <- oldRga
+    , let
+        event = timeFromV1 vid
+        ref   = case a of
+            '\0' -> UUID.succValue event
+            _    -> UUID.zero
+    ]
+
+-- used in parseNoteV1
+deriveFromJSON defaultOptions ''Status
+
+instance FromJSON NoteStatus where
+    parseJSON v = case v of
+        "Wiki" -> pure Wiki
+        _      -> TaskStatus <$> parseJSON v

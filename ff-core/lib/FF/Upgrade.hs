@@ -6,10 +6,10 @@
 module FF.Upgrade (upgradeDatabase) where
 
 import           Data.Foldable (for_)
+import           RON.Storage (Collection, MonadStorage, listCollections,
+                              listDocuments, modify)
 
-import           FF.Storage (Collection, MonadStorage (..), listDocuments,
-                             modify)
-import           FF.Types (Note)
+import           FF.Types2 (Note)
 
 upgradeDatabase :: MonadStorage m => m ()
 upgradeDatabase = do
@@ -18,8 +18,7 @@ upgradeDatabase = do
         "note"      -> upgradeCollection @Note
         collection  -> fail $ "unsupported type " ++ show collection
 
-upgradeCollection
-    :: forall doc m . (Collection doc, Eq doc, MonadStorage m) => m ()
+upgradeCollection :: forall a m . (Collection a, MonadStorage m) => m ()
 upgradeCollection = do
-    docs <- listDocuments @_ @doc
-    for_ docs (`modify` pure)
+    docs <- listDocuments @_ @a
+    for_ docs (`modify` pure ())
