@@ -1,21 +1,20 @@
 name: ff-test
 
 dependencies:
+  # global
+  - aeson
   - base
+  - bytestring
   - containers
+
+  # project
+  - ff-core
 
 library:
   dependencies:
-    # global
-    - aeson
-    - bytestring
     - crdt
     - lens
     - mtl
-
-    # project
-    - ff-core
-
   exposed-modules:
     - FF.Test
 
@@ -23,7 +22,6 @@ tests:
   test:
     dependencies:
       # global
-      - aeson
       - errors
       - github
       - hedgehog
@@ -36,8 +34,9 @@ tests:
       - unordered-containers
       - vector
 
-      # project
-      - ff-core
+      # organization
+      - ron
+      - ron-storage-fs
 
       # package
       - ff-test

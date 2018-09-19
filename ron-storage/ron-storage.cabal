@@ -7,8 +7,18 @@ cabal-version: >= 1.2
 library
     build-depends:
         -- global
-            base
+        base,
+        binary,
+        bytestring,
+        containers,
+        directory,
+        filepath,
+        lens,
+        mtl,
+        network-info,
         -- organization
-        ,   ron
+        ron
     exposed-modules:
         RON.Storage
+        RON.Storage.IO
+        RON.Storage.Test
