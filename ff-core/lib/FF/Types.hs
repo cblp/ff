@@ -1,153 +1,184 @@
-{-# LANGUAGE DeriveFoldable #-}
-{-# LANGUAGE DeriveFunctor #-}
+{-# LANGUAGE DeriveAnyClass #-}
 {-# LANGUAGE DeriveGeneric #-}
-{-# LANGUAGE DuplicateRecordFields #-}
+{-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE LambdaCase #-}
 {-# LANGUAGE NamedFieldPuns #-}
+{-# LANGUAGE OverloadedLists #-}
 {-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE PatternSynonyms #-}
 {-# LANGUAGE RecordWildCards #-}
-{-# LANGUAGE StrictData #-}
+{-# LANGUAGE ScopedTypeVariables #-}
+{-# LANGUAGE StandaloneDeriving #-}
 {-# LANGUAGE TemplateHaskell #-}
+{-# LANGUAGE TypeApplications #-}
 
 module FF.Types where
 
-import           CRDT.Cv.Max (Max)
-import qualified CRDT.Cv.Max as Max
-import           CRDT.Cv.RGA (RgaString)
-import qualified CRDT.Cv.RGA as RGA
-import           CRDT.LamportClock (Clock)
-import           CRDT.LWW (LWW)
-import qualified CRDT.LWW as LWW
-import           Data.Aeson (FromJSON (..), ToJSON (..), Value (Object),
-                             camelTo2)
-import           Data.Aeson.TH (defaultOptions, deriveFromJSON, deriveJSON,
-                                fieldLabelModifier, mkToJSON)
-import qualified Data.HashMap.Strict as HashMap
+import           Control.Monad ((>=>))
+import qualified CRDT.Cv.RGA as CRDT
+import qualified CRDT.LamportClock as CRDT
+import qualified CRDT.LWW as CRDT
+import           Data.Aeson (FromJSON, eitherDecode, parseJSON, withObject,
+                             (.:))
+import           Data.Aeson.TH (defaultOptions, deriveFromJSON)
+import           Data.Aeson.Types (parseEither)
+import           Data.ByteString.Lazy (ByteString)
+import           Data.Functor.Identity (Identity (Identity))
+import           Data.Hashable (Hashable)
 import           Data.List (genericLength)
 import           Data.Map.Strict (Map)
 import qualified Data.Map.Strict as Map
-import           Data.Semigroup (Semigroup, (<>))
-import           Data.Semigroup.Generic (gmappend)
-import           Data.Semilattice (Semilattice)
-import           Data.Text (Text)
-import qualified Data.Text as Text
+import           Data.Maybe (fromJust)
 import           Data.Time (Day, diffDays)
 import           GHC.Generics (Generic)
 import           Numeric.Natural (Natural)
+import           RON.Data (Replicated, ReplicatedAsPayload, encoding,
+                           fromPayload, payloadEncoding, stateFromChunk,
+                           stateToChunk, toPayload)
+import           RON.Data.Internal (mkStateChunk)
+import           RON.Data.LWW (lwwType)
+import           RON.Data.RGA (RgaRaw, rgaType)
+import           RON.Data.Time (day)
+import           RON.Event (Event (Event), applicationSpecific, encodeEvent,
+                            localEpochTimeFromUnix)
+import           RON.Schema (Declaration (DStructLww), StructLww (StructLww),
+                             atomString, def, field, oaHaskellType, opaqueAtoms,
+                             option, rgaString, saHaskellDeriving,
+                             saHaskellFieldPrefix, structLww)
+import           RON.Schema.TH (mkReplicated)
+import           RON.Storage (Collection, DocId, collectionName, fallbackParse)
+import           RON.Types (Atom (AUuid), Object (Object), Op (Op), UUID,
+                            objectFrame, objectId)
+import qualified RON.UUID as UUID
 
 import           FF.CrdtAesonInstances ()
-import           FF.Storage (Collection, DocId, collectionName)
-import           FF.Types.Internal (noteJsonOptions)
 
 data Status = Active | Archived | Deleted
     deriving (Bounded, Enum, Eq, Show)
 
-deriveJSON defaultOptions ''Status
+active, archived, deleted :: UUID
+active   = fromJust $ UUID.mkName "Active"
+archived = fromJust $ UUID.mkName "Archived"
+deleted  = fromJust $ UUID.mkName "Deleted"
+
+instance Replicated Status where encoding = payloadEncoding
+
+instance ReplicatedAsPayload Status where
+    toPayload = toPayload . \case
+        Active   -> active
+        Archived -> archived
+        Deleted  -> deleted
+
+    fromPayload = \case
+        [AUuid u]
+            | u == active   -> pure Active
+            | u == archived -> pure Archived
+            | u == deleted  -> pure Deleted
+        _ -> fail "Expected single UUID"
 
 data NoteStatus = TaskStatus Status | Wiki
     deriving (Eq, Show)
 
-instance ToJSON NoteStatus where
-    toJSON = \case
-        TaskStatus a -> toJSON a
-        Wiki         -> "Wiki"
+wiki :: UUID
+wiki = fromJust $ UUID.mkName "Wiki"
 
-instance FromJSON NoteStatus where
-    parseJSON v = case v of
-        "Wiki" -> pure Wiki
-        _ -> TaskStatus <$> parseJSON v
+instance Replicated NoteStatus where encoding = payloadEncoding
 
-data Tracked = Tracked
-    { trackedProvider   :: Text
-    , trackedSource     :: Text
-    , trackedExternalId :: Text
-    , trackedUrl        :: Text
-    }
-    deriving (Eq, Show, Ord)
+instance ReplicatedAsPayload NoteStatus where
+    toPayload = \case
+        TaskStatus status -> toPayload status
+        Wiki              -> toPayload wiki
+    fromPayload = \case
+        [AUuid u] | u == wiki -> pure Wiki
+        p                     -> TaskStatus <$> fromPayload p
 
-deriveJSON defaultOptions{fieldLabelModifier = camelTo2 '_' . drop 7} ''Tracked
+{-
+EDN version from future:
 
-data Contact = Contact
-    { contactStatus :: LWW Status
-    , contactName   :: RgaString
-    }
-    deriving (Eq, Show, Generic)
+    (ron_schema_edn [2 0]
 
-deriveJSON defaultOptions{fieldLabelModifier = camelTo2 '_' . drop 7} ''Contact
+        (import Time Day)
 
-data Note = Note
-    { noteStatus  :: LWW NoteStatus
-    , noteText    :: RgaString
-    , noteStart   :: LWW Day
-    , noteEnd     :: LWW (Maybe Day)
-    , noteTracked :: Maybe (Max Tracked)
-    }
-    deriving (Eq, Generic, Show)
+        (opaque Status)  ; TODO enum
+        (opaque NoteStatus)  ; TODO transparent enum?
+
+        (struct_lww Track
+            (provider   String)
+            (source     String)
+            (externalId String)
+            (url        String)
+            #Haskell {field_prefix "track_"})
+
+        (struct_lww Contact
+            (status Status)
+            (name   RgaString)
+            #Haskell {field_prefix "contact_"})
+
+        (struct_lww Note
+            (status NoteStatus)
+            (text   RgaString)
+            (start  Day)
+            (end    (Option Day))
+            (track  (Option Track))
+            #Haskell {field_prefix "note_"})
+    )
+-}
+
+$(let
+    status = opaqueAtoms def{oaHaskellType = Just "Status"}
+    noteStatus = opaqueAtoms def{oaHaskellType = Just "NoteStatus"}
+    track = StructLww "Track"
+        [ ("provider",   field atomString)
+        , ("source",     field atomString)
+        , ("externalId", field atomString)
+        , ("url",        field atomString)
+        ]
+        def { saHaskellDeriving    = ["Eq", "Generic", "Hashable", "Show"]
+            , saHaskellFieldPrefix = "track_"
+            }
+    contact = StructLww "Contact"
+        [("status", field status), ("name", field rgaString)]
+        def { saHaskellDeriving    = ["Eq", "Show"]
+            , saHaskellFieldPrefix = "contact_"
+            }
+    note = StructLww "Note"
+        [ ("status",  field noteStatus)
+        , ("text",    field rgaString)
+        , ("start",   field day)
+        , ("end",     field $ option day)
+        , ("track",   field $ option $ structLww track)
+        ]
+        def{saHaskellDeriving = ["Eq", "Show"], saHaskellFieldPrefix = "note_"}
+    in mkReplicated [DStructLww track, DStructLww contact, DStructLww note])
 
 type NoteId = DocId Note
 
 type ContactId = DocId Contact
 
-instance Semigroup Note where
-    (<>) = gmappend
-
-instance Semilattice Note
-
-instance Semigroup Contact where
-    (<>) = gmappend
-
-instance Semilattice Contact
-
-deriveFromJSON noteJsonOptions ''Note
-
-instance ToJSON Note where
-    toJSON note@Note{noteText} =
-        case $(mkToJSON noteJsonOptions ''Note) note of
-            Object obj ->
-                Object $
-                HashMap.insert
-                    "text.trace" (toJSON $ lines $ RGA.toString noteText) obj
-            value -> error $ "expected Object, but got " ++ show value
-
 instance Collection Note where
     collectionName = "note"
+    fallbackParse = parseNoteV1
 
 instance Collection Contact where
     collectionName = "contact"
-
-data NoteView = NoteView
-    { nid     :: Maybe NoteId
-    , status  :: NoteStatus
-    , text    :: Text
-    , start   :: Day
-    , end     :: Maybe Day
-    , tracked :: Maybe Tracked
-    }
-    deriving (Eq, Show)
-
-data ContactView = ContactView
-    { contactViewId     :: ContactId
-    , contactViewStatus :: Status
-    , contactViewName   :: Text
-    }
-    deriving (Eq, Show)
+    fallbackParse = parseContactV1
 
 data Sample a = Sample
-    { docs  :: [a]
-    , total :: Natural
+    { sample_items :: [a]
+    , sample_total :: Natural
     }
     deriving (Eq, Show)
 
-type ContactSample = Sample ContactView
+type ContactSample = EntitySample Contact
 
-type NoteSample = Sample NoteView
+type NoteSample = EntitySample Note
 
 emptySample :: Sample a
-emptySample = Sample {docs = [], total = 0}
+emptySample = Sample{sample_items = [], sample_total = 0}
 
 -- | Number of notes omitted from the sample.
 omitted :: Sample a -> Natural
-omitted Sample { docs, total } = total - genericLength docs
+omitted Sample{..} = sample_total - genericLength sample_items
 
 -- | Sub-status of an 'Active' task from the perspective of the user.
 data TaskMode
@@ -172,16 +203,16 @@ instance Ord TaskMode where
     Starting n <= Starting m = n <= m
     m1         <= m2         = taskModeOrder m1 <= taskModeOrder m2
 
-taskMode :: Day -> NoteView -> TaskMode
-taskMode today NoteView{start, end} = case end of
+taskMode :: Day -> Note -> TaskMode
+taskMode today Note{note_start, note_end} = case note_end of
     Nothing
-        | start <= today -> Actual
-        | otherwise      -> starting start today
+        | note_start <= today -> Actual
+        | otherwise           -> starting note_start today
     Just e -> case compare e today of
         LT -> overdue today e
         EQ -> EndToday
-        GT | start <= today -> endSoon e today
-           | otherwise      -> starting start today
+        GT | note_start <= today -> endSoon e today
+           | otherwise           -> starting note_start today
   where
     overdue  = helper Overdue
     endSoon  = helper EndSoon
@@ -190,30 +221,75 @@ taskMode today NoteView{start, end} = case end of
 
 type ModeMap = Map TaskMode
 
-singletonTaskModeMap :: Day -> NoteView -> ModeMap [NoteView]
-singletonTaskModeMap today note = Map.singleton (taskMode today note) [note]
-
-noteView :: NoteId -> Note -> NoteView
-noteView nid Note {..} = NoteView
-    { nid     = Just nid
-    , status  = LWW.query noteStatus
-    , text    = rgaToText noteText
-    , start   = LWW.query noteStart
-    , end     = LWW.query noteEnd
-    , tracked = Max.query <$> noteTracked
-    }
-
-contactView :: ContactId -> Contact -> ContactView
-contactView contactId Contact {..} = ContactView
-    { contactViewId     = contactId
-    , contactViewStatus = LWW.query contactStatus
-    , contactViewName   = rgaToText contactName
-    }
-
 type Limit = Natural
 
-rgaFromText :: Clock m => Text -> m RgaString
-rgaFromText = RGA.fromString . Text.unpack
+data EntityF f a = EntityF{entityId :: f UUID, entityVal :: a}
+deriving instance (Eq a, Eq (f UUID)) => Eq (EntityF f a)
+deriving instance (Show a, Show (f UUID)) => Show (EntityF f a)
 
-rgaToText :: RgaString -> Text
-rgaToText = Text.pack . RGA.toString
+-- TODO(2018-10-26, cblp) remove redundant morphism, on `track --dry-run` show
+-- temporary UUIDs.
+type Entity = EntityF Identity
+
+pattern Entity :: UUID -> a -> Entity a
+pattern Entity uuid a = EntityF (Identity uuid) a
+{-# COMPLETE Entity #-}
+
+type EntitySample a = Sample (Entity a)
+
+-- * Legacy, v1
+
+parseContactV1 :: UUID -> ByteString -> Either String (Object Contact)
+parseContactV1 = undefined
+
+parseNoteV1 :: UUID -> ByteString -> Either String (Object Note)
+parseNoteV1 objectId = eitherDecode >=> parseEither p where
+    p = withObject "Note" $ \obj -> do
+        CRDT.LWW (endValue    :: Maybe Day) endTime    <- obj .: "end"
+        CRDT.LWW (startValue  :: Day)       startTime  <- obj .: "start"
+        CRDT.LWW (statusValue :: Status)    statusTime <- obj .: "status"
+        textValue :: CRDT.RgaString <- obj .: "text"
+        let endTime'    = timeFromV1 endTime
+            startTime'  = timeFromV1 startTime
+            statusTime' = timeFromV1 statusTime
+        let objectFrame = Map.fromList
+                [ ( (lwwType, objectId)
+                  , mkStateChunk
+                      [ Op endTime'    endName    (toPayload endValue)
+                      , Op startTime'  startName  (toPayload startValue)
+                      , Op statusTime' statusName (toPayload statusValue)
+                      , Op textTime    textName   (toPayload textId)
+                      ]
+                  )
+                , ((rgaType, textId), stateToChunk $ rgaFromV1 textValue)
+                ]
+        pure Object{objectId, objectFrame}
+    textId = textTime
+    textTime = UUID.succValue objectId
+    endName    = fromJust $ UUID.mkName "end"
+    startName  = fromJust $ UUID.mkName "start"
+    statusName = fromJust $ UUID.mkName "status"
+    textName   = fromJust $ UUID.mkName "text"
+
+timeFromV1 :: CRDT.LamportTime -> UUID
+timeFromV1 (CRDT.LamportTime unixTime (CRDT.Pid pid)) =
+    encodeEvent $
+    Event (localEpochTimeFromUnix unixTime) (applicationSpecific pid)
+
+rgaFromV1 :: CRDT.RgaString -> RgaRaw
+rgaFromV1 (CRDT.RGA oldRga) = stateFromChunk
+    [ Op event ref (toPayload a)
+    | (vid, a) <- oldRga
+    , let event = timeFromV1 vid
+          ref   = case a of
+              '\0' -> UUID.succValue event
+              _    -> UUID.zero
+    ]
+
+-- used in parseNoteV1
+deriveFromJSON defaultOptions ''Status
+
+instance FromJSON NoteStatus where
+    parseJSON v = case v of
+        "Wiki" -> pure Wiki
+        _      -> TaskStatus <$> parseJSON v

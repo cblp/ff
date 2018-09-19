@@ -1,6 +1,7 @@
 {-# LANGUAGE LambdaCase #-}
 {-# LANGUAGE NamedFieldPuns #-}
 {-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE PatternSynonyms #-}
 {-# LANGUAGE RecordWildCards #-}
 {-# LANGUAGE TypeApplications #-}
 
@@ -20,6 +21,9 @@ import qualified Data.Map.Strict as Map
 import qualified Data.Text as Text
 import           Data.Time (Day)
 import           Network.Wai.Handler.Warp (defaultSettings, setHost)
+import           RON.Storage.IO (runStorage)
+import qualified RON.Storage.IO as Storage
+import           RON.Types (UUID)
 import           System.IO (hPutStrLn, stderr)
 import           Text.Blaze.Html.Renderer.Text (renderHtml)
 import           Text.Blaze.Html5 (Html, a, br, div, h1, li, p, section, span,
@@ -29,10 +33,8 @@ import           Web.Scotty (get, html, scottyOpts, settings, verbose)
 
 import           FF (getNoteSamples, getUtcToday)
 import           FF.Config (ConfigUI (..))
-import           FF.Storage (runStorage)
-import qualified FF.Storage as Storage
-import           FF.Types (ModeMap, NoteId, NoteSample, NoteView (..),
-                           Sample (..), TaskMode (..), Tracked (..), omitted)
+import           FF.Types (pattern Entity, ModeMap, Note (..), NoteSample,
+                           Sample (..), TaskMode (..), Track (..), omitted)
 import           FF.UI (sampleLabel)
 
 cmdServe :: MonadIO m => Storage.Handle -> ConfigUI -> m ()
@@ -56,26 +58,26 @@ prettyHtmlSamplesBySections samples = do
 
 prettyHtmlSample :: TaskMode -> NoteSample -> Html
 prettyHtmlSample mode = \case
-    Sample{total = 0} -> mempty
-    Sample{docs} ->
+    Sample{sample_total = 0} -> mempty
+    Sample{sample_items} ->
         section $ do
             h1 $ toHtml (sampleLabel mode)
-            ul $ for_ docs noteView
+            ul $ for_ sample_items noteView
   where
     metaItem k v = span ! class_ "metaItem" $ " | " *> strong k *> " " *> v
-    noteView NoteView{..} = li $ do
+    noteView (Entity entityId Note{..}) = li $ do
         p $
-            case Text.lines text of
+            case lines note_text of
                 []            -> pure ()
-                [_]           -> toHtml text
+                [_]           -> toHtml note_text
                 header : body ->
                     mconcat $
                     intersperse br $
                     strong (toHtml header) : map toHtml body
         div $ do
-            whenJust nid $ \i -> metaItem "id" $ toHtml $ show @NoteId i
-            metaItem "start" $ toHtml $ show @Day start
-            whenJust tracked $ \Tracked{..} ->
+            metaItem "id" $ toHtml $ show @UUID entityId
+            metaItem "start" $ toHtml $ show @Day note_start
+            whenJust note_track $ \Track{..} ->
                 metaItem "tracking" $
-                    a ! href (stringValue $ Text.unpack trackedUrl) $
-                        toHtml trackedUrl
+                    a ! href (stringValue $ Text.unpack track_url) $
+                        toHtml track_url

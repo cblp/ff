@@ -1,30 +1,40 @@
 {-# LANGUAGE LambdaCase #-}
 {-# LANGUAGE NamedFieldPuns #-}
 {-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE PatternSynonyms #-}
 {-# LANGUAGE RecordWildCards #-}
 {-# LANGUAGE TypeApplications #-}
 
-module FF.UI where
+module FF.UI (
+    contactViewFull,
+    noteViewFull,
+    prettyContactSamplesOmitted,
+    prettyNotesWikiContacts,
+    prettySamplesBySections,
+    prettyWikiSamplesOmitted,
+    sampleFmap,
+    sampleLabel,
+    withHeader,
+    ) where
 
 import           Data.Char (isSpace)
+import           Data.Foldable (toList)
 import           Data.List (genericLength, intersperse)
 import qualified Data.Map.Strict as Map
 import           Data.Semigroup ((<>))
 import           Data.Text (Text)
 import qualified Data.Text as Text
 import           Data.Time (Day)
+import           RON.Types (UUID)
 import           Text.PrettyPrint.Mainland (Doc, hang, indent, sep, space,
                                             spread, stack, star, strictText,
                                             string, (<+/>), (<+>), (</>))
 import qualified Text.PrettyPrint.Mainland as Pretty
 import           Text.PrettyPrint.Mainland.Class (Pretty, ppr)
 
-import           FF.Storage (rawDocId)
-import           FF.Types (ContactSample, ContactView (..), ModeMap, NoteSample,
-                           NoteView (..), Sample (..), TaskMode (..),
-                           Tracked (..), omitted)
-
-type Template a = a -> String
+import           FF.Types (Contact (..), ContactSample, Entity, pattern Entity,
+                           EntityF (..), ModeMap, Note (..), NoteSample,
+                           Sample (..), TaskMode (..), Track (..), omitted)
 
 (.=) :: Pretty a => String -> a -> Doc
 label .= value = hang indentation $ Pretty.text label <+/> ppr value
@@ -49,13 +59,13 @@ prettyNotesWikiContacts
     -> Doc
 prettyNotesWikiContacts brief notes wiki contacts amongN amongW amongC =
     case (amongN, amongW, amongC) of
-        (True, False, False) -> ns
-        (False, True, False) -> ws
-        (False, False, True) -> cs
-        (True, True, False)  -> ns </> ws
-        (False, True, True)  -> ws </> cs
-        (True, False, True)  -> ns </> cs
-        (_,_,_)              -> ns </> ws </> cs
+        (True,  False, False) -> ns
+        (False, True,  False) -> ws
+        (False, False, True ) -> cs
+        (True,  True,  False) -> ns </> ws
+        (False, True,  True ) -> ws </> cs
+        (True,  False, True ) -> ns </> cs
+        (_,     _,     _    ) -> ns </> ws </> cs
   where
     ns = prettySamplesBySections brief notes
     ws = prettyWikiSamplesOmitted brief wiki
@@ -70,10 +80,10 @@ prettyContactSamplesOmitted brief samples = sparsedStack $
 
 prettyContactSample :: Bool -> ContactSample -> Doc
 prettyContactSample brief = \case
-    Sample{total = 0} -> mempty
-    Sample{docs} ->
+    Sample{sample_total = 0} -> mempty
+    Sample{sample_items} ->
         withHeader "Contacts:" . stacking $
-        map ((star <>) . indent 1 . contactViewFull) docs
+        map ((star <>) . indent 1 . contactViewFull) sample_items
   where
     stacking = if brief then stack else sparsedStack
 
@@ -86,34 +96,36 @@ prettyWikiSamplesOmitted brief samples = sparsedStack $
 
 prettyWikiSample :: Bool -> NoteSample -> Doc
 prettyWikiSample brief = \case
-    Sample{total = 0} -> mempty
-    Sample{docs} ->
-        withHeader "Wiki notes:" . stacking $
-        map ((star <>) . indent 1 . noteView) docs
+    Sample{sample_total = 0} -> mempty
+    Sample{sample_items} ->
+        withHeader "Wiki notes:" .
+        stacking $
+        map ((star <>) . indent 1 . noteView) sample_items
   where
     stacking = if brief then stack else sparsedStack
     noteView = if brief then noteViewBrief else noteViewFull
 
-prettySamplesBySections :: Bool -> ModeMap NoteSample -> Doc
-prettySamplesBySections brief samples = stack' brief $
-    [prettySample brief mode sample | (mode, sample) <- Map.assocs samples] ++
-    [Pretty.text $ show numOmitted <> " task(s) omitted" | numOmitted > 0]
+prettySamplesBySections
+    :: Foldable f => Bool -> ModeMap (Sample (EntityF f Note)) -> Doc
+prettySamplesBySections brief samples = stack' brief
+    $   [prettySample brief mode sample | (mode, sample) <- Map.assocs samples]
+    ++  [Pretty.text $ show numOmitted <> " task(s) omitted" | numOmitted > 0]
   where
     numOmitted = sum $ fmap omitted samples
 
-prettySample :: Bool -> TaskMode -> NoteSample -> Doc
+prettySample :: Foldable f => Bool -> TaskMode -> Sample (EntityF f Note) -> Doc
 prettySample brief mode = \case
-    Sample{total = 0} -> mempty
-    Sample{total, docs} ->
+    Sample{sample_total = 0} -> mempty
+    Sample{sample_total, sample_items} ->
         withHeader (sampleLabel mode) . stack' brief $
-            map ((star <>) . indent 1 . noteView) docs
+            map ((star <>) . indent 1 . noteView) sample_items
             ++  [ toSeeAllLabel .= Pretty.text (cmdToSeeAll mode)
-                | count /= total
+                | count /= sample_total
                 ]
       where
-        toSeeAllLabel = "To see all " <> show total <> " task(s), run:"
-        count         = genericLength docs
-        noteView = if brief then noteViewBrief else noteViewFull
+        toSeeAllLabel = "To see all " <> show sample_total <> " task(s), run:"
+        count         = genericLength sample_items
+        noteView      = if brief then noteViewBrief else noteViewFull
   where
     cmdToSeeAll = \case
         Overdue _  -> "ff search --overdue"
@@ -136,33 +148,36 @@ sampleLabel = \case
         1 -> "Starting tomorrow:"
         _ -> "Starting in " <> show n <> " days:"
 
-noteViewBrief :: NoteView -> Doc
-noteViewBrief NoteView{..} = title <+/> meta
+noteViewBrief :: Foldable f => EntityF f Note -> Doc
+noteViewBrief (EntityF fEntityId Note{..}) = title <+/> meta
   where
-    meta = foldMap (\i -> "| id" <+> string (rawDocId i)) nid
+    meta = foldMap (\i -> "| id" <+> pshow @UUID i) fEntityId
     title
         = stack
         . map (sep . map strictText . Text.split isSpace)
         . take 1
-        $ Text.lines text
+        . Text.lines
+        $ Text.pack note_text
 
-noteViewFull :: NoteView -> Doc
-noteViewFull NoteView{..} = sparsedStack [wrapLines text, sep meta]
+noteViewFull :: Foldable f => EntityF f Note -> Doc
+noteViewFull (EntityF fEntityId Note{..}) =
+    sparsedStack [wrapLines $ Text.pack note_text, sep meta]
   where
     meta
         = concat
-            [ ["| id"    <+> string (rawDocId i) | Just i <- [nid]]
-            , ["| start" <+> pshow @Day start]
-            , ["| end"   <+> pshow @Day e | Just e <- [end]]
+            [ ["| id"    <+> pshow @UUID eid | eid <- toList fEntityId]
+            , ["| start" <+> pshow @Day note_start]
+            , ["| end"   <+> pshow @Day e | Just e <- [note_end]]
             ]
-        ++  [ "| tracking" <+> strictText trackedUrl
-            | Just Tracked{..} <- [tracked]
+        ++  [ "| tracking" <+> strictText track_url
+            | Just Track{..} <- [note_track]
             ]
 
-contactViewFull :: ContactView -> Doc
-contactViewFull ContactView{..} = spread [strictText contactViewName, meta]
+contactViewFull :: Entity Contact -> Doc
+contactViewFull (Entity entityId Contact{..}) =
+    spread [string contact_name, meta]
   where
-    meta = "| id" <+> string (rawDocId contactViewId)
+    meta = "| id" <+> pshow @UUID entityId
 
 wrapLines :: Text -> Doc
 wrapLines =
@@ -175,3 +190,7 @@ stack' :: Bool -> [Doc] -> Doc
 stack' brief
     | brief     = stack
     | otherwise = sparsedStack
+
+sampleFmap :: (a -> b) -> Sample a -> Sample b
+sampleFmap f sample@Sample{sample_items} =
+    sample{sample_items = map f sample_items}

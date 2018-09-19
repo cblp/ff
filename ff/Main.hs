@@ -3,23 +3,25 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE RecordWildCards #-}
 {-# LANGUAGE TemplateHaskell #-}
+{-# LANGUAGE TupleSections #-}
 
 module Main where
 
 import           Control.Concurrent (threadDelay)
 import           Control.Concurrent.Async (race)
-import           Control.Concurrent.STM (newTVarIO)
 import           Control.Monad (forever, guard)
 import           Control.Monad.Except (runExceptT)
 import           Control.Monad.IO.Class (MonadIO, liftIO)
-import           CRDT.LamportClock (getRealLocalTime)
 import           Data.Either.Extra (fromEither)
 import           Data.Foldable (asum)
 import           Data.Functor (($>))
+import           Data.Proxy (Proxy (..))
 import           Data.Text.IO (hPutStrLn)
 import           Data.Text.Lazy (toStrict)
 import qualified Data.Text.Lazy as Text
 import           Data.Time (Day)
+import           RON.Storage.IO (Storage, runStorage)
+import qualified RON.Storage.IO as Storage
 import qualified System.Console.Terminal.Size as Terminal
 import           System.Directory (doesDirectoryExist, getCurrentDirectory,
                                    getHomeDirectory)
@@ -42,9 +44,8 @@ import           FF.Options (Cmd (..), CmdAction (..), Contact (..),
                              Shuffle (..), Track (..), parseOptions)
 import qualified FF.Options as Options
 import           FF.Serve (cmdServe)
-import           FF.Storage (Storage, runStorage)
-import qualified FF.Storage as Storage
-import           FF.UI (withHeader)
+import           FF.Types (EntityF (..))
+import           FF.UI (sampleFmap, withHeader)
 import qualified FF.UI as UI
 import           FF.Upgrade (upgradeDatabase)
 
@@ -54,10 +55,9 @@ import           Paths_ff (version)
 
 main :: IO ()
 main = do
-    cfg@Config { ui } <- loadConfig
-    hClock <- newTVarIO =<< getRealLocalTime
-    hDataDir <- getDataDir cfg
-    let h = Storage.Handle{..}
+    cfg@Config{ui} <- loadConfig
+    dataDir <- getDataDir cfg
+    h <- Storage.newHandle dataDir
     Options {..}      <- parseOptions h
     case optionCmd of
         CmdConfig param  -> runCmdConfig cfg param
@@ -120,24 +120,24 @@ runCmdAction h ui cmd brief = do
     today <- getUtcToday
     case cmd of
         CmdAgenda mlimit -> do
-            nvs <- getNoteSamples ui mlimit today
-            pprint $ UI.prettySamplesBySections brief nvs
+            notes <- getNoteSamples ui mlimit today
+            pprint $ UI.prettySamplesBySections brief notes
         CmdContact contact -> cmdContact brief contact
         CmdDelete noteId -> do
-            nv <- cmdDeleteNote noteId
-            pprint $ withHeader "deleted:" $ UI.noteViewFull nv
+            note <- cmdDeleteNote noteId
+            pprint $ withHeader "deleted:" $ UI.noteViewFull note
         CmdDone noteId -> do
-            nv <- cmdDone noteId
-            pprint $ withHeader "archived:" $ UI.noteViewFull nv
+            note <- cmdDone noteId
+            pprint $ withHeader "archived:" $ UI.noteViewFull note
         CmdEdit edit -> do
-            nv <- cmdEdit edit
-            pprint $ withHeader "edited:" $ UI.noteViewFull nv
+            note <- cmdEdit edit
+            pprint $ withHeader "edited:" $ UI.noteViewFull note
         CmdNew new -> do
-            nv <- cmdNewNote new today
-            pprint $ withHeader "added:" $ UI.noteViewFull nv
+            note <- cmdNewNote new today
+            pprint $ withHeader "added:" $ UI.noteViewFull note
         CmdPostpone noteId -> do
-            nv <- cmdPostpone noteId
-            pprint $ withHeader "postponed:" $ UI.noteViewFull nv
+            note <- cmdPostpone noteId
+            pprint $ withHeader "postponed:" $ UI.noteViewFull note
         CmdSearch Search {..} -> do
             (notes, wiki, contacts) <- cmdSearch searchText searchLimit today
             pprint $ UI.prettyNotesWikiContacts
@@ -146,26 +146,29 @@ runCmdAction h ui cmd brief = do
         CmdTrack track ->
             cmdTrack track today brief
         CmdUnarchive noteId -> do
-            nv <- cmdUnarchive noteId
-            pprint . withHeader "unarchived:" $ UI.noteViewFull nv
+            note <- cmdUnarchive noteId
+            pprint . withHeader "unarchived:" $ UI.noteViewFull note
         CmdUpgrade -> do
             upgradeDatabase
             liftIO $ putStrLn "upgraded"
         CmdWiki mlimit -> do
-            nvs <- getWikiSamples ui mlimit today
-            pprint $ UI.prettyWikiSamplesOmitted brief nvs
+            notes <- getWikiSamples ui mlimit today
+            pprint $ UI.prettyWikiSamplesOmitted brief notes
 
 cmdTrack :: Track -> Day -> Bool -> Storage ()
 cmdTrack Track {..} today brief =
     if trackDryrun then liftIO $ do
         samples <- run $ getOpenIssueSamples trackAddress trackLimit today
-        pprint $ UI.prettySamplesBySections brief samples
+        pprint $
+            UI.prettySamplesBySections brief $
+            fmap (sampleFmap $ EntityF Proxy) samples
     else do
-        nvs <- liftIO $ run $ getIssueViews trackAddress trackLimit
-        updateTrackedNotes nvs
-        liftIO $
-            putStrLn $
-            show (length nvs) ++ " issues synchronized with the local database"
+        notes <- liftIO $ run $ getIssueViews trackAddress trackLimit
+        updateTrackedNotes notes
+        liftIO
+            $   putStrLn
+            $   show (length notes)
+                ++ " issues synchronized with the local database"
   where
     run getter = do
         hPutStr stderr "fetching"
@@ -182,14 +185,14 @@ cmdTrack Track {..} today brief =
 cmdContact :: Bool -> Maybe Contact -> Storage ()
 cmdContact brief = \case
     Just (Add name) -> do
-        cv <- cmdNewContact name
-        pprint $ withHeader "added:" $ UI.contactViewFull cv
+        contact <- cmdNewContact name
+        pprint $ withHeader "added:" $ UI.contactViewFull contact
     Just (Delete cid) -> do
-        cv <- cmdDeleteContact cid
-        pprint $ withHeader "deleted:" $ UI.contactViewFull cv
+        contact <- cmdDeleteContact cid
+        pprint $ withHeader "deleted:" $ UI.contactViewFull contact
     Nothing -> do
-        cvs <- getContactSamples
-        pprint $ UI.prettyContactSamplesOmitted brief cvs
+        contacts <- getContactSamples
+        pprint $ UI.prettyContactSamplesOmitted brief contacts
 
 -- Template taken from stack:
 -- "Version 1.7.1, Git revision 681c800873816c022739ca7ed14755e8 (5807 commits)"

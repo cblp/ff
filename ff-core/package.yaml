@@ -17,6 +17,7 @@ library:
     - extra
     - filepath
     - github
+    - hashable
     - mainland-pretty
     - mtl
     - optparse-applicative
@@ -36,9 +37,8 @@ library:
 
     # organization
     - ron
+    - ron-storage
   source-dirs: lib
-  other-modules:
-    - FF.Types.Internal
 
 tests:
   features:

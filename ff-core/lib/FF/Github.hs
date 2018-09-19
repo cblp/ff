@@ -28,8 +28,8 @@ import           GitHub.Endpoints.Issues (issuesForRepoR)
 import           System.Process (readProcess)
 
 import           FF (splitModes, takeSamples)
-import           FF.Types (Limit, ModeMap, NoteSample, NoteStatus (..),
-                           NoteView (..), Status (..), Tracked (..))
+import           FF.Types (Limit, ModeMap, Note (..), NoteStatus (..), Sample,
+                           Status (..), Track (..))
 
 getIssues
     :: Maybe Text
@@ -67,52 +67,53 @@ getIssues mAddress mlimit issueState = do
     pure (address, response)
 
 getOpenIssueSamples
-    :: Maybe Text -> Maybe Limit -> Day -> ExceptT Text IO (ModeMap NoteSample)
+    :: Maybe Text
+    -> Maybe Limit
+    -> Day
+    -> ExceptT Text IO (ModeMap (Sample Note))
 getOpenIssueSamples mAddress mlimit today = do
     (address, issues) <- getIssues mAddress mlimit stateOpen
     pure $ sampleMap address mlimit today issues
 
-getIssueViews :: Maybe Text -> Maybe Limit -> ExceptT Text IO [NoteView]
+getIssueViews :: Maybe Text -> Maybe Limit -> ExceptT Text IO [Note]
 getIssueViews mAddress mlimit = do
     (address, issues) <- getIssues mAddress mlimit stateAll
     pure $ noteViewList address mlimit issues
 
 sampleMap
-    :: Foldable t => Text -> Maybe Limit -> Day -> t Issue -> ModeMap NoteSample
-sampleMap address mlimit today issues =
-    takeSamples mlimit
-        . splitModes today
-        . map (issueToNoteView address)
-        . maybe id (take . fromIntegral) mlimit
-        $ toList issues
+    :: Foldable t
+    => Text -> Maybe Limit -> Day -> t Issue -> ModeMap (Sample Note)
+sampleMap address mlimit today
+    = takeSamples mlimit
+    . splitModes today
+    . map (issueToNote address)
+    . maybe id (take . fromIntegral) mlimit
+    . toList
 
-noteViewList :: Foldable t => Text -> Maybe Limit -> t Issue -> [NoteView]
-noteViewList address mlimit issues =
-    map (issueToNoteView address)
-        . maybe id (take . fromIntegral) mlimit
-        $ toList issues
+noteViewList :: Foldable t => Text -> Maybe Limit -> t Issue -> [Note]
+noteViewList address mlimit =
+    map (issueToNote address) . maybe id (take . fromIntegral) mlimit . toList
 
-issueToNoteView :: Text -> Issue -> NoteView
-issueToNoteView address Issue {..} = NoteView
-    { nid     = Nothing
-    , status  = toStatus issueState
-    , text    = issueTitle <> body
-    , start   = utctDay issueCreatedAt
-    , end
-    , tracked = Just Tracked
-        { trackedProvider   = "github"
-        , trackedSource     = address
-        , trackedExternalId
-        , trackedUrl
+issueToNote :: Text -> Issue -> Note
+issueToNote address Issue{..} = Note
+    { note_status = toStatus issueState
+    , note_text   = Text.unpack $ issueTitle <> body
+    , note_start  = utctDay issueCreatedAt
+    , note_end
+    , note_track  = Just Track
+        { track_provider   = "github"
+        , track_source     = address
+        , track_externalId
+        , track_url
         }
     }
   where
-    trackedExternalId = Text.pack $ show issueNumber
-    trackedUrl        = case issueHtmlUrl of
+    track_externalId = Text.pack $ show issueNumber
+    track_url = case issueHtmlUrl of
         Just (URL url) -> url
         Nothing ->
-            "https://github.com/" <> address <> "/issues/" <> trackedExternalId
-    end = case issueMilestone of
+            "https://github.com/" <> address <> "/issues/" <> track_externalId
+    note_end = case issueMilestone of
         Just Milestone { milestoneDueOn = Just UTCTime { utctDay } } ->
             Just utctDay
         _ -> Nothing
