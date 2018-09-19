@@ -4,8 +4,8 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE PatternSynonyms #-}
 {-# LANGUAGE RecordWildCards #-}
+{-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE TypeOperators #-}
-{-# LANGUAGE ViewPatterns #-}
 
 module FF
     ( cmdDeleteNote
@@ -22,34 +22,39 @@ module FF
     , getUtcToday
     , getWikiSamples
     , loadActiveNotes
-    , loadAllNotes
-    , newNote
+    , loadAll
     , splitModes
     , takeSamples
     , updateTrackedNotes
     ) where
 
 import           Control.Arrow ((&&&))
-import           Control.Monad.Extra (unless, void, whenJust)
+import           Control.Monad.Except (MonadError, liftEither, throwError)
+import           Control.Monad.Extra (unless, when, whenJust)
 import           Control.Monad.IO.Class (MonadIO, liftIO)
-import           Control.Monad.State.Strict (evalState, state)
-import qualified CRDT.Cv.Max as Max
-import           CRDT.Cv.RGA (RgaString)
-import qualified CRDT.Cv.RGA as RGA
-import           CRDT.LamportClock (Clock)
-import           CRDT.LWW (LWW)
-import qualified CRDT.LWW as LWW
-import           Data.Foldable (asum)
+import           Control.Monad.State.Strict (MonadState, StateT, evalState,
+                                             evalStateT, execStateT, gets,
+                                             state)
+import           Data.Foldable (asum, for_)
+import           Data.HashMap.Strict (HashMap)
+import qualified Data.HashMap.Strict as HashMap
 import           Data.List (genericLength, sortOn)
 import qualified Data.Map.Strict as Map
-import           Data.Maybe (fromMaybe, listToMaybe)
-import           Data.Semigroup ((<>))
+import           Data.Maybe (catMaybes, fromMaybe)
 import           Data.Text (Text)
 import qualified Data.Text as Text
 import qualified Data.Text.IO as Text
 import           Data.Time (Day, addDays, fromGregorian, getCurrentTime,
                             toModifiedJulianDay, utctDay)
 import           Data.Traversable (for)
+import           RON.Data (getObject, newObject)
+import qualified RON.Data.RGA as RGA
+import           RON.Event (Clock)
+import           RON.Storage (Collection, DocId (..), Document (..),
+                              MonadStorage, createVersion, listDocuments, load,
+                              modify)
+import           RON.Storage.IO (Storage)
+import           RON.Types (Object, objectId)
 import           System.Directory (findExecutable)
 import           System.Environment (getEnv)
 import           System.Exit (ExitCode (..))
@@ -60,34 +65,27 @@ import           System.Random (StdGen, mkStdGen, randoms, split)
 
 import           FF.Config (ConfigUI (..))
 import           FF.Options (Edit (..), New (..))
-import           FF.Storage (DocId (..), Document (..),
-                             MonadStorage, Storage, create, listDocuments, load,
-                             modify)
-import           FF.Types (Contact (..), ContactId, ContactSample,
-                           ContactView (..), Limit, ModeMap, Note (..), NoteId,
-                           NoteSample, NoteStatus (..), NoteView (..),
-                           Sample (..), Status (..), Tracked, contactView,
-                           noteView, rgaFromText, rgaToText,
-                           singletonTaskModeMap)
+import           FF.Types (Limit, ModeMap)
+import           FF.Types2 (Contact (..), ContactId, ContactSample, Entity,
+                            pattern Entity, EntityF (..), Note (..), NoteId,
+                            NoteSample, NoteStatus (..), Sample (..),
+                            Status (..), Track, contact_name_zoom,
+                            contact_status_assign, note_end_assign,
+                            note_end_read, note_start_assign, note_start_read,
+                            note_status_assign, note_status_read,
+                            note_text_zoom, note_track_read, taskMode)
 
-loadAllContacts :: (MonadStorage m) => m [ContactView]
-loadAllContacts = do
-    docs      <- listDocuments
-    mcontacts <- for docs load
-    pure
-        [ contactView contactId value
-        | (contactId, Right Document{value}) <- zip docs mcontacts
-        ]
+loadAll :: (Collection a, MonadStorage m) => m [Entity a]
+loadAll = do
+    docs <- listDocuments
+    for docs $ \docId -> do
+        Document{value = obj} <- load docId
+        entityVal <- liftEither $ getObject obj
+        pure $ Entity (objectId obj) entityVal
 
-loadActiveContacts :: MonadStorage m => m [ContactView]
+loadActiveContacts :: MonadStorage m => m [Entity Contact]
 loadActiveContacts =
-    filter (\ContactView { contactViewStatus } -> contactViewStatus == Active) <$> loadAllContacts
-
-filterContacts :: (Text -> Bool) -> [ContactView] -> [ContactView]
-filterContacts predicate notes =
-    [ n | n@ContactView{contactViewId = DocId x, contactViewName} <- notes
-    , predicate contactViewName || predicate (Text.pack x)
-    ]
+    filter ((== Active) . contact_status . entityVal) <$> loadAll
 
 getContactSamples :: MonadStorage m => m ContactSample
 getContactSamples = getContactSamplesWith $ const True
@@ -99,40 +97,24 @@ getContactSamplesWith
 getContactSamplesWith predicate = do
     activeContacts <- loadActiveContacts
     pure . (\ys -> Sample ys $ genericLength ys) $
-        filterContacts predicate activeContacts
+        filter (predicate . Text.pack . contact_name . entityVal) activeContacts
 
-loadAllNotes :: MonadStorage m => m [NoteView]
-loadAllNotes = do
-    docs   <- listDocuments
-    mnotes <- for docs load
-    pure
-        [ noteView noteId value
-        | (noteId, Right Document{value}) <- zip docs mnotes
-        ]
-
-loadTrackedNotes :: MonadStorage m => m [(NoteId, Note)]
+loadTrackedNotes :: MonadStorage m => m [Object Note]
 loadTrackedNotes = do
-    docs   <- listDocuments
-    mnotes <- for docs load
-    pure
-        [ (noteId, value)
-        | (noteId, Right Document{value = value@Note{noteTracked = Just _}})
-            <- zip docs mnotes
-        ]
+    docs <- listDocuments
+    fmap catMaybes . for docs $ \docId -> do
+        Document{value = obj} <- load docId
+        track <- (`evalStateT` obj) note_track_read
+        pure $ case track of
+            Nothing -> Nothing
+            Just _  -> Just obj
 
-loadActiveNotes :: MonadStorage m => m [NoteView]
+loadActiveNotes :: MonadStorage m => m [Entity Note]
 loadActiveNotes =
-    filter (\NoteView { status } -> status == TaskStatus Active) <$> loadAllNotes
+    filter ((TaskStatus Active ==) . note_status . entityVal) <$> loadAll
 
-loadWikiNotes :: MonadStorage m => m [NoteView]
-loadWikiNotes =
-    filter (\NoteView { status } -> status == Wiki) <$> loadAllNotes
-
-filterNotes :: (Text -> Bool) -> [NoteView] -> [NoteView]
-filterNotes predicate notes =
-    [ n | n@NoteView {nid = Just (DocId i), text} <- notes
-    , predicate text || predicate (Text.pack i)
-    ]
+loadWikiNotes :: MonadStorage m => m [Entity Note]
+loadWikiNotes = filter ((Wiki ==) . note_status . entityVal) <$> loadAll
 
 getNoteSamples
     :: MonadStorage m
@@ -149,17 +131,21 @@ getNoteSamplesWith
     -> Maybe Limit
     -> Day             -- ^ today
     -> m (ModeMap NoteSample)
-getNoteSamplesWith predicate ConfigUI { shuffle } limit today = do
+getNoteSamplesWith predicate ConfigUI{shuffle} limit today = do
     activeNotes <- loadActiveNotes
-    -- in sorting by nid no business-logic is involved,
-    -- it's just for determinism
     pure .
         takeSamples limit .
-        (if shuffle then shuffleTraverseItems gen else fmap (sortOn $ start &&& nid)) .
-        splitModes today $
-        filterNotes predicate activeNotes
+        shuffleOrSort .
+        splitModesBy entityVal today $
+        filter (predicate . Text.pack . note_text . entityVal) activeNotes
   where
     gen = mkStdGen . fromIntegral $ toModifiedJulianDay today
+    shuffleOrSort
+        | shuffle   = shuffleTraverseItems gen
+        | otherwise =
+            -- in sorting by entityId no business-logic is involved,
+            -- it's just for determinism
+            fmap $ sortOn $ note_start . entityVal &&& entityId
 
 getWikiSamples
     :: MonadStorage m
@@ -176,19 +162,23 @@ getWikiSamplesWith
     -> Maybe Limit
     -> Day             -- ^ today
     -> m NoteSample
-getWikiSamplesWith predicate ConfigUI { shuffle } limit today = do
+getWikiSamplesWith predicate ConfigUI{shuffle} limit today = do
     wikiNotes <- loadWikiNotes
-    let filteredNotes = filterNotes predicate wikiNotes
-    let wiki = case limit of
+    let filteredNotes =
+            filter (predicate . Text.pack . note_text . entityVal) wikiNotes
+    let wikis = case limit of
             Nothing -> filteredNotes
             Just l -> take (fromIntegral l) filteredNotes
-    pure . toSample $
-    -- in sorting by nid no business-logic is involved,
-    -- it's just for determinism
-        (if shuffle then shuffleItems gen else sortOn $ start &&& nid) wiki
+    pure . toSample $ shuffleOrSort wikis
   where
     toSample ys = Sample ys $ genericLength ys
     gen = mkStdGen . fromIntegral $ toModifiedJulianDay today
+    shuffleOrSort
+        | shuffle   = shuffleItems gen
+        | otherwise =
+            -- in sorting by entityId no business-logic is involved,
+            -- it's just for determinism
+            sortOn $ note_start . entityVal &&& entityId
 
 shuffleItems :: StdGen -> [b] -> [b]
 shuffleItems gen = (`evalState` gen) . shuf
@@ -204,10 +194,15 @@ shuffleTraverseItems gen = (`evalState` gen) . traverse shuf
         g <- state split
         pure . map snd . sortOn fst $ zip (randoms g :: [Int]) xs
 
-splitModes :: Day -> [NoteView] -> ModeMap [NoteView]
-splitModes today = Map.unionsWith (<>) . fmap (singletonTaskModeMap today)
+splitModesBy :: (note -> Note) -> Day -> [note] -> ModeMap [note]
+splitModesBy f today = Map.unionsWith (++) . map singleton
+  where
+    singleton note = Map.singleton (taskMode today $ f note) [note]
 
-takeSamples :: Maybe Limit -> ModeMap [NoteView] -> ModeMap NoteSample
+splitModes :: Day -> [Note] -> ModeMap [Note]
+splitModes = splitModesBy id
+
+takeSamples :: Maybe Limit -> ModeMap [a] -> ModeMap (Sample a)
 takeSamples Nothing = fmap mkSample
   where
     mkSample ys = Sample ys $ genericLength ys
@@ -221,79 +216,68 @@ takeSamples (Just limit) = (`evalState` limit) . traverse takeSample
         | a <= b    = 0
         | otherwise = a - b
 
-updateTrackedNote
-    :: [(NoteId, Note)] -- ^ selection of all aready tracked notes
-    -> NoteView
-    -> Storage ()
-updateTrackedNote oldNotes NoteView{..} =
-    case sameTrack of
-        Nothing -> do
-            note <- newNote' status text start end tracked
-            void $ create note
-        Just (n, _) ->
-            void $ modify n $ \note@Note{..} -> do
-                noteStatus' <- lwwAssignIfDiffer status noteStatus
-                noteText'   <- rgaEditText text noteText
-                pure note{noteStatus = noteStatus', noteText = noteText'}
-  where
-    isSameTrack oldNote = tracked == (Max.query <$> noteTracked oldNote)
-    sameTrack = listToMaybe $ filter (isSameTrack . snd) oldNotes
-
-updateTrackedNotes :: [NoteView] -> Storage ()
+updateTrackedNotes :: [Note] -> Storage ()
 updateTrackedNotes nvNews = do
+    -- TODO(2018-10-22, cblp) index notes by track in the database and select
+    -- specific note by its track
     oldNotes <- loadTrackedNotes
-    mapM_ (updateTrackedNote oldNotes) nvNews
+    oldNotesWithTrack <- for oldNotes $ \oldNote -> do
+        track <- (`evalStateT` oldNote) note_track_read
+        pure (track, oldNote)
+    let oldNotesByTrack = HashMap.fromList
+            [(track, note) | (Just track, note) <- oldNotesWithTrack]
+    for_ nvNews $ updateTrackedNote oldNotesByTrack
+  where
+    updateTrackedNote
+        :: MonadStorage m
+        => HashMap Track (Object Note)
+            -- ^ selection of all aready tracked notes
+        -> Note  -- ^ external note to insert
+        -> m ()
+    updateTrackedNote oldNotes note = case note of
+        Note{note_track = Just track} -> do
+            obj <- case HashMap.lookup track oldNotes of
+                Nothing -> newObject note
+                Just oldNote -> (`execStateT` oldNote) $ do
+                    note_status_assignIfDiffer note_status
+                    note_text_zoom $ RGA.edit note_text
+            createVersion obj
+        _ -> throwError "External note is expected to be supplied with tracking"
+      where
+        Note{note_status, note_text} = note
 
--- | Native 'Note' smart constructor
-newNote :: Clock m => NoteStatus -> Text -> Day -> Maybe Day -> m Note
-newNote status text start end = newNote' status text start end Nothing
-
--- | Generic 'Note' smart constructor
-newNote' :: Clock m => NoteStatus -> Text -> Day -> Maybe Day -> Maybe Tracked -> m Note
-newNote' status text start end tracked = do
-    noteStatus <- LWW.initialize status
-    noteText   <- rgaFromText text
-    noteStart  <- LWW.initialize start
-    noteEnd    <- LWW.initialize end
-    let noteTracked = Max.initial <$> tracked
-    pure Note{..}
-
-cmdNewNote :: MonadStorage m => New -> Day -> m NoteView
-cmdNewNote New { newText, newStart, newEnd, newWiki } today = do
+cmdNewNote :: MonadStorage m => New -> Day -> m (Entity Note)
+cmdNewNote New{newText, newStart, newEnd, newWiki} today = do
     let newStart' = fromMaybe today newStart
-    case newEnd of
-        Just end -> assertStartBeforeEnd newStart' end
-        _        -> pure ()
-    (status, end, start) <-
+    whenJust newEnd $ assertStartBeforeEnd newStart'
+    (note_status, note_end, note_start) <-
         if newWiki then case newEnd of
             Nothing -> pure (Wiki, Nothing, today)
-            Just _  -> fail "Wiki note has no end date."
+            Just _  -> throwError "Wiki note has no end date."
         else pure (TaskStatus Active, newEnd, newStart')
-    note <- newNote status newText start end
-    nid  <- create note
-    pure $ noteView nid note
+    let note = Note
+            { note_end
+            , note_start
+            , note_status
+            , note_text = Text.unpack newText
+            , note_track = Nothing
+            }
+    obj <- newObject note
+    createVersion obj
+    pure $ Entity (objectId obj) note
 
--- | Generic 'Contact' smart constructor
-newContact' :: Clock m => Status -> Text -> m Contact
-newContact' st name = do
-    contactStatus <- LWW.initialize st
-    contactName   <- rgaFromText name
-    pure Contact{..}
-
-cmdNewContact :: MonadStorage m => Text -> m ContactView
+cmdNewContact :: MonadStorage m => Text -> m (Entity Contact)
 cmdNewContact name = do
-    contact <- newContact' Active name
-    cid  <- create contact
-    pure $ contactView cid contact
+    let contact =
+            Contact{contact_name = Text.unpack name, contact_status = Active}
+    obj <- newObject contact
+    createVersion obj
+    pure $ Entity (objectId obj) contact
 
-cmdDeleteContact :: ContactId -> Storage ContactView
-cmdDeleteContact cid = modifyAndViewContact cid $ \contact@Contact {..} -> do
-    contactStatus' <- LWW.assign Deleted contactStatus
-    contactName'   <- rgaEditText Text.empty contactName
-    pure contact
-        { contactStatus = contactStatus'
-        , contactName   = contactName'
-        }
+cmdDeleteContact :: MonadStorage m => ContactId -> m (Entity Contact)
+cmdDeleteContact cid = modifyAndView cid $ do
+    contact_status_assign Deleted
+    contact_name_zoom $ RGA.editText ""
 
 cmdSearch
     :: Text  -- ^ query
@@ -309,88 +293,77 @@ cmdSearch substr limit today = do
     predicate = Text.isInfixOf (Text.toCaseFold substr) . Text.toCaseFold
     ui = ConfigUI {shuffle = False}
 
-cmdDeleteNote :: NoteId -> Storage NoteView
-cmdDeleteNote nid = modifyAndView nid $ \note@Note {..} -> do
-    assertNoteIsNative note
-    noteStatus' <- LWW.assign (TaskStatus Deleted) noteStatus
-    noteText'   <- rgaEditText Text.empty noteText
-    noteStart'  <- LWW.assign (fromGregorian 0 1 1) noteStart
-    noteEnd'    <- LWW.assign Nothing noteEnd
-    pure note { noteStatus = noteStatus'
-              , noteText   = noteText'
-              , noteStart  = noteStart'
-              , noteEnd    = noteEnd'
-              }
+cmdDeleteNote :: MonadStorage m => NoteId -> m (Entity Note)
+cmdDeleteNote nid = modifyAndView nid $ do
+    assertNoteIsNative
+    note_status_assign $ TaskStatus Deleted
+    note_text_zoom $ RGA.editText ""
+    note_start_assign $ fromGregorian 0 1 1
+    note_end_assign Nothing
 
-cmdDone :: NoteId -> Storage NoteView
-cmdDone nid = modifyAndView nid $ \note@Note { noteStatus } -> do
-    assertNoteIsNative note
-    noteStatus' <- LWW.assign (TaskStatus Archived) noteStatus
-    pure note { noteStatus = noteStatus' }
+cmdDone :: MonadStorage m => NoteId -> m (Entity Note)
+cmdDone nid = modifyAndView nid $ do
+    assertNoteIsNative
+    note_status_assign $ TaskStatus Archived
 
-cmdUnarchive :: NoteId -> Storage NoteView
-cmdUnarchive nid = modifyAndView nid $ \note@Note { noteStatus } -> do
-    noteStatus' <- LWW.assign (TaskStatus Active) noteStatus
-    pure note { noteStatus = noteStatus' }
+cmdUnarchive :: MonadStorage m => NoteId -> m (Entity Note)
+cmdUnarchive nid = modifyAndView nid $ note_status_assign $ TaskStatus Active
 
-cmdEdit :: Edit -> Storage NoteView
+cmdEdit :: Edit -> Storage (Entity Note)
 cmdEdit Edit{..} = case (editText, editStart, editEnd) of
     (Nothing, Nothing, Nothing) ->
-        modifyAndView editId $ \note@Note{noteText} -> do
-            assertNoteIsNative note
-            text'     <- liftIO . runExternalEditor $ rgaToText noteText
-            noteText' <- rgaEditText text' noteText
-            pure note{noteText = noteText'}
+        modifyAndView editId $ do
+            assertNoteIsNative
+            note_text_zoom $ do
+                text <- liftEither =<< gets RGA.getText
+                text' <- liftIO $ runExternalEditor text
+                RGA.editText text'
     _ ->
-        modifyAndView editId $ \note -> do
-            whenJust editText $ \_ -> assertNoteIsNative note
-            checkStartEnd note
-            update note
+        modifyAndView editId $ do
+            whenJust editText $ const assertNoteIsNative
+            checkStartEnd
+            update'
   where
-    checkStartEnd Note { noteStart = (LWW.query -> noteStart), noteEnd } =
-        case newStartEnd of
-            Just (start, end) -> assertStartBeforeEnd start end
-            Nothing           -> pure ()
-      where
-        newStartEnd = case (editStart, editEnd, LWW.query noteEnd) of
-            (Just start, Nothing        , Just end) -> Just (start, end)
-            (Nothing   , Just (Just end), _       ) -> Just (noteStart, end)
-            (Just start, Just (Just end), _       ) -> Just (start, end)
-            _ -> Nothing
-    update :: Note -> Storage Note
-    update note@Note{noteStatus = (LWW.query -> noteStatus), noteEnd, noteStart, noteText} = do
-        (start, end) <- case noteStatus of
+    checkStartEnd = do
+        start <- note_start_read
+        mend  <- note_end_read
+        let newStartEnd = case (editStart, editEnd, mend) of
+                (Just eStart, Nothing        , Just end) -> Just (eStart, end)
+                (Nothing    , Just (Just end), _       ) -> Just (start,  end)
+                (Just eStart, Just (Just end), _       ) -> Just (eStart, end)
+                _                                        -> Nothing
+        whenJust newStartEnd $
+            uncurry assertStartBeforeEnd
+
+    update' = do
+        status <- note_status_read
+        (start, end) <- case status of
             Wiki -> case (editStart, editEnd) of
                 (Nothing, Nothing) -> pure (Nothing, Nothing)
-                _                  -> fail "Wiki note has unchangable dates."
+                _ -> throwError "Wiki dates are immutable"
             _ -> pure (editStart, editEnd)
-        noteEnd'   <- lwwAssignIfJust end noteEnd
-        noteStart' <- lwwAssignIfJust start noteStart
-        noteText'  <- maybe (pure noteText) (`rgaEditText` noteText) editText
-        pure note
-            { noteEnd   = noteEnd'
-            , noteStart = noteStart'
-            , noteText  = noteText'
-            }
+        whenJust end $ \d -> note_end_assign d
+        whenJust start $ \d -> note_start_assign d
+        whenJust editText $ \t -> note_text_zoom $ RGA.editText t
 
-lwwAssignIfJust :: Clock m => Maybe a -> LWW a -> m (LWW a)
-lwwAssignIfJust = maybe pure LWW.assign
-
-cmdPostpone :: NoteId -> Storage NoteView
-cmdPostpone nid = modifyAndView nid $ \note@Note { noteStart, noteEnd } -> do
+cmdPostpone :: NoteId -> Storage (Entity Note)
+cmdPostpone nid = modifyAndView nid $ do
     today <- getUtcToday
-    let start' = addDays 1 $ max today $ LWW.query noteStart
-    noteStart' <- LWW.assign start' noteStart
-    noteEnd'   <- case LWW.query noteEnd of
-        Just end | end < start' -> LWW.assign (Just start') noteEnd
-        _                       -> pure noteEnd
-    pure note { noteStart = noteStart', noteEnd = noteEnd' }
+    start <- note_start_read
+    let start' = addDays 1 $ max today start
+    note_start_assign start'
+    mend <- note_end_read
+    case mend of
+        Just end | end < start' -> note_end_assign $ Just start'
+        _                       -> pure ()
 
-modifyAndView :: NoteId -> (Note -> Storage Note) -> Storage NoteView
-modifyAndView nid f = noteView nid <$> modify nid f
-
-modifyAndViewContact :: ContactId -> (Contact -> Storage Contact) -> Storage ContactView
-modifyAndViewContact cid f = contactView cid <$> modify cid f
+modifyAndView
+    :: (Collection a, MonadStorage m)
+    => DocId a -> StateT (Object a) m () -> m (Entity a)
+modifyAndView docid f = do
+    obj <- modify docid f
+    entityVal <- liftEither $ getObject obj
+    pure $ Entity (objectId obj) entityVal
 
 getUtcToday :: MonadIO io => io Day
 getUtcToday = liftIO $ utctDay <$> getCurrentTime
@@ -412,24 +385,23 @@ runExternalEditor textOld = do
         pure prog
     assertExecutableFromEnv param = assertExecutable =<< getEnv param
 
-assertStartBeforeEnd :: Monad m => Day -> Day -> m ()
+assertStartBeforeEnd :: MonadError String m => Day -> Day -> m ()
 assertStartBeforeEnd start end =
-    unless (start <= end) $ fail "task cannot end before it is started"
+    unless (start <= end) $ throwError "task cannot end before it is started"
 
-rgaEditText :: Clock m => Text -> RgaString -> m RgaString
-rgaEditText = RGA.edit . Text.unpack
+note_status_assignIfDiffer
+    :: (Clock m, MonadError String m, MonadState (Object Note) m)
+    => NoteStatus -> m ()
+note_status_assignIfDiffer newStatus = do
+    curStatus <- note_status_read
+    when (curStatus /= newStatus) $
+        note_status_assign newStatus
+{-# ANN note_status_assignIfDiffer ("HLint: ignore Use camelCase" :: String) #-}
 
-lwwAssignIfDiffer :: (Eq a, Clock m) => a -> LWW a -> m (LWW a)
-lwwAssignIfDiffer new var = do
-    let cur = LWW.query var
-    if new == cur then
-        pure var
-    else
-        LWW.assign new var
-
-assertNoteIsNative :: Monad m => Note -> m ()
-assertNoteIsNative = \case
-    Note{noteTracked = Just _} ->
-        fail "Oh, no! It is tracked note. Not for modifying. Sorry :("
-    _ ->
-        pure ()
+assertNoteIsNative :: (MonadError String m, MonadState (Object Note) m) => m ()
+assertNoteIsNative = do
+    -- TODO(2018-10-22, cblp) use `case of some/none` without full decoding of
+    -- `some`
+    tracking <- note_track_read
+    whenJust tracking $ \_ ->
+        throwError "Oh, no! It is tracked note. Not for modifying. Sorry :("

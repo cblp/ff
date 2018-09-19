@@ -195,7 +195,6 @@ lamportTimeToFileName :: LamportTime -> FilePath
 lamportTimeToFileName (LamportTime time (Pid pid)) =
     showBase36K time $ '-' : showBase36K pid ""
 
--- | For user-supplied function input Left means document cannot be loaded.
 modify
     :: (Collection doc, Eq doc, MonadStorage m)
     => DocId doc
