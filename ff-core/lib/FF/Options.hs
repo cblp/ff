@@ -191,9 +191,9 @@ parseOptions h = execParser $ i parser "A note taker and task tracker"
         <*> searchW
         <*> searchC
         <*> optional limit
-    searchN = switch (long "notes" <> short 'n' <> help "Search among notes")
+    searchN = switch (long "tasks" <> short 't' <> help "Search among notes")
     searchW = switch (long "wiki" <> short 'w' <> help "Search among wiki")
-    searchC = switch (long "contscts" <> short 'c' <> help "Search among contacts")
+    searchC = switch (long "contacts" <> short 'c' <> help "Search among contacts")
     noteid = DocId <$> strArgument
         (metavar "ID" <> help "note id" <> completer completeNoteIds)
     text = strArgument $ metavar "TEXT" <> help "note text"

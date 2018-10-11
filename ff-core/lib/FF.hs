@@ -83,8 +83,8 @@ loadActiveContacts :: MonadStorage m => m [ContactView]
 loadActiveContacts =
     filter (\ContactView { contactViewStatus } -> contactViewStatus == Active) <$> loadAllContacts
 
-filteredContacts :: (Text -> Bool) -> [ContactView] -> [ContactView]
-filteredContacts predicate notes =
+filterContacts :: (Text -> Bool) -> [ContactView] -> [ContactView]
+filterContacts predicate notes =
     [ n | n@ContactView{contactViewId = DocId x, contactViewName} <- notes
     , predicate contactViewName || predicate (Text.pack x)
     ]
@@ -99,7 +99,7 @@ getContactSamplesWith
 getContactSamplesWith predicate = do
     activeContacts <- loadActiveContacts
     pure . (\ys -> Sample ys $ genericLength ys) $
-        filteredContacts predicate activeContacts
+        filterContacts predicate activeContacts
 
 loadAllNotes :: MonadStorage m => m [NoteView]
 loadAllNotes = do
@@ -128,8 +128,8 @@ loadWikiNotes :: MonadStorage m => m [NoteView]
 loadWikiNotes =
     filter (\NoteView { status } -> status == Wiki) <$> loadAllNotes
 
-filteredNotes :: (Text -> Bool) -> [NoteView] -> [NoteView]
-filteredNotes predicate notes =
+filterNotes :: (Text -> Bool) -> [NoteView] -> [NoteView]
+filterNotes predicate notes =
     [ n | n@NoteView {nid = Just (DocId i), text} <- notes
     , predicate text || predicate (Text.pack i)
     ]
@@ -157,7 +157,7 @@ getNoteSamplesWith predicate ConfigUI { shuffle } limit today = do
         takeSamples limit .
         (if shuffle then shuffleTraverseItems gen else fmap (sortOn $ start &&& nid)) .
         splitModes today $
-        filteredNotes predicate activeNotes
+        filterNotes predicate activeNotes
   where
     gen = mkStdGen . fromIntegral $ toModifiedJulianDay today
 
@@ -178,10 +178,10 @@ getWikiSamplesWith
     -> m NoteSample
 getWikiSamplesWith predicate ConfigUI { shuffle } limit today = do
     wikiNotes <- loadWikiNotes
-    let fn = filteredNotes predicate wikiNotes
+    let filteredNotes = filterNotes predicate wikiNotes
     let wiki = case limit of
-            Nothing -> fn
-            Just l -> take (fromIntegral l) fn
+            Nothing -> filteredNotes
+            Just l -> take (fromIntegral l) filteredNotes
     pure . toSample $
     -- in sorting by nid no business-logic is involved,
     -- it's just for determinism
