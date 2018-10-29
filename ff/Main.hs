@@ -47,7 +47,7 @@ import           FF.Serve (cmdServe)
 import           FF.Types (EntityF (..))
 import           FF.UI (sampleFmap, withHeader)
 import qualified FF.UI as UI
--- import           FF.Upgrade (upgradeDatabase)
+import           FF.Upgrade (upgradeDatabase)
 
 import           Data.Version (showVersion)
 import           Development.GitRev (gitDirty, gitHash)
@@ -148,8 +148,8 @@ runCmdAction h ui cmd brief = do
         CmdUnarchive noteId -> do
             note <- cmdUnarchive noteId
             pprint . withHeader "unarchived:" $ UI.noteViewFull note
-        CmdUpgrade -> -- do
-            -- upgradeDatabase
+        CmdUpgrade -> do
+            upgradeDatabase
             liftIO $ putStrLn "upgraded"
         CmdWiki mlimit -> do
             notes <- getWikiSamples ui mlimit today
