@@ -1,21 +1,12 @@
-{-# OPTIONS -Wno-orphans #-}
-
-{-# LANGUAGE FlexibleContexts #-}
-{-# LANGUAGE GeneralizedNewtypeDeriving #-}
-{-# LANGUAGE InstanceSigs #-}
 {-# LANGUAGE LambdaCase #-}
 {-# LANGUAGE NamedFieldPuns #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE PatternSynonyms #-}
 {-# LANGUAGE QuasiQuotes #-}
-{-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE TemplateHaskell #-}
-{-# LANGUAGE TypeApplications #-}
 
 module Main (main) where
 
-import           Control.Monad.Fail (MonadFail)
-import qualified Control.Monad.Fail as MonadFail
 import           Data.Aeson (FromJSON, ToJSON, parseJSON, toJSON)
 import           Data.Aeson.Types (parseEither)
 import qualified Data.ByteString.Lazy.Char8 as BSLC
@@ -32,13 +23,14 @@ import           GitHub (Issue (..), IssueState (..), Milestone (..), URL (..))
 import           GitHub.Data.Definitions (SimpleUser (..))
 import           GitHub.Data.Id (Id (..))
 import           GitHub.Data.Name (Name (..))
-import           Hedgehog (Gen, MonadTest, Property, PropertyT, forAll,
-                           property, (===))
+import           Hedgehog (Gen, MonadTest, Property, forAll, property, (===))
 import           Hedgehog.Internal.Property (failWith)
+import           RON.Data (ReplicatedAsObject, getObject, newObject)
 import           RON.Event (Event (..), LocalTime (TEpoch), applicationSpecific,
                             encodeEvent)
 import           RON.Internal.Word (ls60)
 import           RON.Storage.Test (TestDB, runStorageSim)
+import           RON.Text (parseObject, serializeObject)
 import           RON.Types (UUID)
 import           Test.Tasty (TestTree, testGroup)
 import           Test.Tasty.Hedgehog (testProperty)
@@ -56,10 +48,8 @@ import           FF.Upgrade (upgradeDatabase)
 
 import qualified Gen
 
--- type ByteStringL = BSL.ByteString
-
 main :: IO ()
-main = $defaultMainGenerator
+main = $(defaultMainGenerator)
 
 prop_not_exist :: Property
 prop_not_exist = property $ do
@@ -170,17 +160,27 @@ evalEitherS = \case
     Left  x -> withFrozenCallStack $ failWith Nothing x
     Right a -> pure a
 
-jsonRoundtrip
-    :: forall a . (Show a, Eq a, FromJSON a, ToJSON a) => Gen a -> Property
+jsonRoundtrip :: (Eq a, FromJSON a, Show a, ToJSON a) => Gen a -> Property
 jsonRoundtrip genA = property $ do
     a <- forAll genA
     a' <- evalEitherS $ parseEither parseJSON $ toJSON a
     a === a'
 
+ronRoundtrip :: (Eq a, ReplicatedAsObject a, Show a) => Gen a -> Property
+ronRoundtrip genA = property $ do
+    a <- forAll genA
+    (obj, _) <- evalEitherS $ runStorageSim mempty $ newObject a
+    let (u, bs) = serializeObject obj
+    obj' <- evalEitherS $ parseObject u bs
+    obj === obj'
+    a' <- evalEitherS $ getObject obj'
+    a === a'
+
 test_JSON_Tests :: [TestTree]
 test_JSON_Tests =
-    [ testProperty "Config" $ jsonRoundtrip Gen.config
-    -- , testProperty "Note"   $ ronRoundtrip Gen.note
+    [ testProperty "Config"  $ jsonRoundtrip Gen.config
+    , testProperty "Contact" $ ronRoundtrip  Gen.contact
+    , testProperty "Note"    $ ronRoundtrip  Gen.note
     ]
 
 ui :: ConfigUI
@@ -312,12 +312,6 @@ fs123merged =
 (-:) :: a -> b -> (a, b)
 a -: b = (a, b)
 infixr 0 -:
-
-instance Monad m => MonadFail (PropertyT m) where
-    fail = fail  -- MonadFail.fail via Monad.fail
-
--- uuid :: HasCallStack => ByteString -> UUID
--- uuid = either (error "Bad UUID") id . parseUuid
 
 event :: Word64 -> Word64 -> UUID
 event x y = encodeEvent $ Event (TEpoch $ ls60 x) $ applicationSpecific y

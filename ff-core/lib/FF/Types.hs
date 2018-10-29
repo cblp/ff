@@ -138,7 +138,9 @@ $(let
             }
     contact = StructLww "Contact"
         [("status", field status), ("name", field rgaString)]
-        def{saHaskellFieldPrefix = "contact_"}
+        def { saHaskellDeriving    = ["Eq", "Show"]
+            , saHaskellFieldPrefix = "contact_"
+            }
     note = StructLww "Note"
         [ ("status",  field noteStatus)
         , ("text",    field rgaString)
