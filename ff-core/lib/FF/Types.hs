@@ -53,35 +53,8 @@ import qualified RON.UUID as UUID
 
 import           FF.CrdtAesonInstances ()
 
-type Limit = Natural
-
--- | Sub-status of an 'Active' task from the perspective of the user.
-data TaskMode
-    = Overdue Natural   -- ^ end in past, with days
-    | EndToday          -- ^ end today
-    | EndSoon Natural   -- ^ started, end in future, with days
-    | Actual            -- ^ started, no end
-    | Starting Natural  -- ^ starting in future, with days
-    deriving (Eq, Show)
-
-taskModeOrder :: TaskMode -> Int
-taskModeOrder = \case
-    Overdue _  -> 0
-    EndToday   -> 1
-    EndSoon _  -> 2
-    Actual     -> 3
-    Starting _ -> 4
-
-instance Ord TaskMode where
-    Overdue  n <= Overdue  m = n >= m
-    EndSoon  n <= EndSoon  m = n <= m
-    Starting n <= Starting m = n <= m
-    m1         <= m2         = taskModeOrder m1 <= taskModeOrder m2
-
-type ModeMap = Map TaskMode
-
 data Status = Active | Archived | Deleted
-    deriving (Bounded, Enum, Eq, Read, Show)
+    deriving (Bounded, Enum, Eq, Show)
 
 active, archived, deleted :: UUID
 active   = fromJust $ UUID.mkName "Active"
@@ -176,17 +149,57 @@ $(let
         def{saHaskellDeriving = ["Eq", "Show"], saHaskellFieldPrefix = "note_"}
     in mkReplicated [DStructLww track, DStructLww contact, DStructLww note])
 
-instance Collection Contact where
-    collectionName = "contact"
-    fallbackParse = parseContactV1
+type NoteId = DocId Note
+
+type ContactId = DocId Contact
 
 instance Collection Note where
     collectionName = "note"
     fallbackParse = parseNoteV1
 
-type ContactId = DocId Contact
+instance Collection Contact where
+    collectionName = "contact"
+    fallbackParse = parseContactV1
 
-type NoteId = DocId Note
+data Sample a = Sample
+    { sample_items :: [a]
+    , sample_total :: Natural
+    }
+    deriving (Eq, Show)
+
+type ContactSample = EntitySample Contact
+
+type NoteSample = EntitySample Note
+
+emptySample :: Sample a
+emptySample = Sample{sample_items = [], sample_total = 0}
+
+-- | Number of notes omitted from the sample.
+omitted :: Sample a -> Natural
+omitted Sample{..} = sample_total - genericLength sample_items
+
+-- | Sub-status of an 'Active' task from the perspective of the user.
+data TaskMode
+    = Overdue Natural   -- ^ end in past, with days
+    | EndToday          -- ^ end today
+    | EndSoon Natural   -- ^ started, end in future, with days
+    | Actual            -- ^ started, no end
+    | Starting Natural  -- ^ starting in future, with days
+    deriving (Eq, Show)
+
+taskModeOrder :: TaskMode -> Int
+taskModeOrder = \case
+    Overdue _  -> 0
+    EndToday   -> 1
+    EndSoon _  -> 2
+    Actual     -> 3
+    Starting _ -> 4
+
+instance Ord TaskMode where
+    Overdue  n <= Overdue  m = n >= m
+    EndSoon  n <= EndSoon  m = n <= m
+    Starting n <= Starting m = n <= m
+    m1         <= m2         = taskModeOrder m1 <= taskModeOrder m2
 
 taskMode :: Day -> Note -> TaskMode
 taskMode today Note{note_start, note_end} = case note_end of
@@ -204,6 +217,10 @@ taskMode today Note{note_start, note_end} = case note_end of
     starting = helper Starting
     helper m x y = m . fromIntegral $ diffDays x y
 
+type ModeMap = Map TaskMode
+
+type Limit = Natural
+
 data EntityF f a = EntityF{entityId :: f UUID, entityVal :: a}
 deriving instance (Eq a, Eq (f UUID)) => Eq (EntityF f a)
 deriving instance (Show a, Show (f UUID)) => Show (EntityF f a)
@@ -216,24 +233,7 @@ pattern Entity :: UUID -> a -> Entity a
 pattern Entity uuid a = EntityF (Identity uuid) a
 {-# COMPLETE Entity #-}
 
-data Sample a = Sample
-    { sample_items  :: [a]
-    , sample_total :: Natural
-    }
-    deriving (Eq, Show)
-
 type EntitySample a = Sample (Entity a)
-
-type ContactSample = EntitySample Contact
-
-type NoteSample = EntitySample Note
-
-emptySample :: Sample a
-emptySample = Sample{sample_items = [], sample_total = 0}
-
--- | Number of notes omitted from the sample.
-omitted :: Sample a -> Natural
-omitted Sample{..} = sample_total - genericLength sample_items
 
 -- * Legacy, v1
 
@@ -251,17 +251,15 @@ parseNoteV1 objectId = eitherDecode >=> parseEither p where
             startTime'  = timeFromV1 startTime
             statusTime' = timeFromV1 statusTime
         let objectFrame = Map.fromList
-                [   ( (lwwType, objectId)
-                    , mkStateChunk
-                        [ Op endTime'    endName    (toPayload endValue)
-                        , Op startTime'  startName  (toPayload startValue)
-                        , Op statusTime' statusName (toPayload statusValue)
-                        , Op textTime    textName   (toPayload textId)
-                        ]
-                    )
-                ,   ( (rgaType, textId)
-                    , stateToChunk $ rgaFromV1 textValue
-                    )
+                [ ( (lwwType, objectId)
+                  , mkStateChunk
+                      [ Op endTime'    endName    (toPayload endValue)
+                      , Op startTime'  startName  (toPayload startValue)
+                      , Op statusTime' statusName (toPayload statusValue)
+                      , Op textTime    textName   (toPayload textId)
+                      ]
+                  )
+                , ((rgaType, textId), stateToChunk $ rgaFromV1 textValue)
                 ]
         pure Object{objectId, objectFrame}
     textId = textTime
@@ -280,11 +278,10 @@ rgaFromV1 :: CRDT.RgaString -> RgaRaw
 rgaFromV1 (CRDT.RGA oldRga) = stateFromChunk
     [ Op event ref (toPayload a)
     | (vid, a) <- oldRga
-    , let
-        event = timeFromV1 vid
-        ref   = case a of
-            '\0' -> UUID.succValue event
-            _    -> UUID.zero
+    , let event = timeFromV1 vid
+          ref   = case a of
+              '\0' -> UUID.succValue event
+              _    -> UUID.zero
     ]
 
 -- used in parseNoteV1

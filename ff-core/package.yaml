@@ -39,8 +39,6 @@ library:
     - ron
     - ron-storage
   source-dirs: lib
-  other-modules:
-    - FF.Types.Internal
 
 tests:
   features:
