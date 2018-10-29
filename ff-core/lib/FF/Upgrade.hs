@@ -9,7 +9,7 @@ import           Data.Foldable (for_)
 import           RON.Storage (Collection, MonadStorage, listCollections,
                               listDocuments, modify)
 
-import           FF.Types2 (Note)
+import           FF.Types (Note)
 
 upgradeDatabase :: MonadStorage m => m ()
 upgradeDatabase = do

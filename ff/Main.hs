@@ -44,7 +44,7 @@ import           FF.Options (Cmd (..), CmdAction (..), Contact (..),
                              Shuffle (..), Track (..), parseOptions)
 import qualified FF.Options as Options
 import           FF.Serve (cmdServe)
-import           FF.Types2 (EntityF (..))
+import           FF.Types (EntityF (..))
 import           FF.UI (sampleFmap, withHeader)
 import qualified FF.UI as UI
 -- import           FF.Upgrade (upgradeDatabase)

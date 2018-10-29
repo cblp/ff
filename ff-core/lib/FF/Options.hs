@@ -38,8 +38,8 @@ import qualified RON.Storage.IO as Storage
 import           RON.Text.Parse (parseUuid)
 import           RON.Types (UUID)
 
-import           FF.Types2 (ContactId, Limit, Note, NoteId)
-import qualified FF.Types2
+import           FF.Types (ContactId, Limit, Note, NoteId)
+import qualified FF.Types
 
 data Cmd
     = CmdConfig (Maybe Config)
@@ -245,7 +245,7 @@ parseOptions h = execParser $ i parser "A note taker and task tracker"
 
     completeNoteIds = docIdCompleter @Note
 
-    completeContactIds = docIdCompleter @FF.Types2.Contact
+    completeContactIds = docIdCompleter @FF.Types.Contact
 
     docIdCompleter :: forall a . Collection a => Completer
     docIdCompleter = listIOCompleter $

@@ -65,14 +65,14 @@ import           System.Random (StdGen, mkStdGen, randoms, split)
 
 import           FF.Config (ConfigUI (..))
 import           FF.Options (Edit (..), New (..))
-import           FF.Types2 (Contact (..), ContactId, ContactSample, Entity,
-                            pattern Entity, EntityF (..), Limit, ModeMap,
-                            Note (..), NoteId, NoteSample, NoteStatus (..),
-                            Sample (..), Status (..), Track, contact_name_zoom,
-                            contact_status_assign, note_end_assign,
-                            note_end_read, note_start_assign, note_start_read,
-                            note_status_assign, note_status_read,
-                            note_text_zoom, note_track_read, taskMode)
+import           FF.Types (Contact (..), ContactId, ContactSample, Entity,
+                           pattern Entity, EntityF (..), Limit, ModeMap,
+                           Note (..), NoteId, NoteSample, NoteStatus (..),
+                           Sample (..), Status (..), Track, contact_name_zoom,
+                           contact_status_assign, note_end_assign,
+                           note_end_read, note_start_assign, note_start_read,
+                           note_status_assign, note_status_read, note_text_zoom,
+                           note_track_read, taskMode)
 
 loadAll :: (Collection a, MonadStorage m) => m [Entity a]
 loadAll = do

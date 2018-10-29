@@ -12,7 +12,7 @@
 {-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE TypeApplications #-}
 
-module FF.Types2 where
+module FF.Types where
 
 import           Control.Monad ((>=>))
 import qualified CRDT.Cv.RGA as CRDT

@@ -28,8 +28,8 @@ import           GitHub.Endpoints.Issues (issuesForRepoR)
 import           System.Process (readProcess)
 
 import           FF (splitModes, takeSamples)
-import           FF.Types2 (Limit, ModeMap, Note (..), NoteStatus (..), Sample,
-                            Status (..), Track (..))
+import           FF.Types (Limit, ModeMap, Note (..), NoteStatus (..), Sample,
+                           Status (..), Track (..))
 
 getIssues
     :: Maybe Text

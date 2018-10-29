@@ -32,9 +32,9 @@ import           Text.PrettyPrint.Mainland (Doc, hang, indent, sep, space,
 import qualified Text.PrettyPrint.Mainland as Pretty
 import           Text.PrettyPrint.Mainland.Class (Pretty, ppr)
 
-import           FF.Types2 (Contact (..), ContactSample, Entity, pattern Entity,
-                            EntityF (..), ModeMap, Note (..), NoteSample,
-                            Sample (..), TaskMode (..), Track (..), omitted)
+import           FF.Types (Contact (..), ContactSample, Entity, pattern Entity,
+                           EntityF (..), ModeMap, Note (..), NoteSample,
+                           Sample (..), TaskMode (..), Track (..), omitted)
 
 (.=) :: Pretty a => String -> a -> Doc
 label .= value = hang indentation $ Pretty.text label <+/> ppr value
