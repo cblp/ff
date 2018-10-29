@@ -276,7 +276,7 @@ cmdNewContact name = do
 cmdDeleteContact :: MonadStorage m => ContactId -> m (Entity Contact)
 cmdDeleteContact cid = modifyAndView cid $ do
     contact_status_assign Deleted
-    contact_name_zoom $ RGA.editText ""
+    contact_name_zoom $   RGA.editText ""
 
 cmdSearch
     :: Text  -- ^ query
@@ -296,9 +296,9 @@ cmdDeleteNote :: MonadStorage m => NoteId -> m (Entity Note)
 cmdDeleteNote nid = modifyAndView nid $ do
     assertNoteIsNative
     note_status_assign $ TaskStatus Deleted
-    note_text_zoom $ RGA.editText ""
-    note_start_assign $ fromGregorian 0 1 1
-    note_end_assign Nothing
+    note_text_zoom     $ RGA.editText ""
+    note_start_assign  $ fromGregorian 0 1 1
+    note_end_assign      Nothing
 
 cmdDone :: MonadStorage m => NoteId -> m (Entity Note)
 cmdDone nid = modifyAndView nid $ do
