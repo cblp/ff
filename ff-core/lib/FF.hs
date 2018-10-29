@@ -215,6 +215,24 @@ takeSamples (Just limit) = (`evalState` limit) . traverse takeSample
         | a <= b    = 0
         | otherwise = a - b
 
+updateTrackedNote
+    :: MonadStorage m
+    => HashMap Track (Object Note)
+        -- ^ selection of all aready tracked notes
+    -> Note  -- ^ external note to insert
+    -> m ()
+updateTrackedNote oldNotes note = case note of
+    Note{note_track = Just track} -> do
+        obj <- case HashMap.lookup track oldNotes of
+            Nothing -> newObject note
+            Just oldNote -> (`execStateT` oldNote) $ do
+                note_status_assignIfDiffer note_status
+                note_text_zoom $ RGA.edit note_text
+        createVersion obj
+    _ -> throwError "External note is expected to be supplied with tracking"
+  where
+    Note{note_status, note_text} = note
+
 updateTrackedNotes :: [Note] -> Storage ()
 updateTrackedNotes nvNews = do
     -- TODO(2018-10-22, cblp) index notes by track in the database and select
@@ -226,24 +244,6 @@ updateTrackedNotes nvNews = do
     let oldNotesByTrack = HashMap.fromList
             [(track, note) | (Just track, note) <- oldNotesWithTrack]
     for_ nvNews $ updateTrackedNote oldNotesByTrack
-  where
-    updateTrackedNote
-        :: MonadStorage m
-        => HashMap Track (Object Note)
-            -- ^ selection of all aready tracked notes
-        -> Note  -- ^ external note to insert
-        -> m ()
-    updateTrackedNote oldNotes note = case note of
-        Note{note_track = Just track} -> do
-            obj <- case HashMap.lookup track oldNotes of
-                Nothing -> newObject note
-                Just oldNote -> (`execStateT` oldNote) $ do
-                    note_status_assignIfDiffer note_status
-                    note_text_zoom $ RGA.edit note_text
-            createVersion obj
-        _ -> throwError "External note is expected to be supplied with tracking"
-      where
-        Note{note_status, note_text} = note
 
 cmdNewNote :: MonadStorage m => New -> Day -> m (Entity Note)
 cmdNewNote New{newText, newStart, newEnd, newWiki} today = do
