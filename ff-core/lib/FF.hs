@@ -321,7 +321,7 @@ cmdEdit Edit{..} = case (editText, editStart, editEnd) of
         modifyAndView editId $ do
             whenJust editText $ const assertNoteIsNative
             checkStartEnd
-            update'
+            update
   where
     checkStartEnd = do
         start <- note_start_read
@@ -334,7 +334,7 @@ cmdEdit Edit{..} = case (editText, editStart, editEnd) of
         whenJust newStartEnd $
             uncurry assertStartBeforeEnd
 
-    update' = do
+    update = do
         status <- note_status_read
         (start, end) <- case status of
             Wiki -> case (editStart, editEnd) of
