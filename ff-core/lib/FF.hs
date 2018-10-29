@@ -65,11 +65,10 @@ import           System.Random (StdGen, mkStdGen, randoms, split)
 
 import           FF.Config (ConfigUI (..))
 import           FF.Options (Edit (..), New (..))
-import           FF.Types (Limit, ModeMap)
 import           FF.Types2 (Contact (..), ContactId, ContactSample, Entity,
-                            pattern Entity, EntityF (..), Note (..), NoteId,
-                            NoteSample, NoteStatus (..), Sample (..),
-                            Status (..), Track, contact_name_zoom,
+                            pattern Entity, EntityF (..), Limit, ModeMap,
+                            Note (..), NoteId, NoteSample, NoteStatus (..),
+                            Sample (..), Status (..), Track, contact_name_zoom,
                             contact_status_assign, note_end_assign,
                             note_end_read, note_start_assign, note_start_read,
                             note_status_assign, note_status_read,

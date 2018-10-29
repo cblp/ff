@@ -33,9 +33,8 @@ import           Web.Scotty (get, html, scottyOpts, settings, verbose)
 
 import           FF (getNoteSamples, getUtcToday)
 import           FF.Config (ConfigUI (..))
-import           FF.Types (ModeMap, TaskMode (..))
-import           FF.Types2 (pattern Entity, Note (..), NoteSample, Sample (..),
-                            Track (..), omitted)
+import           FF.Types2 (pattern Entity, ModeMap, Note (..), NoteSample,
+                            Sample (..), TaskMode (..), Track (..), omitted)
 import           FF.UI (sampleLabel)
 
 cmdServe :: MonadIO m => Storage.Handle -> ConfigUI -> m ()

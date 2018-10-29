@@ -26,6 +26,7 @@ import           Data.ByteString.Lazy (ByteString)
 import           Data.Functor.Identity (Identity (Identity))
 import           Data.Hashable (Hashable)
 import           Data.List (genericLength)
+import           Data.Map.Strict (Map)
 import qualified Data.Map.Strict as Map
 import           Data.Maybe (fromJust)
 import           Data.Time (Day, diffDays)
@@ -50,7 +51,34 @@ import           RON.Types (Atom (AUuid), Object (Object), Op (Op), UUID,
                             objectFrame, objectId)
 import qualified RON.UUID as UUID
 
-import           FF.Types (TaskMode (Actual, EndSoon, EndToday, Overdue, Starting))
+import           FF.CrdtAesonInstances ()
+
+type Limit = Natural
+
+-- | Sub-status of an 'Active' task from the perspective of the user.
+data TaskMode
+    = Overdue Natural   -- ^ end in past, with days
+    | EndToday          -- ^ end today
+    | EndSoon Natural   -- ^ started, end in future, with days
+    | Actual            -- ^ started, no end
+    | Starting Natural  -- ^ starting in future, with days
+    deriving (Eq, Show)
+
+taskModeOrder :: TaskMode -> Int
+taskModeOrder = \case
+    Overdue _  -> 0
+    EndToday   -> 1
+    EndSoon _  -> 2
+    Actual     -> 3
+    Starting _ -> 4
+
+instance Ord TaskMode where
+    Overdue  n <= Overdue  m = n >= m
+    EndSoon  n <= EndSoon  m = n <= m
+    Starting n <= Starting m = n <= m
+    m1         <= m2         = taskModeOrder m1 <= taskModeOrder m2
+
+type ModeMap = Map TaskMode
 
 data Status = Active | Archived | Deleted
     deriving (Bounded, Enum, Eq, Read, Show)

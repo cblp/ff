@@ -10,14 +10,6 @@ dependencies:
   # project
   - ff-core
 
-library:
-  dependencies:
-    - crdt
-    - lens
-    - mtl
-  exposed-modules:
-    - FF.Test
-
 tests:
   test:
     dependencies:
@@ -37,9 +29,6 @@ tests:
       # organization
       - ron
       - ron-storage
-
-      # package
-      - ff-test
 
     main: Main
     source-dirs: test

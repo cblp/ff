@@ -38,8 +38,7 @@ import qualified RON.Storage.IO as Storage
 import           RON.Text.Parse (parseUuid)
 import           RON.Types (UUID)
 
-import           FF.Types (Limit)
-import           FF.Types2 (ContactId, Note, NoteId)
+import           FF.Types2 (ContactId, Limit, Note, NoteId)
 import qualified FF.Types2
 
 data Cmd

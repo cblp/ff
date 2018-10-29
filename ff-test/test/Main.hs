@@ -48,9 +48,10 @@ import           FF (cmdNewNote, getNoteSamples)
 import           FF.Config (ConfigUI (..))
 import qualified FF.Github as Github
 import           FF.Options (New (..))
-import           FF.Types (Limit, TaskMode (Overdue))
-import           FF.Types2 (pattern Entity, Note (..), NoteStatus (TaskStatus),
-                            Sample (..), Status (Active), Track (..), entityVal)
+import           FF.Types2 (pattern Entity, Limit, Note (..),
+                            NoteStatus (TaskStatus), Sample (..),
+                            Status (Active), TaskMode (Overdue), Track (..),
+                            entityVal)
 import           FF.Upgrade (upgradeDatabase)
 
 import qualified Gen

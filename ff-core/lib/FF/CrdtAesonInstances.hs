@@ -13,15 +13,14 @@ module FF.CrdtAesonInstances
 import           CRDT.Cv.RGA (RgaString)
 import qualified CRDT.Cv.RGA as RGA
 import           CRDT.LamportClock (LamportTime (LamportTime), Pid)
-import           CRDT.LWW (LWW (LWW), time, value)
-import           Data.Aeson (FromJSON, ToJSON, Value (Array, Null, String),
-                             parseJSON, toJSON, withArray)
+import           CRDT.LWW (LWW (LWW))
+import           Data.Aeson (FromJSON, Value (Array, Null, String), parseJSON,
+                             withArray)
 import           Data.Aeson.TH (defaultOptions, deriveJSON)
 import           Data.Aeson.Types (Parser, typeMismatch)
-import           Data.Empty (empty, isEmpty)
+import           Data.Empty (empty)
 import           Data.Foldable (toList)
 import qualified Data.Text as Text
-import           GHC.Exts (fromList)
 
 deriveJSON defaultOptions ''Pid
 
@@ -32,15 +31,8 @@ instance FromJSON a => FromJSON (LWW a) where
         _ -> fail $ unwords
             ["expected array of 3 values, got", show $ length a, "values"]
 
-instance ToJSON a => ToJSON (LWW a) where
-    toJSON LWW{value, time = LamportTime time pid} =
-        array [toJSON value, toJSON time, toJSON pid]
-
 instance FromJSON RgaString where
     parseJSON = rgaParseJson
-
-instance ToJSON RgaString where
-    toJSON = rgaToJson
 
 rgaParseJson :: Value -> Parser RgaString
 rgaParseJson = withArray "RGA"
@@ -76,16 +68,5 @@ rgaParseJson = withArray "RGA"
 withList :: String -> ([Value] -> Parser a) -> Value -> Parser a
 withList name p = withArray name (p . toList)
 
-rgaToJson :: RgaString -> Value
-rgaToJson rga = array . map segmentToJson $ RGA.pack rga
-  where
-    segmentToJson (LamportTime time pid, chars) =
-        array $ toJSON time : toJSON pid : if all isEmpty chars
-            then [Null, toJSON $ length chars]
-            else [toJSON chars]
-
 parseLamportTime :: Value -> Value -> Parser LamportTime
 parseLamportTime time pid = LamportTime <$> parseJSON time <*> parseJSON pid
-
-array :: [Value] -> Value
-array = Array . fromList
