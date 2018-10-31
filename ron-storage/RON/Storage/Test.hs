@@ -1,5 +1,6 @@
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE InstanceSigs #-}
+{-# LANGUAGE LambdaCase #-}
 {-# LANGUAGE NamedFieldPuns #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE TypeApplications #-}
@@ -11,6 +12,7 @@ import           Control.Monad.State.Strict (StateT, get, gets, modify,
                                              runStateT)
 import qualified Data.ByteString.Lazy as BSL
 import qualified Data.ByteString.Lazy.Char8 as BSLC
+import           Data.Functor.Compose (Compose (Compose), getCompose)
 import           Data.Map.Strict (Map, (!), (!?))
 import qualified Data.Map.Strict as Map
 import           Data.Maybe (fromMaybe)
@@ -18,9 +20,9 @@ import           RON.Event (Clock, Replica, applicationSpecific)
 import           RON.Event.Simulation (ReplicaSim, runNetworkSim, runReplicaSim)
 
 import           RON.Storage (Collection, CollectionName, DocId (DocId),
-                              MonadStorage, Version, collectionName,
-                              deleteVersion, listCollections, listDocuments,
-                              listVersions, loadVersionContent,
+                              MonadStorage, Version, changeDocId,
+                              collectionName, deleteVersion, listCollections,
+                              listDocuments, listVersions, loadVersionContent,
                               saveVersionContent)
 
 type ByteStringL = BSL.ByteString
@@ -77,5 +79,16 @@ instance MonadStorage StorageSim where
         . (`Map.adjust` doc)
         $ Map.delete version
 
+    changeDocId (DocId old :: DocId a) (DocId new :: DocId a) = StorageSim $
+        modify $ (`Map.adjust` collectionName @a) $ \collection ->
+            maybe collection (uncurry $ Map.insert new) $
+            mapTake old collection
+
 (!.) :: Ord a => Map a (Map b c) -> a -> Map b c
 m !. a = fromMaybe Map.empty $ m !? a
+
+mapTake :: Ord k => k -> Map k a -> Maybe (a, Map k a)
+mapTake k = getCompose . Map.alterF (Compose . f) k where
+    f = \case
+        Nothing -> Nothing
+        Just a  -> Just (a, Nothing)

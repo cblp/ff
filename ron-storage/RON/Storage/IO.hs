@@ -15,9 +15,9 @@ module RON.Storage.IO
     ) where
 
 import           Control.Exception (catch, throwIO)
-import           Control.Monad (filterM, unless)
+import           Control.Monad (filterM, unless, when)
 import           Control.Monad.Except (ExceptT (ExceptT), MonadError,
-                                       runExceptT)
+                                       runExceptT, throwError)
 import           Control.Monad.IO.Class (MonadIO, liftIO)
 import           Control.Monad.Reader (ReaderT (ReaderT), ask, runReaderT)
 import           Control.Monad.Trans (lift)
@@ -31,14 +31,15 @@ import           RON.Event (Clock, EpochClock, EpochTime, Replica, ReplicaId,
                             advance, applicationSpecific, getCurrentEpochTime,
                             getEvents, getPid, runEpochClock)
 import           System.Directory (createDirectoryIfMissing, doesDirectoryExist,
-                                   listDirectory, removeFile)
+                                   doesPathExist, listDirectory, removeFile,
+                                   renameDirectory)
 import           System.FilePath ((</>))
 import           System.IO.Error (isDoesNotExistError)
 
 import           RON.Storage (Collection, DocId (DocId), MonadStorage,
-                              collectionName, deleteVersion, listCollections,
-                              listDocuments, listVersions, loadVersionContent,
-                              saveVersionContent)
+                              changeDocId, collectionName, deleteVersion,
+                              listCollections, listDocuments, listVersions,
+                              loadVersionContent, saveVersionContent)
 
 -- | Environment is the dataDir
 newtype StorageT clock a = Storage (ExceptT String (ReaderT FilePath clock) a)
@@ -86,6 +87,15 @@ instance (Clock m, MonadIO m) => MonadStorage (StorageT m) where
             removeFile file
             `catch` \e ->
                 unless (isDoesNotExistError e) $ throwIO e
+
+    changeDocId old new = Storage $ do
+        db <- ask
+        let oldPath = db </> docDir old
+            newPath = db </> docDir new
+        newPathExists <- liftIO $ doesPathExist newPath
+        when newPathExists $
+            throwError "Internal error: new document id is already taken"
+        liftIO $ renameDirectory oldPath newPath
 
 data Handle = Handle
     { hClock    :: IORef EpochTime

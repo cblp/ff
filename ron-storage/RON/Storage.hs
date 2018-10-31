@@ -13,6 +13,7 @@ module RON.Storage
     , MonadStorage (..)
     , Version
     , createVersion
+    , decodeDocId
     , loadDocument
     , modify
     , rawDocId
@@ -71,14 +72,20 @@ class (Clock m, MonadError String m) => MonadStorage m where
 
     deleteVersion :: Collection a => DocId a -> Version -> m ()
 
+    changeDocId :: Collection a => DocId a -> DocId a -> m ()
+
+decodeDocId :: FilePath -> Maybe UUID
+decodeDocId file = do
+    uuid <- UUID.decodeBase32 file
+    guard $ UUID.encodeBase32 uuid == file
+    pure uuid
+
 readVersion
     :: MonadStorage m => Collection a => DocId a -> Version -> m (Object a)
 readVersion docid@(DocId dir) version = do
     objectId <-
-        liftEither $ maybe (Left $ "Bad Base32 UUID " ++ show dir) Right $ do
-            uuid <- UUID.decodeBase32 dir
-            guard $ UUID.encodeBase32 uuid == dir
-            pure uuid
+        liftEither $
+        maybe (Left $ "Bad Base32 UUID " ++ show dir) Right $ decodeDocId dir
     contents <- loadVersionContent docid version
     case parseStateFrame contents of
         Right objectFrame -> pure Object{objectId, objectFrame}
