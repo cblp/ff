@@ -52,8 +52,8 @@ import           RON.Data (getObject, newObject)
 import qualified RON.Data.RGA as RGA
 import           RON.Event (Clock)
 import           RON.Storage (Collection, DocId (..), Document (..),
-                              MonadStorage, createVersion, listDocuments, load,
-                              modify)
+                              MonadStorage, createVersion, listDocuments,
+                              loadDocument, modify)
 import           RON.Storage.IO (Storage)
 import           RON.Types (Object, objectId)
 import           System.Directory (findExecutable)
@@ -79,7 +79,7 @@ loadAll :: (Collection a, MonadStorage m) => m [Entity a]
 loadAll = do
     docs <- listDocuments
     for docs $ \docId -> do
-        Document{value = obj} <- load docId
+        Document{value = obj} <- loadDocument docId
         entityVal <- liftEither $ getObject obj
         pure $ Entity (objectId obj) entityVal
 
@@ -103,7 +103,7 @@ loadTrackedNotes :: MonadStorage m => m [(NoteId, Object Note)]
 loadTrackedNotes = do
     docs <- listDocuments
     fmap catMaybes . for docs $ \docId -> do
-        Document{value = obj} <- load docId
+        Document{value = obj} <- loadDocument docId
         mTrack <- (`evalStateT` obj) note_track_read
         pure $ mTrack $> (docId, obj)
 

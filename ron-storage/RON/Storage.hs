@@ -13,13 +13,13 @@ module RON.Storage
     , MonadStorage (..)
     , Version
     , createVersion
-    , load
+    , loadDocument
     , modify
     , rawDocId
     , readVersion
     ) where
 
-import           Control.Monad (when)
+import           Control.Monad (guard, when)
 import           Control.Monad.Except (MonadError, catchError, liftEither,
                                        throwError)
 import           Control.Monad.State.Strict (StateT, execStateT)
@@ -75,9 +75,10 @@ readVersion
     :: MonadStorage m => Collection a => DocId a -> Version -> m (Object a)
 readVersion docid@(DocId dir) version = do
     objectId <-
-        liftEither $
-        maybe (Left $ "Bad Base32 UUID " ++ show dir) Right $
-        UUID.decodeBase32 dir
+        liftEither $ maybe (Left $ "Bad Base32 UUID " ++ show dir) Right $ do
+            uuid <- UUID.decodeBase32 dir
+            guard $ UUID.encodeBase32 uuid == dir
+            pure uuid
     contents <- loadVersionContent docid version
     case parseStateFrame contents of
         Right objectFrame -> pure Object{objectId, objectFrame}
@@ -95,22 +96,24 @@ data Document a = Document
     }
     deriving Show
 
-load :: (Collection a, MonadStorage m) => DocId a -> m (Document a)
-load docId = loadRetry (3 :: Int)
+loadDocument :: (Collection a, MonadStorage m) => DocId a -> m (Document a)
+loadDocument docid = loadRetry (3 :: Int)
   where
     loadRetry n
         | n > 0 = do
-            versions0 <- listVersions docId
+            versions0 <- listVersions docid
             case versions0 of
-                []   -> throwError $ "Empty document " ++ show docId
+                []   -> throwError $ "Empty document " ++ show docid
                 v:vs -> do
                     let versions = v :| vs
                     let wrapDoc value = Document{value, versions}
                     e1 <-
                         for versions $ \ver -> do
-                            e1 <- try $ readVersion docId ver
-                            pure $
-                                fmapL (("version " ++ show ver ++ ": ") ++) e1
+                            let ctx =   "document "  ++ show docid
+                                    ++  ", version " ++ ver
+                                    ++  ": "
+                            e1 <- try $ readVersion docid ver
+                            pure $ fmapL (ctx ++) e1
                     liftEither $ wrapDoc <$> vsconcat e1
         | otherwise = throwError "Maximum retries exceeded"
 
@@ -136,7 +139,7 @@ modify
     :: (Collection a, MonadStorage m)
     => DocId a -> StateT (Object a) m () -> m (Object a)
 modify docid f = do
-    Document{value = docOld, versions} <- load docid
+    Document{value = docOld, versions} <- loadDocument docid
     docNew <- execStateT f docOld
     when (docNew /= docOld || length versions /= 1) $ do
         createVersion (Just docid) docNew
