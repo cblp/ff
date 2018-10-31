@@ -6,8 +6,8 @@
 
 module RON.Storage.Test (TestDB, runStorageSim) where
 
-import           Control.Monad.Except (ExceptT, MonadError, runExceptT,
-                                       throwError)
+import           Control.Monad.Except (ExceptT, MonadError, liftEither,
+                                       runExceptT, throwError)
 import           Control.Monad.State.Strict (StateT, get, gets, modify,
                                              runStateT)
 import qualified Data.ByteString.Lazy as BSL
@@ -18,12 +18,14 @@ import           Data.Maybe (fromMaybe)
 import           RON.Event (Clock, Replica, applicationSpecific, getEventUuid)
 import           RON.Event.Simulation (ReplicaSim, runNetworkSim, runReplicaSim)
 import           RON.Text (parseStateFrame, serializeStateFrame)
-import           RON.Types (Object (Object), UUID, objectFrame, objectId)
+import           RON.Types (Object (Object), objectFrame, objectId)
+import qualified RON.UUID as UUID
 
 import           RON.Storage (Collection, CollectionName, DocId (DocId),
-                              MonadStorage, collectionName, createVersion,
-                              deleteVersion, fallbackParse, listCollections,
-                              listDocuments, listVersions, readVersion)
+                              MonadStorage, Version, collectionName,
+                              createVersion, deleteVersion, fallbackParse,
+                              listCollections, listDocuments, listVersions,
+                              readVersion)
 
 type ByteStringL = BSL.ByteString
 
@@ -31,9 +33,7 @@ type TestDB = Map CollectionName (Map DocumentId (Map Version Document))
 
 type Document = [ByteStringL]
 
-type DocumentId = UUID
-
-type Version = UUID
+type DocumentId = FilePath
 
 -- * Storage simulation
 
@@ -60,19 +60,24 @@ instance MonadStorage StorageSim where
         pure $ Map.keys $ db !. collectionName @a !. doc
 
     createVersion (Object{objectId, objectFrame} :: Object a) = do
-        version <- getEventUuid
+        version <- UUID.encodeBase32 <$> getEventUuid
         let document = BSLC.lines $ serializeStateFrame objectFrame
         let insertDocumentVersion =
                 Just . Map.insertWith (<>) version document . fromMaybe mempty
-        let alterDocument = Just .
-                Map.alter insertDocumentVersion objectId . fromMaybe mempty
+        let alterDocument
+                = Just
+                . Map.alter insertDocumentVersion (UUID.encodeBase32 objectId)
+                . fromMaybe mempty
         let alterCollection = Map.alter alterDocument (collectionName @a)
         StorageSim $ modify alterCollection
 
-    readVersion (DocId objectId :: DocId a) version = StorageSim $ do
+    readVersion (DocId dir :: DocId a) version = StorageSim $ do
         db <- get
-        let contents =
-                BSLC.unlines $ db !. collectionName @a !. objectId ! version
+        let contents = BSLC.unlines $ db !. collectionName @a !. dir ! version
+        objectId <-
+            liftEither $
+            maybe (Left $ "Bad Base32 UUID " ++ show dir) Right $
+            UUID.decodeBase32 dir
         case parseStateFrame contents of
             Right objectFrame -> pure Object{objectId, objectFrame}
             Left ronError     -> case fallbackParse objectId contents of

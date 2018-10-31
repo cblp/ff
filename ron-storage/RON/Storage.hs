@@ -9,6 +9,7 @@ module RON.Storage
     , DocId (..)
     , Document (..)
     , MonadStorage (..)
+    , Version
     , load
     , modify
     , rawDocId
@@ -26,15 +27,14 @@ import           Data.Traversable (for)
 import           RON.Data (ReplicatedAsObject, reduceObject')
 import           RON.Event (Clock (..))
 import           RON.Types (Object, UUID)
-import qualified RON.UUID as UUID
 
-type Version = UUID
+type Version = FilePath
 
-newtype DocId a = DocId UUID
+newtype DocId a = DocId FilePath
     deriving Show
 
-rawDocId :: DocId doc -> UUID
-rawDocId (DocId uuid) = uuid
+rawDocId :: DocId doc -> FilePath
+rawDocId (DocId file) = file
 
 type CollectionName = FilePath
 
@@ -78,9 +78,7 @@ load docId = loadRetry (3 :: Int)
                     let versions = v :| vs
                     let wrapDoc value = Document{value, versions}
                     e <- fmap (fmap wrapDoc . vsconcat) $ for versions $ \ver ->
-                        fmapL
-                            (( "version " ++ show ver ++ " ("
-                            ++ UUID.encodeBase32 ver ++ ")" ++ ": ") ++)
+                        fmapL (("version " ++ show ver ++ ": ") ++)
                         <$> catchExcept (readVersion docId ver)
                     liftEither e
         | otherwise = throwError "Maximum retries exceeded"
@@ -89,7 +87,7 @@ load docId = loadRetry (3 :: Int)
 vsconcat :: NonEmpty (Either String (Object a)) -> Either String (Object a)
 vsconcat = foldr1 vappend
   where
-    vappend    (Left  e1)    (Left  e2) = Left $ e1 <> e2
+    vappend    (Left  e1)    (Left  e2) = Left $ e1 ++ "\n" ++ e2
     vappend e1@(Left  _ )     _         = e1
     vappend    (Right a1)    (Right a2) = reduceObject' a1 a2
     vappend     _         e2@(Left  _ ) = e2

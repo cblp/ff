@@ -27,7 +27,6 @@ import qualified Data.ByteString.Lazy as BSL
 import           Data.Coerce (coerce)
 import           Data.IORef (IORef, newIORef)
 import           Data.Maybe (fromMaybe, listToMaybe)
-import           Data.Traversable (for)
 import           Data.Word (Word64)
 import           Network.Info (MAC (MAC), getNetworkInterfaces, mac)
 import           RON.Event (Clock, EpochClock, EpochTime, Replica, ReplicaId,
@@ -73,22 +72,9 @@ instance (Clock m, MonadIO m) => MonadStorage (StorageT m) where
             >>= filterM (doesDirectoryExist . (dataDir </>))
 
     listDocuments :: forall doc. Collection doc => StorageT m [DocId doc]
-    listDocuments = do
-        docdirs <- listDirectoryIfExists (collectionName @doc)
-        for docdirs $
-            fmap DocId . liftEither . maybe (Left "Bad UUID") Right .
-            UUID.decodeBase32
+    listDocuments = map DocId <$> listDirectoryIfExists (collectionName @doc)
 
-    listVersions (docId :: DocId doc) = do
-        files <- listDirectoryIfExists $ docDir docId
-        Storage $
-            for files $ \file -> do
-                let path = docDir docId </> file
-                case UUID.decodeBase32 file of
-                    Just uuid -> pure uuid
-                    Nothing ->
-                        throwError $
-                        "Directory name " ++ path ++ " is not a UUID"
+    listVersions = listDirectoryIfExists . docDir
 
     createVersion obj@Object{objectFrame} = do
         version <- getEventUuid
@@ -100,11 +86,11 @@ instance (Clock m, MonadIO m) => MonadStorage (StorageT m) where
                 createDirectoryIfMissing True docdir
                 BSL.writeFile file $ serializeStateFrame objectFrame
 
-    readVersion docId@(DocId objectId) version = Storage $ do
+    readVersion (DocId dir) version = Storage $ do
         dataDir <- ask
-        contents <- liftIO $
-            BSL.readFile $
-            dataDir </> docDir docId </> UUID.encodeBase32 version
+        contents <- liftIO $ BSL.readFile $ dataDir </> dir </> version
+        objectId <-
+            liftEither $ maybe (Left "Bad UUID") Right $ UUID.decodeBase32 dir
         case parseStateFrame contents of
             Right objectFrame -> pure Object{objectId, objectFrame}
             Left ronError     -> case fallbackParse objectId contents of
@@ -114,7 +100,7 @@ instance (Clock m, MonadIO m) => MonadStorage (StorageT m) where
     deleteVersion docId version = Storage $ do
         dataDir <- ask
         liftIO $ do
-            let file = dataDir </> docDir docId </> UUID.encodeBase32 version
+            let file = dataDir </> docDir docId </> version
             removeFile file
             `catch` \e ->
                 unless (isDoesNotExistError e) $ throwIO e
@@ -148,10 +134,11 @@ listDirectoryIfExists relpath = Storage $ do
         if exists then listDirectory dir else pure []
 
 docDir :: forall a . Collection a => DocId a -> FilePath
-docDir (DocId docId) = collectionName @a </> UUID.encodeBase32 docId
+docDir (DocId dir) = collectionName @a </> dir
 
 objectDir :: forall a . Collection a => Object a -> FilePath
-objectDir Object{objectId} = docDir (DocId objectId :: DocId a)
+objectDir Object{objectId} =
+    docDir (DocId $ UUID.encodeBase32 objectId :: DocId a)
 
 -- MAC address
 

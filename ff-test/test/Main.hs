@@ -74,7 +74,7 @@ prop_smoke = property $ do
             Sample
                 { sample_items =
                     [Entity
-                        (event 2 98)
+                        (event 77 77)
                         Note
                             { note_status = TaskStatus Active
                             , note_text   = "helloworld"
@@ -87,36 +87,38 @@ prop_smoke = property $ do
     fs' === fs123
 
 fs123 :: TestDB
-fs123 = Map.singleton "note" $ Map.singleton (event 2 98) $ Map.fromList
-    [ event 2 93 -: BSLC.lines [i|
-        *lww #B/0000000002+000000001Y !
-            @20+21  :end    >some =17 =06 =19
-            @25+26  :start  =22 =11 =24
-            @29+30  :status >Active
-            @07+07  :text   >2+I9
-                    :track  >none
-        *rga #2+I9 :0 !
-            @6+7            'h'
-            @7+7            'e'
-            @8+7            'l'
-            @9+7            'l'
-            @A+7            'o'
-        |]
-    , event 3 99 -: BSLC.lines [i|
-        *lww #B/0000000002+000000001Y !
-            @15+16  :end    >some =12 =01 =14
-            @07+08  :start  =09 =10 =11
-            @27+28  :status >Active
-            @04+05  :text   >2+I9
-                    :track  >none
-        *rga #2+I9 :0 !
-            @4+5            'w'
-            @5+5            'o'
-            @6+5            'r'
-            @7+5            'l'
-            @8+5            'd'
-        |]
-    ]
+fs123 =
+    Map.singleton "note" $ Map.singleton "B00000000002D-200000000002D" $
+    Map.fromList
+        [ "event 2 93" -: BSLC.lines [i|
+            *lww #B/000000001D+000000001D !
+                @20+21  :end    >some =17 =06 =19
+                @25+26  :start  =22 =11 =24
+                @29+30  :status >Active
+                @07+07  :text   >2+I9
+                        :track  >none
+            *rga #2+I9 :0 !
+                @6+7            'h'
+                @7+7            'e'
+                @8+7            'l'
+                @9+7            'l'
+                @A+7            'o'
+            |]
+        , "event 3 99" -: BSLC.lines [i|
+            *lww #000000001Q$000000001Q !
+                @15+16  :end    >some =12 =01 =14
+                @07+08  :start  =09 =10 =11
+                @27+28  :status >Active
+                @04+05  :text   >2+I9
+                        :track  >none
+            *rga #2+I9 :0 !
+                @4+5            'w'
+                @5+5            'o'
+                @6+5            'r'
+                @7+5            'l'
+                @8+5            'd'
+            |]
+        ]
 
 agendaLimit :: Maybe Limit
 agendaLimit = Just 10
@@ -139,8 +141,8 @@ prop_new = property $ do
     newStart = Just $ fromGregorian 2154 5 6
     newEnd   = Just $ fromGregorian 3150 1 2
     fs =
-        Map.singleton "note" $ Map.singleton (event 5 34) $
-        Map.singleton (event 6 34) $
+        Map.singleton "note" $ Map.singleton "B000000000005-2000000000012" $
+        Map.singleton "B000000000006-2000000000012" $
         map encodeUtf8
             [ "*lww #B/)5+)Y @` !"
             ,   "\t:end >some =3150 =1 =2 ,"
@@ -271,31 +273,33 @@ prop_json2ron = property $ do
         db' === fs123merged
 
 fs123json :: TestDB
-fs123json = Map.singleton "note" $ Map.singleton (event 2 98) $ Map.fromList
-    [ event 2 72 -: BSLC.lines [i|{
-        "end"   : ["17-06-19", 20, 21],
-        "start" : ["22-11-24", 25, 26],
-        "status": ["Active",   29, 30],
-        "text"  : ["hello",     6,  7]
-        } |]
-    , event 2 78 -: BSLC.lines [i|{
-        "end"   : ["12-01-14", 15, 16],
-        "start" : ["9-10-11",   7,  8],
-        "status": ["Active",   27, 28],
-        "text"  : ["world",     4,  5]
-        } |]
-    ]
+fs123json =
+    Map.singleton "note" $ Map.singleton "000000000008K-000000000001J" $
+    Map.fromList
+        [ "event 2 72" -: BSLC.lines [i|{
+            "end"   : ["17-06-19", 20, 21],
+            "start" : ["22-11-24", 25, 26],
+            "status": ["Active",   29, 30],
+            "text"  : ["hello",     6,  7]
+            } |]
+        , "event 2 78" -: BSLC.lines [i|{
+            "end"   : ["12-01-14", 15, 16],
+            "start" : ["9-10-11",   7,  8],
+            "status": ["Active",   27, 28],
+            "text"  : ["world",     4,  5]
+            } |]
+        ]
 
 fs123merged :: TestDB
 fs123merged =
-    Map.singleton "note" $ Map.singleton (event 2 98) $
-    Map.singleton (event 1 34)
-        [ "*lww #B/)2+]1Y @B/6n7T8JWK0T+)U !"
+    Map.singleton "note" $ Map.singleton "000000000008K-000000000001J" $
+    Map.singleton "B000000000001-2000000000012"
+        [ "*lww #]4K$)o @B/6n7T8JWK0T+)U !"
         ,   "\t@)K+)L :end >some =17 =6 =19 ,"
         ,   "\t@)P+)Q :start =22 =11 =24 ,"
         ,   "\t@)T+)U :status >Active ,"
-        ,   "\t@`)3 :text >)3 ,"
-        , "*rga #)3 @6n7T8JWK0A+]07 :0 !"
+        ,   "\t@`)L :text >)L ,"
+        , "*rga #)L @B/6n7T8JWK0A+)7 :0 !"
         ,   "\t@)6 'h' ,"
         ,   "\t@)7 'e' ,"
         ,   "\t@)8 'l' ,"
