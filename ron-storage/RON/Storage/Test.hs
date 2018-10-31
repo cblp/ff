@@ -6,8 +6,7 @@
 
 module RON.Storage.Test (TestDB, runStorageSim) where
 
-import           Control.Monad.Except (ExceptT, MonadError, liftEither,
-                                       runExceptT, throwError)
+import           Control.Monad.Except (ExceptT, MonadError, runExceptT)
 import           Control.Monad.State.Strict (StateT, get, gets, modify,
                                              runStateT)
 import qualified Data.ByteString.Lazy as BSL
@@ -17,15 +16,14 @@ import qualified Data.Map.Strict as Map
 import           Data.Maybe (fromMaybe)
 import           RON.Event (Clock, Replica, applicationSpecific, getEventUuid)
 import           RON.Event.Simulation (ReplicaSim, runNetworkSim, runReplicaSim)
-import           RON.Text (parseStateFrame, serializeStateFrame)
+import           RON.Text (serializeStateFrame)
 import           RON.Types (Object (Object), objectFrame, objectId)
 import qualified RON.UUID as UUID
 
 import           RON.Storage (Collection, CollectionName, DocId (DocId),
                               MonadStorage, Version, collectionName,
-                              createVersion, deleteVersion, fallbackParse,
-                              listCollections, listDocuments, listVersions,
-                              readVersion)
+                              createVersion, deleteVersion, listCollections,
+                              listDocuments, listVersions, loadVersionContent)
 
 type ByteStringL = BSL.ByteString
 
@@ -71,20 +69,9 @@ instance MonadStorage StorageSim where
         let alterCollection = Map.alter alterDocument (collectionName @a)
         StorageSim $ modify alterCollection
 
-    readVersion (DocId dir :: DocId a) version = StorageSim $ do
+    loadVersionContent (DocId dir :: DocId a) version = StorageSim $ do
         db <- get
-        let contents = BSLC.unlines $ db !. collectionName @a !. dir ! version
-        objectId <-
-            liftEither $
-            maybe (Left $ "Bad Base32 UUID " ++ show dir) Right $
-            UUID.decodeBase32 dir
-        case parseStateFrame contents of
-            Right objectFrame -> pure Object{objectId, objectFrame}
-            Left ronError     -> case fallbackParse objectId contents of
-                Right object       -> pure object
-                Left fallbackError -> throwError $ case BSLC.head contents of
-                    '{' -> fallbackError
-                    _   -> ronError
+        pure $ BSLC.unlines $ db !. collectionName @a !. dir ! version
 
     deleteVersion (DocId doc :: DocId a) version
         = StorageSim

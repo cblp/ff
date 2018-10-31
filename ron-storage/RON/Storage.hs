@@ -13,6 +13,7 @@ module RON.Storage
     , load
     , modify
     , rawDocId
+    , readVersion
     ) where
 
 import           Control.Monad (when)
@@ -20,13 +21,16 @@ import           Control.Monad.Except (MonadError, catchError, liftEither,
                                        throwError)
 import           Control.Monad.State.Strict (StateT, execStateT)
 import           Data.ByteString.Lazy (ByteString)
+import qualified Data.ByteString.Lazy.Char8 as BSLC
 import           Data.Foldable (for_)
 import           Data.List.NonEmpty (NonEmpty ((:|)))
 import           Data.Traversable (for)
 
 import           RON.Data (ReplicatedAsObject, reduceObject')
-import           RON.Event (Clock (..))
-import           RON.Types (Object, UUID)
+import           RON.Event (Clock)
+import           RON.Text (parseStateFrame)
+import           RON.Types (Object (Object), UUID, objectFrame, objectId)
+import qualified RON.UUID as UUID
 
 type Version = FilePath
 
@@ -55,9 +59,25 @@ class (Clock m, MonadError String m) => MonadStorage m where
     -- | Must create collection and document if not exist
     createVersion :: Collection a => Object a -> m ()
 
-    readVersion :: Collection a => DocId a -> Version -> m (Object a)
+    loadVersionContent :: Collection a => DocId a -> Version -> m ByteString
 
     deleteVersion :: Collection a => DocId a -> Version -> m ()
+
+readVersion
+    :: MonadStorage m => Collection a => DocId a -> Version -> m (Object a)
+readVersion docid@(DocId dir) version = do
+    objectId <-
+        liftEither $
+        maybe (Left $ "Bad Base32 UUID " ++ show dir) Right $
+        UUID.decodeBase32 dir
+    contents <- loadVersionContent docid version
+    case parseStateFrame contents of
+        Right objectFrame -> pure Object{objectId, objectFrame}
+        Left ronError     -> case fallbackParse objectId contents of
+            Right object       -> pure object
+            Left fallbackError -> throwError $ case BSLC.head contents of
+                '{' -> fallbackError
+                _   -> ronError
 
 -- | Result of DB reading
 data Document a = Document

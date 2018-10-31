@@ -17,13 +17,12 @@ module RON.Storage.IO
 import           Control.Exception (catch, throwIO)
 import           Control.Monad (filterM, unless)
 import           Control.Monad.Except (ExceptT (ExceptT), MonadError,
-                                       liftEither, runExceptT, throwError)
+                                       runExceptT)
 import           Control.Monad.IO.Class (MonadIO, liftIO)
 import           Control.Monad.Reader (ReaderT (ReaderT), ask, runReaderT)
 import           Control.Monad.Trans (lift)
 import           Data.Bits (shiftL)
 import qualified Data.ByteString.Lazy as BSL
-import qualified Data.ByteString.Lazy.Char8 as BSLC
 import           Data.IORef (IORef, newIORef)
 import           Data.Maybe (fromMaybe, listToMaybe)
 import           Data.Word (Word64)
@@ -31,7 +30,7 @@ import           Network.Info (MAC (MAC), getNetworkInterfaces, mac)
 import           RON.Event (Clock, EpochClock, EpochTime, Replica, ReplicaId,
                             advance, applicationSpecific, getCurrentEpochTime,
                             getEventUuid, getEvents, getPid, runEpochClock)
-import           RON.Text (parseStateFrame, serializeStateFrame)
+import           RON.Text (serializeStateFrame)
 import           RON.Types (Object (Object), objectFrame, objectId)
 import qualified RON.UUID as UUID
 import           System.Directory (createDirectoryIfMissing, doesDirectoryExist,
@@ -41,8 +40,8 @@ import           System.IO.Error (isDoesNotExistError)
 
 import           RON.Storage (Collection, DocId (DocId), MonadStorage,
                               collectionName, createVersion, deleteVersion,
-                              fallbackParse, listCollections, listDocuments,
-                              listVersions, readVersion)
+                              listCollections, listDocuments, listVersions,
+                              loadVersionContent)
 
 -- | Environment is the dataDir
 newtype StorageT clock a = Storage (ExceptT String (ReaderT FilePath clock) a)
@@ -81,25 +80,14 @@ instance (Clock m, MonadIO m) => MonadStorage (StorageT m) where
                 createDirectoryIfMissing True docdir
                 BSL.writeFile file $ serializeStateFrame objectFrame
 
-    readVersion docId@(DocId dir) version = Storage $ do
+    loadVersionContent docid version = Storage $ do
         dataDir <- ask
-        contents <- liftIO $ BSL.readFile $ dataDir </> docDir docId </> version
-        objectId <-
-            liftEither $
-            maybe (Left $ "Bad Base32 UUID " ++ show dir) Right $
-            UUID.decodeBase32 dir
-        case parseStateFrame contents of
-            Right objectFrame -> pure Object{objectId, objectFrame}
-            Left ronError     -> case fallbackParse objectId contents of
-                Right object       -> pure object
-                Left fallbackError -> throwError $ case BSLC.head contents of
-                    '{' -> fallbackError
-                    _   -> ronError
+        liftIO $ BSL.readFile $ dataDir </> docDir docid </> version
 
-    deleteVersion docId version = Storage $ do
+    deleteVersion docid version = Storage $ do
         dataDir <- ask
         liftIO $ do
-            let file = dataDir </> docDir docId </> version
+            let file = dataDir </> docDir docid </> version
             removeFile file
             `catch` \e ->
                 unless (isDoesNotExistError e) $ throwIO e
