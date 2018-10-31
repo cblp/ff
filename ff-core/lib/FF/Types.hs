@@ -30,7 +30,8 @@ import           Data.Hashable (Hashable)
 import           Data.List (genericLength)
 import           Data.Map.Strict (Map)
 import qualified Data.Map.Strict as Map
-import           Data.Maybe (fromJust)
+import           Data.Maybe (fromJust, maybeToList)
+import           Data.Text (Text)
 import           Data.Time (Day, diffDays)
 import           GHC.Generics (Generic)
 import           Numeric.Natural (Natural)
@@ -246,36 +247,60 @@ parseContactV1 = undefined
 
 parseNoteV1 :: UUID -> ByteString -> Either String (Object Note)
 parseNoteV1 objectId = eitherDecode >=> parseEither p where
+
     p = withObject "Note" $ \obj -> do
-        CRDT.LWW (endValue    :: Maybe Day) endTime    <- obj .:  "end"
-        CRDT.LWW (startValue  :: Day)       startTime  <- obj .:  "start"
-        CRDT.LWW (statusValue :: Status)    statusTime <- obj .:  "status"
-        (tracked :: Maybe JSON.Object)                 <- obj .:? "tracked"
-        textValue :: CRDT.RgaString <- obj .: "text"
+        CRDT.LWW (end    :: Maybe Day) endTime    <- obj .:  "end"
+        CRDT.LWW (start  :: Day)       startTime  <- obj .:  "start"
+        CRDT.LWW (status :: Status)    statusTime <- obj .:  "status"
+        (mTracked :: Maybe JSON.Object)           <- obj .:? "tracked"
+        text :: CRDT.RgaString <- obj .: "text"
         let endTime'    = timeFromV1 endTime
             startTime'  = timeFromV1 startTime
             statusTime' = timeFromV1 statusTime
-        let trackPayload = toPayload $ tracked $> trackId
+        let trackPayload = toPayload $ mTracked $> trackId
+        mTrackObject <- case mTracked of
+            Nothing -> pure Nothing
+            Just tracked -> do
+                externalId :: Text <- tracked .: "external_id"
+                provider   :: Text <- tracked .: "provider"
+                source     :: Text <- tracked .: "source"
+                url        :: Text <- tracked .: "url"
+                pure $ Just
+                    ( (lwwType, trackId)
+                    , mkStateChunk
+                        [ Op trackId externalIdName $ toPayload externalId
+                        , Op trackId providerName   $ toPayload provider
+                        , Op trackId sourceName     $ toPayload source
+                        , Op trackId urlName        $ toPayload url
+                        ]
+                    )
         let objectFrame = Map.fromList
-                [ ( (lwwType, objectId)
-                  , mkStateChunk
-                      [ Op endTime'    endName    (toPayload endValue)
-                      , Op startTime'  startName  (toPayload startValue)
-                      , Op statusTime' statusName (toPayload statusValue)
-                      , Op objectId    textName   (toPayload textId)
-                      , Op objectId    trackName  trackPayload
-                      ]
-                  )
-                , ((rgaType, textId), stateToChunk $ rgaFromV1 textValue)
-                ]
+                $   [   ( (lwwType, objectId)
+                        , mkStateChunk
+                            [ Op endTime'    endName    $ toPayload end
+                            , Op startTime'  startName  $ toPayload start
+                            , Op statusTime' statusName $ toPayload status
+                            , Op objectId    textName   $ toPayload textId
+                            , Op objectId    trackName  trackPayload
+                            ]
+                        )
+                    ,   ((rgaType, textId), stateToChunk $ rgaFromV1 text)
+                    ]
+                ++  maybeToList mTrackObject
         pure Object{objectId, objectFrame}
+
     textId  = UUID.succValue objectId
     trackId = UUID.succValue textId
-    endName    = fromJust $ UUID.mkName "end"
-    startName  = fromJust $ UUID.mkName "start"
-    statusName = fromJust $ UUID.mkName "status"
-    textName   = fromJust $ UUID.mkName "text"
-    trackName  = fromJust $ UUID.mkName "track"
+
+    endName        = fromJust $ UUID.mkName "end"
+    startName      = fromJust $ UUID.mkName "start"
+    statusName     = fromJust $ UUID.mkName "status"
+    textName       = fromJust $ UUID.mkName "text"
+    trackName      = fromJust $ UUID.mkName "track"
+    externalIdName = fromJust $ UUID.mkName "externalId"
+    providerName   = fromJust $ UUID.mkName "provider"
+    sourceName     = fromJust $ UUID.mkName "source"
+    urlName        = fromJust $ UUID.mkName "url"
 
 timeFromV1 :: CRDT.LamportTime -> UUID
 timeFromV1 (CRDT.LamportTime unixTime (CRDT.Pid pid)) =
@@ -284,7 +309,7 @@ timeFromV1 (CRDT.LamportTime unixTime (CRDT.Pid pid)) =
 
 rgaFromV1 :: CRDT.RgaString -> RgaRaw
 rgaFromV1 (CRDT.RGA oldRga) = stateFromChunk
-    [ Op event ref (toPayload a)
+    [ Op event ref $ toPayload a
     | (vid, a) <- oldRga
     , let event = timeFromV1 vid
           ref   = case a of
