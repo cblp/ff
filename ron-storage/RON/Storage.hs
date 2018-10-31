@@ -2,6 +2,8 @@
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE LambdaCase #-}
 {-# LANGUAGE NamedFieldPuns #-}
+{-# LANGUAGE ScopedTypeVariables #-}
+{-# LANGUAGE TypeApplications #-}
 
 module RON.Storage
     ( Collection (..)
@@ -17,7 +19,6 @@ module RON.Storage
     , readVersion
     ) where
 
-import Data.Maybe (fromMaybe)
 import           Control.Monad (when)
 import           Control.Monad.Except (MonadError, catchError, liftEither,
                                        throwError)
@@ -26,7 +27,9 @@ import           Data.ByteString.Lazy (ByteString)
 import qualified Data.ByteString.Lazy.Char8 as BSLC
 import           Data.Foldable (for_)
 import           Data.List.NonEmpty (NonEmpty ((:|)))
+import           Data.Maybe (fromMaybe)
 import           Data.Traversable (for)
+import           System.FilePath ((</>))
 
 import           RON.Data (ReplicatedAsObject, reduceObject')
 import           RON.Event (Clock, getEventUuid)
@@ -37,7 +40,9 @@ import qualified RON.UUID as UUID
 type Version = FilePath
 
 newtype DocId a = DocId FilePath
-    deriving Show
+
+instance Collection a => Show (DocId a) where
+    show (DocId file) = collectionName @a </> file
 
 rawDocId :: DocId doc -> FilePath
 rawDocId (DocId file) = file
