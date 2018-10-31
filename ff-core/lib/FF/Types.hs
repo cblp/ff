@@ -19,10 +19,12 @@ import qualified CRDT.Cv.RGA as CRDT
 import qualified CRDT.LamportClock as CRDT
 import qualified CRDT.LWW as CRDT
 import           Data.Aeson (FromJSON, eitherDecode, parseJSON, withObject,
-                             (.:))
+                             (.:), (.:?))
+import qualified Data.Aeson as JSON
 import           Data.Aeson.TH (defaultOptions, deriveFromJSON)
 import           Data.Aeson.Types (parseEither)
 import           Data.ByteString.Lazy (ByteString)
+import           Data.Functor (($>))
 import           Data.Functor.Identity (Identity (Identity))
 import           Data.Hashable (Hashable)
 import           Data.List (genericLength)
@@ -245,31 +247,35 @@ parseContactV1 = undefined
 parseNoteV1 :: UUID -> ByteString -> Either String (Object Note)
 parseNoteV1 objectId = eitherDecode >=> parseEither p where
     p = withObject "Note" $ \obj -> do
-        CRDT.LWW (endValue    :: Maybe Day) endTime    <- obj .: "end"
-        CRDT.LWW (startValue  :: Day)       startTime  <- obj .: "start"
-        CRDT.LWW (statusValue :: Status)    statusTime <- obj .: "status"
+        CRDT.LWW (endValue    :: Maybe Day) endTime    <- obj .:  "end"
+        CRDT.LWW (startValue  :: Day)       startTime  <- obj .:  "start"
+        CRDT.LWW (statusValue :: Status)    statusTime <- obj .:  "status"
+        (tracked :: Maybe JSON.Object)                 <- obj .:? "tracked"
         textValue :: CRDT.RgaString <- obj .: "text"
         let endTime'    = timeFromV1 endTime
             startTime'  = timeFromV1 startTime
             statusTime' = timeFromV1 statusTime
+        let trackPayload = toPayload $ tracked $> trackId
         let objectFrame = Map.fromList
                 [ ( (lwwType, objectId)
                   , mkStateChunk
                       [ Op endTime'    endName    (toPayload endValue)
                       , Op startTime'  startName  (toPayload startValue)
                       , Op statusTime' statusName (toPayload statusValue)
-                      , Op textTime    textName   (toPayload textId)
+                      , Op objectId    textName   (toPayload textId)
+                      , Op objectId    trackName  trackPayload
                       ]
                   )
                 , ((rgaType, textId), stateToChunk $ rgaFromV1 textValue)
                 ]
         pure Object{objectId, objectFrame}
-    textId = textTime
-    textTime = UUID.succValue objectId
+    textId  = UUID.succValue objectId
+    trackId = UUID.succValue textId
     endName    = fromJust $ UUID.mkName "end"
     startName  = fromJust $ UUID.mkName "start"
     statusName = fromJust $ UUID.mkName "status"
     textName   = fromJust $ UUID.mkName "text"
+    trackName  = fromJust $ UUID.mkName "track"
 
 timeFromV1 :: CRDT.LamportTime -> UUID
 timeFromV1 (CRDT.LamportTime unixTime (CRDT.Pid pid)) =

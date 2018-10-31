@@ -65,6 +65,7 @@ data Document a = Document
         -- ^ merged value
     , versions :: NonEmpty Version
     }
+    deriving Show
 
 load :: (Collection a, MonadStorage m) => DocId a -> m (Document a)
 load docId = loadRetry (3 :: Int)
@@ -77,10 +78,12 @@ load docId = loadRetry (3 :: Int)
                 v:vs -> do
                     let versions = v :| vs
                     let wrapDoc value = Document{value, versions}
-                    e <- fmap (fmap wrapDoc . vsconcat) $ for versions $ \ver ->
-                        fmapL (("version " ++ show ver ++ ": ") ++)
-                        <$> catchExcept (readVersion docId ver)
-                    liftEither e
+                    e1 <-
+                        for versions $ \ver -> do
+                            e1 <- try $ readVersion docId ver
+                            pure $
+                                fmapL (("version " ++ show ver ++ ": ") ++) e1
+                    liftEither $ wrapDoc <$> vsconcat e1
         | otherwise = throwError "Maximum retries exceeded"
 
 -- | Validation-like version of 'sconcat'.
@@ -92,8 +95,8 @@ vsconcat = foldr1 vappend
     vappend    (Right a1)    (Right a2) = reduceObject' a1 a2
     vappend     _         e2@(Left  _ ) = e2
 
-catchExcept :: MonadError e m => m a -> m (Either e a)
-catchExcept ma = catchError (Right <$> ma) (pure . Left)
+try :: MonadError e m => m a -> m (Either e a)
+try ma = (Right <$> ma) `catchError` (pure . Left)
 
 fmapL :: (a -> b) -> Either a c -> Either b c
 fmapL f = \case

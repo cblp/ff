@@ -17,14 +17,13 @@ module RON.Storage.IO
 import           Control.Exception (catch, throwIO)
 import           Control.Monad (filterM, unless)
 import           Control.Monad.Except (ExceptT (ExceptT), MonadError,
-                                       catchError, liftEither, runExceptT,
-                                       throwError)
+                                       liftEither, runExceptT, throwError)
 import           Control.Monad.IO.Class (MonadIO, liftIO)
 import           Control.Monad.Reader (ReaderT (ReaderT), ask, runReaderT)
 import           Control.Monad.Trans (lift)
 import           Data.Bits (shiftL)
 import qualified Data.ByteString.Lazy as BSL
-import           Data.Coerce (coerce)
+import qualified Data.ByteString.Lazy.Char8 as BSLC
 import           Data.IORef (IORef, newIORef)
 import           Data.Maybe (fromMaybe, listToMaybe)
 import           Data.Word (Word64)
@@ -47,7 +46,7 @@ import           RON.Storage (Collection, DocId (DocId), MonadStorage,
 
 -- | Environment is the dataDir
 newtype StorageT clock a = Storage (ExceptT String (ReaderT FilePath clock) a)
-    deriving (Applicative, Functor, Monad, MonadIO)
+    deriving (Applicative, Functor, Monad, MonadError String, MonadIO)
 
 runStorageT :: FilePath -> StorageT m a -> m (Either String a)
 runStorageT dataDir (Storage except) =
@@ -59,10 +58,6 @@ instance Replica m => Replica (StorageT m) where
 instance Clock m => Clock (StorageT m) where
     getEvents = Storage . lift . lift . getEvents
     advance   = Storage . lift . lift . advance
-
-instance Monad m => MonadError String (StorageT m) where
-    throwError = Storage . throwError
-    catchError = coerce . catchError
 
 instance (Clock m, MonadIO m) => MonadStorage (StorageT m) where
     listCollections = Storage $ do
@@ -86,16 +81,20 @@ instance (Clock m, MonadIO m) => MonadStorage (StorageT m) where
                 createDirectoryIfMissing True docdir
                 BSL.writeFile file $ serializeStateFrame objectFrame
 
-    readVersion (DocId dir) version = Storage $ do
+    readVersion docId@(DocId dir) version = Storage $ do
         dataDir <- ask
-        contents <- liftIO $ BSL.readFile $ dataDir </> dir </> version
+        contents <- liftIO $ BSL.readFile $ dataDir </> docDir docId </> version
         objectId <-
-            liftEither $ maybe (Left "Bad UUID") Right $ UUID.decodeBase32 dir
+            liftEither $
+            maybe (Left $ "Bad Base32 UUID " ++ show dir) Right $
+            UUID.decodeBase32 dir
         case parseStateFrame contents of
             Right objectFrame -> pure Object{objectId, objectFrame}
             Left ronError     -> case fallbackParse objectId contents of
-                Right object        -> pure object
-                Left _fallbackError -> throwError ronError
+                Right object       -> pure object
+                Left fallbackError -> throwError $ case BSLC.head contents of
+                    '{' -> fallbackError
+                    _   -> ronError
 
     deleteVersion docId version = Storage $ do
         dataDir <- ask

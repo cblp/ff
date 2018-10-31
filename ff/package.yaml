@@ -6,6 +6,7 @@ copyright:
 executable:
   main: Main
   other-modules: Paths_ff
+  ghc-options: -rtsopts
 
 dependencies:
   # global
