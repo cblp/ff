@@ -29,19 +29,16 @@ import           Data.Word (Word64)
 import           Network.Info (MAC (MAC), getNetworkInterfaces, mac)
 import           RON.Event (Clock, EpochClock, EpochTime, Replica, ReplicaId,
                             advance, applicationSpecific, getCurrentEpochTime,
-                            getEventUuid, getEvents, getPid, runEpochClock)
-import           RON.Text (serializeStateFrame)
-import           RON.Types (Object (Object), objectFrame, objectId)
-import qualified RON.UUID as UUID
+                            getEvents, getPid, runEpochClock)
 import           System.Directory (createDirectoryIfMissing, doesDirectoryExist,
                                    listDirectory, removeFile)
 import           System.FilePath ((</>))
 import           System.IO.Error (isDoesNotExistError)
 
 import           RON.Storage (Collection, DocId (DocId), MonadStorage,
-                              collectionName, createVersion, deleteVersion,
-                              listCollections, listDocuments, listVersions,
-                              loadVersionContent)
+                              collectionName, deleteVersion, listCollections,
+                              listDocuments, listVersions, loadVersionContent,
+                              saveVersionContent)
 
 -- | Environment is the dataDir
 newtype StorageT clock a = Storage (ExceptT String (ReaderT FilePath clock) a)
@@ -70,15 +67,13 @@ instance (Clock m, MonadIO m) => MonadStorage (StorageT m) where
 
     listVersions = listDirectoryIfExists . docDir
 
-    createVersion obj@Object{objectFrame} = do
-        version <- getEventUuid
+    saveVersionContent docid version content =
         Storage $ do
             dataDir <- ask
-            let docdir = dataDir </> objectDir obj
-            let file = docdir </> UUID.encodeBase32 version
+            let docdir = dataDir </> docDir docid
             liftIO $ do
                 createDirectoryIfMissing True docdir
-                BSL.writeFile file $ serializeStateFrame objectFrame
+                BSL.writeFile (docdir </> version) content
 
     loadVersionContent docid version = Storage $ do
         dataDir <- ask
@@ -122,10 +117,6 @@ listDirectoryIfExists relpath = Storage $ do
 
 docDir :: forall a . Collection a => DocId a -> FilePath
 docDir (DocId dir) = collectionName @a </> dir
-
-objectDir :: forall a . Collection a => Object a -> FilePath
-objectDir Object{objectId} =
-    docDir (DocId $ UUID.encodeBase32 objectId :: DocId a)
 
 -- MAC address
 

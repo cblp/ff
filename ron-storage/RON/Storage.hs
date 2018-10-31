@@ -10,12 +10,14 @@ module RON.Storage
     , Document (..)
     , MonadStorage (..)
     , Version
+    , createVersion
     , load
     , modify
     , rawDocId
     , readVersion
     ) where
 
+import Data.Maybe (fromMaybe)
 import           Control.Monad (when)
 import           Control.Monad.Except (MonadError, catchError, liftEither,
                                        throwError)
@@ -27,8 +29,8 @@ import           Data.List.NonEmpty (NonEmpty ((:|)))
 import           Data.Traversable (for)
 
 import           RON.Data (ReplicatedAsObject, reduceObject')
-import           RON.Event (Clock)
-import           RON.Text (parseStateFrame)
+import           RON.Event (Clock, getEventUuid)
+import           RON.Text (parseStateFrame, serializeStateFrame)
 import           RON.Types (Object (Object), UUID, objectFrame, objectId)
 import qualified RON.UUID as UUID
 
@@ -57,7 +59,8 @@ class (Clock m, MonadError String m) => MonadStorage m where
     listVersions :: Collection a => DocId a -> m [Version]
 
     -- | Must create collection and document if not exist
-    createVersion :: Collection a => Object a -> m ()
+    saveVersionContent
+        :: Collection a => DocId a -> Version -> ByteString -> m ()
 
     loadVersionContent :: Collection a => DocId a -> Version -> m ByteString
 
@@ -127,10 +130,17 @@ fmapL f = \case
 modify
     :: (Collection a, MonadStorage m)
     => DocId a -> StateT (Object a) m () -> m (Object a)
-modify docId f = do
-    Document{value = docOld, versions} <- load docId
+modify docid f = do
+    Document{value = docOld, versions} <- load docid
     docNew <- execStateT f docOld
     when (docNew /= docOld || length versions /= 1) $ do
-        createVersion docNew
-        for_ versions (deleteVersion docId)
+        createVersion (Just docid) docNew
+        for_ versions $ deleteVersion docid
     pure docNew
+
+createVersion
+    :: (Collection a, MonadStorage m) => Maybe (DocId a) -> Object a -> m ()
+createVersion mDocid Object{objectId, objectFrame} = do
+    version <- UUID.encodeBase32 <$> getEventUuid
+    let docid = fromMaybe (DocId $ UUID.encodeBase32 objectId) mDocid
+    saveVersionContent docid version (serializeStateFrame objectFrame)

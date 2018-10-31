@@ -14,16 +14,14 @@ import qualified Data.ByteString.Lazy.Char8 as BSLC
 import           Data.Map.Strict (Map, (!), (!?))
 import qualified Data.Map.Strict as Map
 import           Data.Maybe (fromMaybe)
-import           RON.Event (Clock, Replica, applicationSpecific, getEventUuid)
+import           RON.Event (Clock, Replica, applicationSpecific)
 import           RON.Event.Simulation (ReplicaSim, runNetworkSim, runReplicaSim)
-import           RON.Text (serializeStateFrame)
-import           RON.Types (Object (Object), objectFrame, objectId)
-import qualified RON.UUID as UUID
 
 import           RON.Storage (Collection, CollectionName, DocId (DocId),
                               MonadStorage, Version, collectionName,
-                              createVersion, deleteVersion, listCollections,
-                              listDocuments, listVersions, loadVersionContent)
+                              deleteVersion, listCollections, listDocuments,
+                              listVersions, loadVersionContent,
+                              saveVersionContent)
 
 type ByteStringL = BSL.ByteString
 
@@ -57,14 +55,13 @@ instance MonadStorage StorageSim where
         db <- get
         pure $ Map.keys $ db !. collectionName @a !. doc
 
-    createVersion (Object{objectId, objectFrame} :: Object a) = do
-        version <- UUID.encodeBase32 <$> getEventUuid
-        let document = BSLC.lines $ serializeStateFrame objectFrame
+    saveVersionContent (DocId docid :: DocId a) version content = do
+        let document = BSLC.lines content
         let insertDocumentVersion =
                 Just . Map.insertWith (<>) version document . fromMaybe mempty
         let alterDocument
                 = Just
-                . Map.alter insertDocumentVersion (UUID.encodeBase32 objectId)
+                . Map.alter insertDocumentVersion docid
                 . fromMaybe mempty
         let alterCollection = Map.alter alterDocument (collectionName @a)
         StorageSim $ modify alterCollection

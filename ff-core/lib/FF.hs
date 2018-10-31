@@ -36,6 +36,7 @@ import           Control.Monad.State.Strict (MonadState, StateT, evalState,
                                              evalStateT, execStateT, gets,
                                              state)
 import           Data.Foldable (asum, for_)
+import           Data.Functor (($>))
 import           Data.HashMap.Strict (HashMap)
 import qualified Data.HashMap.Strict as HashMap
 import           Data.List (genericLength, sortOn)
@@ -98,15 +99,13 @@ getContactSamplesWith predicate = do
     pure . (\ys -> Sample ys $ genericLength ys) $
         filter (predicate . Text.pack . contact_name . entityVal) activeContacts
 
-loadTrackedNotes :: MonadStorage m => m [Object Note]
+loadTrackedNotes :: MonadStorage m => m [(NoteId, Object Note)]
 loadTrackedNotes = do
     docs <- listDocuments
     fmap catMaybes . for docs $ \docId -> do
         Document{value = obj} <- load docId
-        track <- (`evalStateT` obj) note_track_read
-        pure $ case track of
-            Nothing -> Nothing
-            Just _  -> Just obj
+        mTrack <- (`evalStateT` obj) note_track_read
+        pure $ mTrack $> (docId, obj)
 
 loadActiveNotes :: MonadStorage m => m [Entity Note]
 loadActiveNotes =
@@ -217,18 +216,22 @@ takeSamples (Just limit) = (`evalState` limit) . traverse takeSample
 
 updateTrackedNote
     :: MonadStorage m
-    => HashMap Track (Object Note)
+    => HashMap Track (NoteId, Object Note)
         -- ^ selection of all aready tracked notes
     -> Note  -- ^ external note to insert
     -> m ()
 updateTrackedNote oldNotes note = case note of
     Note{note_track = Just track} -> do
-        obj <- case HashMap.lookup track oldNotes of
-            Nothing -> newObject note
-            Just oldNote -> (`execStateT` oldNote) $ do
-                note_status_assignIfDiffer note_status
-                note_text_zoom $ RGA.edit note_text
-        createVersion obj
+        (mNoteid, obj) <- case HashMap.lookup track oldNotes of
+            Nothing -> do
+                obj <- newObject note
+                pure (Nothing, obj)
+            Just (noteid, oldNote) -> do
+                newNote <- (`execStateT` oldNote) $ do
+                    note_status_assignIfDiffer note_status
+                    note_text_zoom $ RGA.edit note_text
+                pure (Just noteid, newNote)
+        createVersion mNoteid obj
     _ -> throwError "External note is expected to be supplied with tracking"
   where
     Note{note_status, note_text} = note
@@ -238,9 +241,9 @@ updateTrackedNotes nvNews = do
     -- TODO(2018-10-22, cblp) index notes by track in the database and select
     -- specific note by its track
     oldNotes <- loadTrackedNotes
-    oldNotesWithTrack <- for oldNotes $ \oldNote -> do
+    oldNotesWithTrack <- for oldNotes $ \note@(_, oldNote) -> do
         track <- (`evalStateT` oldNote) note_track_read
-        pure (track, oldNote)
+        pure (track, note)
     let oldNotesByTrack = HashMap.fromList
             [(track, note) | (Just track, note) <- oldNotesWithTrack]
     for_ nvNews $ updateTrackedNote oldNotesByTrack
@@ -262,7 +265,7 @@ cmdNewNote New{newText, newStart, newEnd, newWiki} today = do
             , note_track = Nothing
             }
     obj <- newObject note
-    createVersion obj
+    createVersion Nothing obj
     pure $ Entity (objectId obj) note
 
 cmdNewContact :: MonadStorage m => Text -> m (Entity Contact)
@@ -270,7 +273,7 @@ cmdNewContact name = do
     let contact =
             Contact{contact_name = Text.unpack name, contact_status = Active}
     obj <- newObject contact
-    createVersion obj
+    createVersion Nothing obj
     pure $ Entity (objectId obj) contact
 
 cmdDeleteContact :: MonadStorage m => ContactId -> m (Entity Contact)
