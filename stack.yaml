@@ -10,5 +10,5 @@ extra-deps:
   # ff:
   - crdt-10.3
   - git: https://github.com/ff-notes/ron.git
-    commit: '54ff19a'
+    commit: 'c02917e'
     subdirs: [ron]
