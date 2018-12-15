@@ -16,9 +16,8 @@ import           Data.Either.Extra (fromEither)
 import           Data.Foldable (asum)
 import           Data.Functor (($>))
 import           Data.Proxy (Proxy (..))
+import           Data.Text (Text)
 import           Data.Text.IO (hPutStrLn)
-import           Data.Text.Lazy (toStrict)
-import qualified Data.Text.Lazy as Text
 import           Data.Time (Day)
 import           RON.Storage.IO (Storage, runStorage)
 import qualified RON.Storage.IO as Storage
@@ -29,12 +28,13 @@ import           System.Exit (exitFailure)
 import           System.FilePath (FilePath, normalise, splitDirectories, (</>))
 import           System.IO (hPutChar, hPutStr, stderr)
 import           System.Pager (printOrPage)
-import           Text.PrettyPrint.Mainland (prettyLazyText)
-import           Text.PrettyPrint.Mainland.Class (Pretty, ppr)
+import           Data.Text.Prettyprint.Doc (Doc, LayoutOptions (..),
+                                            PageWidth (..), layoutSmart)
+import           Data.Text.Prettyprint.Doc.Render.Text (renderStrict)
 
 import           FF (cmdDeleteContact, cmdDeleteNote, cmdDone, cmdEdit,
-                     cmdNewContact, cmdNewNote, cmdPostpone, cmdSearch,
-                     cmdShow, cmdUnarchive, getContactSamples, getNoteSamples,
+                     cmdNewContact, cmdNewNote, cmdPostpone, cmdSearch, cmdShow,
+                     cmdUnarchive, getContactSamples, getNoteSamples,
                      getUtcToday, getWikiSamples, updateTrackedNotes)
 import           FF.Config (Config (..), ConfigUI (..), appName, loadConfig,
                             printConfig, saveConfig)
@@ -207,7 +207,8 @@ runCmdVersion = putStrLn $ concat
     , if $(gitDirty) then ", dirty" else ""
     ]
 
-pprint :: (Pretty a, MonadIO io) => a -> io ()
-pprint a = liftIO $ do
+pprint :: MonadIO io => Doc Text -> io ()
+pprint doc = liftIO $ do
     width <- maybe 80 Terminal.width <$> Terminal.size
-    printOrPage . toStrict . (`Text.snoc` '\n') . prettyLazyText width $ ppr a
+    printOrPage . renderStrict
+        $ layoutSmart (LayoutOptions (AvailablePerLine width 1)) doc
