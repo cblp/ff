@@ -1,7 +1,10 @@
-name:           ff-qt
-version:        0.9
-build-type:     Simple
-cabal-version:  >= 1.10
+cabal-version: 2.2
+
+name: ff-qt
+version: 0.9
+
+build-type: Simple
+extra-source-files: MainWindow.hpp
 
 executable ff-qt
     default-language: Haskell2010
@@ -9,69 +12,46 @@ executable ff-qt
     build-depends:
         -- global
         base,
+        bytestring,
         containers,
         extra,
-        hoppy-runtime,
+        inline-c,
+        inline-c-cpp,
+        template-haskell,
+        text,
         time,
 
         -- organization
         ron-storage,
 
         -- project
-        ff-core,
+        ff-core
 
-        -- package
-        ff-qt-qtah
-
-    ghc-options: -dynamic -optl-pthread
+    ghc-options: -fPIC
     main-is: Main.hs
     other-modules:
         Paths_ff_qt
 
-library
-    default-language: Haskell2010
-
-library ff-qt-qtah
-    build-depends:
-        qtah-qt5
-    default-language: Haskell2010
-    reexported-modules:
-        Graphics.UI.Qtah.Core.Types                   as Qtah.Core,
-        Graphics.UI.Qtah.Core.QAbstractItemModel      as QAbstractItemModel,
-        Graphics.UI.Qtah.Core.QCoreApplication        as QCoreApplication,
-        Graphics.UI.Qtah.Core.QDate                   as QDate,
-        Graphics.UI.Qtah.Core.QModelIndex             as QModelIndex,
-        Graphics.UI.Qtah.Core.QObject                 as QObject,
-        Graphics.UI.Qtah.Core.QSettings               as QSettings,
-        Graphics.UI.Qtah.Core.QString                 as QString,
-        Graphics.UI.Qtah.Core.QVariant                as QVariant,
-        Graphics.UI.Qtah.Event                        as Qtah.Event,
-        Graphics.UI.Qtah.Gui.QCloseEvent              as QCloseEvent,
-        Graphics.UI.Qtah.Gui.QFont                    as QFont,
-        Graphics.UI.Qtah.Gui.QShowEvent               as QShowEvent,
-        Graphics.UI.Qtah.Gui.QStandardItem            as QStandardItem,
-        Graphics.UI.Qtah.Gui.QStandardItemModel       as QStandardItemModel,
-        Graphics.UI.Qtah.Signal                       as Qtah.Signal,
-        Graphics.UI.Qtah.Widgets.QAbstractButton      as QAbstractButton,
-        Graphics.UI.Qtah.Widgets.QAbstractItemView    as QAbstractItemView,
-        Graphics.UI.Qtah.Widgets.QAbstractSpinBox     as QAbstractSpinBox,
-        Graphics.UI.Qtah.Widgets.QAction              as QAction,
-        Graphics.UI.Qtah.Widgets.QApplication         as QApplication,
-        Graphics.UI.Qtah.Widgets.QBoxLayout           as QBoxLayout,
-        Graphics.UI.Qtah.Widgets.QDateEdit            as QDateEdit,
-        Graphics.UI.Qtah.Widgets.QDateTimeEdit        as QDateTimeEdit,
-        Graphics.UI.Qtah.Widgets.QFrame               as QFrame,
-        Graphics.UI.Qtah.Widgets.QHBoxLayout          as QHBoxLayout,
-        Graphics.UI.Qtah.Widgets.QLabel               as QLabel,
-        Graphics.UI.Qtah.Widgets.QLayout              as QLayout,
-        Graphics.UI.Qtah.Widgets.QLayoutItem          as QLayoutItem,
-        Graphics.UI.Qtah.Widgets.QMainWindow          as QMainWindow,
-        Graphics.UI.Qtah.Widgets.QMenu                as QMenu,
-        Graphics.UI.Qtah.Widgets.QPushButton          as QPushButton,
-        Graphics.UI.Qtah.Widgets.QStyledItemDelegate  as QStyledItemDelegate,
-        Graphics.UI.Qtah.Widgets.QTabWidget           as QTabWidget,
-        Graphics.UI.Qtah.Widgets.QToolBox             as QToolBox,
-        Graphics.UI.Qtah.Widgets.QToolButton          as QToolButton,
-        Graphics.UI.Qtah.Widgets.QTreeView            as QTreeView,
-        Graphics.UI.Qtah.Widgets.QVBoxLayout          as QVBoxLayout,
-        Graphics.UI.Qtah.Widgets.QWidget              as QWidget
+    if os(linux)
+        extra-libraries: Qt5Core Qt5Gui Qt5Widgets
+        include-dirs:
+            /usr/include/x86_64-linux-gnu/qt5
+            /usr/include/x86_64-linux-gnu/qt5/QtWidgets
+    if os(osx)
+        -- cxx-options: -std=gnu++11
+            -- TODO(cblp, 2019-02-08) why this doesn't work?
+        ghc-options:
+            -pgmc=gcc-8
+                -- hack to use C++11
+            -pie
+                -- hack to use gcc
+        ghc-options:
+            -framework-path=/usr/local/opt/qt5/lib
+            -framework=QtCore
+            -framework=QtGui
+            -framework=QtWidgets
+            -optl=-stdlib=libstdc++
+            -optl=-lstdc++
+        include-dirs:
+            /usr/local/opt/qt5/include
+            /usr/local/opt/qt5/include/QtWidgets
