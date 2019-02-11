@@ -97,9 +97,7 @@ main = do
                 (cast -> Just (noteId :: NoteId)) -> do
                     note <- runStorage storage $ load noteId
                     addTask mainWindow note
-                _ ->
-                    -- TODO(2019-02-11, cblp) do something other
-                    error $ show (typeRep docid, docid)
+                _ -> pure ()
 
     [Cpp.block| void {
         qApp->exec();
@@ -134,10 +132,6 @@ addTask mainWindow Entity{entityId = DocId id, entityVal = note} = do
         };
         $(MainWindow * mainWindow)->addTask(note);
     }|]
-
--- updateView :: (HasCallStack, Collection a) => App -> DocId a -> IO ()
--- updateView mainWindow docid = case docid of
---     (cast -> Just noteId) -> updateTask mainWindow noteId
 
 stringZ :: String -> ByteString
 stringZ = (`BS.snoc` 0) . Text.encodeUtf8 . Text.pack
