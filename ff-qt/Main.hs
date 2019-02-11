@@ -26,7 +26,7 @@ import           Data.Time (Day, toGregorian)
 import           Data.Typeable (cast, typeRep)
 import           Data.Version (showVersion)
 import           Foreign (Ptr)
-import           Foreign.C (CString, peekCAString)
+import           Foreign.C (CInt, CString, peekCAString)
 import           Foreign.StablePtr (StablePtr, deRefStablePtr, newStablePtr)
 import qualified Language.C.Inline.Context as C
 import qualified Language.C.Inline.Cpp as Cpp
@@ -108,17 +108,9 @@ addTask mainWindow Entity{entityId = DocId id, entityVal = note} = do
     let docidBS = stringZ id
         Note{note_text, note_start, note_end} = note
         noteTextBS = stringZ note_text
-        (     fromIntegral -> startYear
-            , fromIntegral -> startMonth
-            , fromIntegral -> startDay
-            ) =
-                toGregorian note_start
+        (startYear, startMonth, startDay) = toGregorianC note_start
         endIsJust = isJust note_end
-        (     fromIntegral -> endYear
-            , fromIntegral -> endMonth
-            , fromIntegral -> endDay
-            ) =
-                maybe (0, 0, 0) toGregorian note_end
+        (endYear, endMonth, endDay) = maybe (0, 0, 0) toGregorianC note_end
     [Cpp.block| void {
         Note note = {
             .id = NoteId{$bs-ptr:docidBS},
@@ -132,6 +124,10 @@ addTask mainWindow Entity{entityId = DocId id, entityVal = note} = do
         };
         $(MainWindow * mainWindow)->addTask(note);
     }|]
+
+toGregorianC :: Day -> (CInt, CInt, CInt)
+toGregorianC day = (y, m, d) where
+    (fromIntegral -> y, fromIntegral -> m, fromIntegral -> d) = toGregorian day
 
 stringZ :: String -> ByteString
 stringZ = (`BS.snoc` 0) . Text.encodeUtf8 . Text.pack
