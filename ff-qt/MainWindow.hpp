@@ -15,7 +15,7 @@
 
 struct StorageHandle { void * ptr; };
 
-struct NoteId { QString id; };
+struct NoteId { string str; };
 
 // \todo(2019-02-10, cblp) generate with ron-schema
 struct Note {
@@ -25,7 +25,9 @@ struct Note {
     optional<QDate> end;
 };
 
-void FF_postpone(StorageHandle, NoteId);
+extern "C" {
+    void ff_postpone(StorageHandle, const char *);
+}
 
 
 class DateComponent: public QHBoxLayout {
@@ -55,7 +57,9 @@ public:
         setPopupMode(InstantPopup);
         {
             auto menu = new QMenu;
-            menu->addAction("Postpone", [=]{ FF_postpone(storage, id); });
+            menu->addAction("Postpone", [=]{
+                ff_postpone(storage, id.str.c_str());
+            });
             setMenu(menu);
         }
     }

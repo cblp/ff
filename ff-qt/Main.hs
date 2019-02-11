@@ -21,6 +21,7 @@ import qualified Data.Text as Text
 import qualified Data.Text.Encoding as Text
 import           Data.Time (Day, toGregorian)
 import           Data.Version (showVersion)
+import           Foreign.C (CString, peekCString)
 import           Foreign.StablePtr (StablePtr, newStablePtr)
 import qualified Language.C.Inline.Context as C
 import qualified Language.C.Inline.Cpp as Cpp
@@ -135,3 +136,10 @@ main = do
 
 stringZ :: String -> ByteString
 stringZ = (`BS.snoc` 0) . Text.encodeUtf8 . Text.pack
+
+foreign export ccall ff_postpone :: StablePtr Storage.Handle -> CString -> IO ()
+ff_postpone :: StablePtr Storage.Handle -> CString -> IO ()
+ff_postpone _storagePtr noteIdStr = do
+    noteId <- peekCString noteIdStr
+    print noteId
+{-# ANN ff_postpone ("HLint: ignore Use camelCase" :: String) #-}
