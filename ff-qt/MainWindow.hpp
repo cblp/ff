@@ -26,7 +26,7 @@ struct Note {
 };
 
 extern "C" {
-    void ff_postpone(StorageHandle, const char *);
+    void ff_postpone(StorageHandle, const char * noteId);
 }
 
 
