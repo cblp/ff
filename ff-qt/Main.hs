@@ -21,6 +21,7 @@ import qualified Data.Text as Text
 import qualified Data.Text.Encoding as Text
 import           Data.Time (Day, toGregorian)
 import           Data.Version (showVersion)
+import           Foreign.StablePtr (StablePtr, newStablePtr)
 import qualified Language.C.Inline.Context as C
 import qualified Language.C.Inline.Cpp as Cpp
 import qualified Language.C.Types as C
@@ -45,8 +46,9 @@ $(let
     myCtx = mempty
         { C.ctxTypesTable =
             Map.fromList
-                [ (C.TypeName "MainWindow", TH.conT ''MainWindow)
-                , (C.TypeName "bool", TH.conT ''Bool)
+                [ (C.TypeName "bool", TH.conT ''Bool)
+                , (C.TypeName "MainWindow", TH.conT ''MainWindow)
+                , (C.TypeName "StorageHandle", [t| StablePtr Storage.Handle |])
                 ]
         }
     in Cpp.context $ Cpp.cppCtx <> Cpp.bsCtx <> myCtx)
@@ -60,7 +62,9 @@ main = do
     cfg     <- loadConfig
     dataDir <- getDataDir cfg
     storage <- Storage.newHandle dataDir
+
     let versionBS = stringZ $ showVersion version
+    storagePtr <- newStablePtr storage
 
     -- TODO(2019-02-10, cblp) minimize inline C/C++ code with cxx-sources
     mainWindow <- [Cpp.block| MainWindow * {
@@ -73,7 +77,7 @@ main = do
         app->setApplicationName("ff");
         app->setApplicationVersion($bs-ptr:versionBS);
 
-        auto window = new MainWindow;
+        auto window = new MainWindow($(StorageHandle storagePtr));
         window->show();
         return window;
     }|]
@@ -97,7 +101,7 @@ main = do
                     maybe (0, 0, 0) toGregorian note_end
         [Cpp.block| void {
             Note note = {
-                .id = $bs-ptr:docidBS,
+                .id = NoteId{$bs-ptr:docidBS},
                 .text = $bs-ptr:noteTextBS,
                 .start =
                     QDate($(int startYear), $(int startMonth), $(int startDay)),

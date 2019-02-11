@@ -4,6 +4,8 @@
 
 #include <map>
     using std::map;
+#include <string>
+    using std::string;
 #include <vector>
     using std::vector;
 #include <experimental/optional>
@@ -11,13 +13,19 @@
 #include <QtWidgets>
 
 
+struct StorageHandle { void * ptr; };
+
+struct NoteId { QString id; };
+
 // \todo(2019-02-10, cblp) generate with ron-schema
 struct Note {
-    QString id;
+    NoteId id;
     QString text;
     QDate start;
     optional<QDate> end;
 };
+
+void FF_postpone(StorageHandle, NoteId);
 
 
 class DateComponent: public QHBoxLayout {
@@ -42,14 +50,12 @@ class TaskActionsButton: public QToolButton {
 
 public:
 
-    TaskActionsButton () {
+    TaskActionsButton (StorageHandle storage, NoteId id) {
         setText("⋮");
         setPopupMode(InstantPopup);
         {
             auto menu = new QMenu;
-            menu->addAction("Postpone", []{
-                // runStorage h $ cmdPostpone taskId
-            });
+            menu->addAction("Postpone", [=]{ FF_postpone(storage, id); });
             setMenu(menu);
         }
     }
@@ -66,7 +72,7 @@ private:
 
 public:
 
-    TaskWidget(QWidget * parent, Note task):
+    TaskWidget(QWidget * parent, StorageHandle storage, Note task):
         super(parent), label(new QLabel(task.text))
     {
         auto box = new QVBoxLayout(this);
@@ -76,7 +82,7 @@ public:
             fields->addLayout(new DateComponent("Start:", task.start));
             if (task.end)
                 fields->addLayout(new DateComponent("Deadline:", *task.end));
-            fields->addWidget(new TaskActionsButton);
+            fields->addWidget(new TaskActionsButton(storage, task.id));
             fields->addStretch();
             box->addLayout(fields);
         }
@@ -88,9 +94,15 @@ public:
 class TaskListWidget: public QTreeView {
     using super = QTreeView;
 
+private:
+
+    StorageHandle storage;
+
 public:
 
-    TaskListWidget(QWidget * parent): super(parent) {
+    TaskListWidget(QWidget * parent, StorageHandle storage):
+        super(parent), storage(storage)
+    {
         setAlternatingRowColors(true);
         setHeaderHidden(true);
         setModel(new QStandardItemModel);
@@ -103,7 +115,7 @@ public:
         {
             // trick: a transparent widget around an opaque one
             auto wrapBox = new QVBoxLayout(wrap);
-            auto taskWidget = new TaskWidget(wrap, task);
+            auto taskWidget = new TaskWidget(wrap, storage, task);
             taskWidget->setAutoFillBackground(true);
             wrapBox->addWidget(taskWidget);
         }
@@ -125,7 +137,9 @@ private:
 
 public:
 
-    MainWindow(): agenda(new TaskListWidget(this)) {
+    MainWindow(StorageHandle storage):
+        agenda(new TaskListWidget(this, storage))
+    {
         // https://wiki.qt.io/Saving_Window_Size_State
         QSettings settings;
         restoreGeometry(settings.value("mainWindowGeometry").toByteArray());
