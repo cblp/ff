@@ -105,6 +105,12 @@ public:
         setAlternatingRowColors(true);
         setHeaderHidden(true);
         setModel(new QStandardItemModel);
+
+        QPalette p = palette();
+        p.setColor(
+            QPalette::Highlight, p.color(QPalette::Highlight).lighter(200)
+        );
+        setPalette(p);
     }
 
     void addTask(Note task) {
@@ -115,7 +121,6 @@ public:
             // trick: a transparent widget around an opaque one
             auto wrapBox = new QVBoxLayout(wrap);
             auto taskWidget = new TaskWidget(wrap, storage, task);
-            taskWidget->setAutoFillBackground(true);
             wrapBox->addWidget(taskWidget);
         }
         setIndexWidget(item->index(), wrap);
