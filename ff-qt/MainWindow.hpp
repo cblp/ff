@@ -152,6 +152,7 @@ public:
         tabs->addTab(agenda, "Agenda");
         setCentralWidget(tabs);
         setWindowTitle("ff");
+        agenda->setFocus();
 
         restoreState(settings.value("mainWindowState").toByteArray());
     }
