@@ -3,10 +3,13 @@
 {-# LANGUAGE NamedFieldPuns #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE QuasiQuotes #-}
+{-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE ViewPatterns #-}
 
 module Main (main) where
+
+import           Prelude hiding (id)
 
 import           Control.Concurrent (forkIO)
 import           Control.Monad.Extra (void, whenJust, (<=<))
@@ -20,7 +23,9 @@ import           Data.Maybe (isJust)
 import qualified Data.Text as Text
 import qualified Data.Text.Encoding as Text
 import           Data.Time (Day, toGregorian)
+import           Data.Typeable (cast, typeRep)
 import           Data.Version (showVersion)
+import           Foreign (Ptr)
 import           Foreign.C (CString, peekCAString)
 import           Foreign.StablePtr (StablePtr, deRefStablePtr, newStablePtr)
 import qualified Language.C.Inline.Context as C
@@ -84,55 +89,55 @@ main = do
     }|]
 
     activeTasks <- runStorage storage loadActiveTasks
-    for_ activeTasks $ \Entity{entityId, entityVal} -> do
-        let DocId docid = entityId
-            docidBS = stringZ docid
-            Note{note_text, note_start, note_end} = entityVal
-            noteTextBS = stringZ note_text
-            (     fromIntegral -> startYear
-                , fromIntegral -> startMonth
-                , fromIntegral -> startDay
-                ) =
-                    toGregorian note_start
-            endIsJust = isJust note_end
-            (     fromIntegral -> endYear
-                , fromIntegral -> endMonth
-                , fromIntegral -> endDay
-                ) =
-                    maybe (0, 0, 0) toGregorian note_end
-        [Cpp.block| void {
-            Note note = {
-                .id = NoteId{$bs-ptr:docidBS},
-                .text = $bs-ptr:noteTextBS,
-                .start =
-                    QDate($(int startYear), $(int startMonth), $(int startDay)),
-                .end =
-                    $(bool endIsJust)
-                        ? QDate($(int endYear), $(int endMonth), $(int endDay))
-                        : optional<QDate>()
-            };
-            $(MainWindow * mainWindow)->addTask(note);
-        }|]
+    for_ activeTasks $ addTask mainWindow
 
     void $ forkIO $
         subscribeForever storage $
-            \(CollectionDocId _docId) -> pure () -- updateView app docId
+            \(CollectionDocId docid) -> case docid of
+                (cast -> Just (noteId :: NoteId)) -> do
+                    note <- runStorage storage $ load noteId
+                    addTask mainWindow note
+                _ ->
+                    -- TODO(2019-02-11, cblp) do something other
+                    error $ show (typeRep docid, docid)
 
     [Cpp.block| void {
         qApp->exec();
     }|]
 
+addTask :: Ptr MainWindow -> Entity Note -> IO ()
+addTask mainWindow Entity{entityId = DocId id, entityVal = note} = do
+    let docidBS = stringZ id
+        Note{note_text, note_start, note_end} = note
+        noteTextBS = stringZ note_text
+        (     fromIntegral -> startYear
+            , fromIntegral -> startMonth
+            , fromIntegral -> startDay
+            ) =
+                toGregorian note_start
+        endIsJust = isJust note_end
+        (     fromIntegral -> endYear
+            , fromIntegral -> endMonth
+            , fromIntegral -> endDay
+            ) =
+                maybe (0, 0, 0) toGregorian note_end
+    [Cpp.block| void {
+        Note note = {
+            .id = NoteId{$bs-ptr:docidBS},
+            .text = $bs-ptr:noteTextBS,
+            .start =
+                QDate($(int startYear), $(int startMonth), $(int startDay)),
+            .end =
+                $(bool endIsJust)
+                    ? QDate($(int endYear), $(int endMonth), $(int endDay))
+                    : optional<QDate>()
+        };
+        $(MainWindow * mainWindow)->addTask(note);
+    }|]
+
 -- updateView :: (HasCallStack, Collection a) => App -> DocId a -> IO ()
 -- updateView mainWindow docid = case docid of
 --     (cast -> Just noteId) -> updateTask mainWindow noteId
---     _ -> error $ show (typeRep docid, docid)
-
--- updateTask :: App -> NoteId -> IO ()
--- updateTask mainWindow noteId = do
---     note <- runStorage h $ load noteId
---     addTask   mainWindow note
---   where
---     App{storage = h} = mainWindow
 
 stringZ :: String -> ByteString
 stringZ = (`BS.snoc` 0) . Text.encodeUtf8 . Text.pack
