@@ -1,5 +1,3 @@
-{-# OPTIONS -Wno-unused-imports #-}
-
 {-# LANGUAGE NamedFieldPuns #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE QuasiQuotes #-}
@@ -12,10 +10,9 @@ module Main (main) where
 import           Prelude hiding (id)
 
 import           Control.Concurrent (forkIO)
-import           Control.Monad.Extra (void, whenJust, (<=<))
+import           Control.Monad.Extra (void)
 import           Data.ByteString (ByteString)
 import qualified Data.ByteString as BS
-import qualified Data.ByteString.Char8 as BSC
 import           Data.Foldable (for_)
 import           Data.Functor (($>))
 import qualified Data.Map.Strict as Map
@@ -23,7 +20,7 @@ import           Data.Maybe (isJust)
 import qualified Data.Text as Text
 import qualified Data.Text.Encoding as Text
 import           Data.Time (Day, toGregorian)
-import           Data.Typeable (cast, typeRep)
+import           Data.Typeable (cast)
 import           Data.Version (showVersion)
 import           Foreign (Ptr)
 import           Foreign.C (CInt, CString, peekCAString)
@@ -33,16 +30,14 @@ import qualified Language.C.Inline.Cpp as Cpp
 import qualified Language.C.Types as C
 import           Language.Haskell.TH as TH
 import           Language.Haskell.TH.Syntax (addDependentFile)
-import           RON.Storage.IO (Collection, CollectionDocId (CollectionDocId),
+import           RON.Storage.IO (CollectionDocId (CollectionDocId),
                                  DocId (DocId), runStorage, subscribeForever)
 import qualified RON.Storage.IO as Storage
 
-import           FF (cmdPostpone, getDataDir, getUtcToday, load,
-                     loadActiveTasks)
+import           FF (cmdPostpone, getDataDir, load, loadActiveTasks)
 import           FF.Config (loadConfig)
-import           FF.Types (Entity (Entity), Note (Note), NoteId, TaskMode (Actual, EndSoon, EndToday, Overdue, Starting),
-                           entityId, entityVal, note_end, note_start, note_text,
-                           taskMode)
+import           FF.Types (Entity (Entity), Note (Note), NoteId, entityId,
+                           entityVal, note_end, note_start, note_text)
 
 import           Paths_ff_qt (version)
 
