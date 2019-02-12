@@ -18,8 +18,13 @@ struct Note {
 };
 
 extern "C" {
-    void ff_postpone(StorageHandle, const char * noteId);
+    void c_postpone(StorageHandle, const char * noteId);
 }
+
+struct Storage {
+    StorageHandle handle;
+    void postpone(NoteId id) const { c_postpone(handle, id.bytes); }
+};
 
 
 class DateComponent: public QHBoxLayout {
@@ -44,14 +49,13 @@ class TaskActionsButton: public QToolButton {
 
 public:
 
-    TaskActionsButton (StorageHandle storage, NoteId id) {
+    TaskActionsButton (StorageHandle storageHandle, NoteId id) {
+        auto storage = Storage{storageHandle};
         setText("⋮");
         setPopupMode(InstantPopup);
         {
             auto menu = new QMenu;
-            menu->addAction("Postpone", [=]{
-                ff_postpone(storage, id.bytes);
-            });
+            menu->addAction("Postpone", [=]{ storage.postpone(id); });
             setMenu(menu);
         }
     }

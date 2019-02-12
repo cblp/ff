@@ -125,10 +125,10 @@ toGregorianC day = (y, m, d) where
 stringZ :: String -> ByteString
 stringZ = (`BS.snoc` 0) . Text.encodeUtf8 . Text.pack
 
-foreign export ccall ff_postpone :: StablePtr Storage.Handle -> CString -> IO ()
-ff_postpone :: StablePtr Storage.Handle -> CString -> IO ()
-ff_postpone storagePtr noteIdStr = do
+foreign export ccall c_postpone :: StablePtr Storage.Handle -> CString -> IO ()
+c_postpone :: StablePtr Storage.Handle -> CString -> IO ()
+c_postpone storagePtr noteIdStr = do
     storageHandle <- deRefStablePtr storagePtr
     noteId <- peekCAString noteIdStr
     void $ runStorage storageHandle $ cmdPostpone $ DocId noteId
-{-# ANN ff_postpone ("HLint: ignore Use camelCase" :: String) #-}
+{-# ANN c_postpone ("HLint: ignore Use camelCase" :: String) #-}
