@@ -96,7 +96,11 @@ public:
         auto item = new QStandardItem;
         model().appendRow(item);
         auto taskWidget = new TaskWidget(this, storage, task);
-        setIndexWidget(item->index(), taskWidget);
+        auto index = item->index();
+        setIndexWidget(index, taskWidget);
+        if (not currentIndex().isValid()) {
+            setCurrentIndex(index);
+        }
     }
 
     QStandardItemModel & model() const {
