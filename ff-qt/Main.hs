@@ -15,7 +15,6 @@ import           Data.ByteString (ByteString)
 import qualified Data.ByteString as BS
 import           Data.Foldable (for_)
 import           Data.Functor (($>))
-import qualified Data.Map.Strict as Map
 import           Data.Maybe (isJust)
 import qualified Data.Text as Text
 import qualified Data.Text.Encoding as Text
@@ -25,10 +24,7 @@ import           Data.Version (showVersion)
 import           Foreign (Ptr)
 import           Foreign.C (CInt, CString, peekCAString)
 import           Foreign.StablePtr (StablePtr, deRefStablePtr, newStablePtr)
-import qualified Language.C.Inline.Context as C
 import qualified Language.C.Inline.Cpp as Cpp
-import qualified Language.C.Types as C
-import           Language.Haskell.TH as TH
 import           Language.Haskell.TH.Syntax (addDependentFile)
 import           RON.Storage.IO (CollectionDocId (CollectionDocId),
                                  DocId (DocId), runStorage, subscribeForever)
@@ -39,21 +35,10 @@ import           FF.Config (loadConfig)
 import           FF.Types (Entity (Entity), Note (Note), NoteId, entityId,
                            entityVal, note_end, note_start, note_text)
 
+import           Cpp (MainWindow, ffCtx)
 import           Paths_ff_qt (version)
 
-data MainWindow
-
-$(let
-    myCtx = mempty
-        { C.ctxTypesTable =
-            Map.fromList
-                [ (C.TypeName "bool", TH.conT ''Bool)
-                , (C.TypeName "MainWindow", TH.conT ''MainWindow)
-                , (C.TypeName "StorageHandle", [t| StablePtr Storage.Handle |])
-                ]
-        }
-    in Cpp.context $ Cpp.cppCtx <> Cpp.bsCtx <> myCtx)
-Cpp.include "<QtWidgets>"
+Cpp.context $ Cpp.cppCtx <> Cpp.bsCtx <> ffCtx
 Cpp.include "MainWindow.hpp"; addDependentFile "MainWindow.hpp" $> []
 Cpp.include "Types.hpp";      addDependentFile "Types.hpp"      $> []
 

@@ -85,10 +85,11 @@ public:
         setAlternatingRowColors(true);
         setHeaderHidden(true);
         setModel(new QStandardItemModel);
-
-        auto p = palette();
-        p.setColor(QPalette::Highlight, QColor(179, 215, 255));
-        setPalette(p);
+        {
+            auto p = palette();
+            p.setColor(QPalette::Highlight, QColor(179, 215, 255));
+            setPalette(p);
+        }
     }
 
     void upsertTask(Note task) {

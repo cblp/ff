@@ -30,6 +30,7 @@ executable ff-qt
     ghc-options: -fPIC
     main-is: Main.hs
     other-modules:
+        Cpp
         Paths_ff_qt
 
     if os(linux)
