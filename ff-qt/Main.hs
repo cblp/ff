@@ -14,7 +14,6 @@ import           Control.Monad (void)
 import           Data.ByteString (ByteString)
 import qualified Data.ByteString as BS
 import           Data.Foldable (for_)
-import           Data.Maybe (isJust)
 import qualified Data.Text as Text
 import qualified Data.Text.Encoding as Text
 import           Data.Time (Day, toGregorian)
@@ -37,8 +36,7 @@ import           Cpp (MainWindow, ffCtx, includeDependent)
 import           Paths_ff_qt (version)
 
 Cpp.context $ Cpp.cppCtx <> Cpp.bsCtx <> ffCtx
-includeDependent "MainWindow.hpp"
-includeDependent "Types.hpp"
+includeDependent "proxy.hpp"
 
 main :: IO ()
 main = do
@@ -46,24 +44,11 @@ main = do
     dataDir <- getDataDir cfg
     storage <- Storage.newHandle dataDir
 
-    let versionBS = stringZ $ showVersion version
+    let version' = stringZ $ showVersion version
     storagePtr <- newStablePtr storage
 
-    -- TODO(2019-02-10, cblp) minimize inline C/C++ code with cxx-sources
-    mainWindow <- [Cpp.block| MainWindow * {
-        int argc = 0;
-        char * argv0 = "ff-qt";
-        char * argv[] = {argv0, NULL};
-
-        auto app = new QApplication(argc, argv);
-        app->setOrganizationDomain("ff.cblp.su");
-        app->setOrganizationName("ff");
-        app->setApplicationName("ff");
-        app->setApplicationVersion($bs-ptr:versionBS);
-
-        auto window = new MainWindow($(StorageHandle storagePtr));
-        window->show();
-        return window;
+    mainWindow <- [Cpp.exp| MainWindow * {
+        proxy_main($bs-ptr:version', $(StorageHandle storagePtr))
     }|]
 
     activeTasks <- runStorage storage loadActiveTasks
@@ -77,9 +62,7 @@ main = do
                     upsertTask mainWindow note
                 _ -> pure ()
 
-    [Cpp.block| void {
-        qApp->exec();
-    }|]
+    [Cpp.exp| void { qApp_exec() }|]
 
 upsertTask :: Ptr MainWindow -> Entity Note -> IO ()
 upsertTask mainWindow Entity{entityId = DocId id, entityVal = note} = do
@@ -87,19 +70,19 @@ upsertTask mainWindow Entity{entityId = DocId id, entityVal = note} = do
         Note{note_text, note_start, note_end} = note
         noteTextBS = stringZ note_text
         (startYear, startMonth, startDay) = toGregorianC note_start
-        endIsJust = isJust note_end
         (endYear, endMonth, endDay) = maybe (0, 0, 0) toGregorianC note_end
     [Cpp.block| void {
-        $(MainWindow * mainWindow)->upsertTask({
-            .id = NoteId{$bs-ptr:docidBS},
-            .text = $bs-ptr:noteTextBS,
-            .start =
-                QDate($(int startYear), $(int startMonth), $(int startDay)),
-            .end =
-                $(bool endIsJust)
-                    ? QDate($(int endYear), $(int endMonth), $(int endDay))
-                    : QDate()
-        });
+        MainWindow_upsertTask(
+            $(MainWindow * mainWindow),
+            (Note){
+                .id = (NoteId){$bs-ptr:docidBS},
+                .text = $bs-ptr:noteTextBS,
+                .start = (Date){
+                    $(int startYear), $(int startMonth), $(int startDay)
+                },
+                .end = (Date){$(int endYear), $(int endMonth), $(int endDay)},
+            }
+        );
     }|]
 
 toGregorianC :: Day -> (CInt, CInt, CInt)

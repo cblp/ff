@@ -4,7 +4,12 @@
 
 #include <QtWidgets>
 
-#include "Types.hpp"
+#include "proxy.hpp"
+
+
+QDate qDate(Date d) {
+    return QDate(d.year, d.month, d.day);
+}
 
 
 class DateComponent: public QHBoxLayout {
@@ -53,14 +58,14 @@ private:
 public:
 
     TaskWidget(QWidget * parent, StorageHandle storage, Note task):
-        super(parent), label(new QLabel(task.text))
+        super(parent), label(new QLabel(QString::fromStdString(task.text)))
     {
         auto box = new QVBoxLayout(this);
         box->addWidget(label);
         {
             auto fields = new QHBoxLayout;
-            fields->addLayout(new DateComponent("Start:", task.start));
-            fields->addLayout(new DateComponent("Deadline:", task.end));
+            fields->addLayout(new DateComponent("Start:", qDate(task.start)));
+            fields->addLayout(new DateComponent("Deadline:", qDate(task.end)));
             fields->addWidget(new TaskActionsButton(storage, task.id));
             fields->addStretch();
             box->addLayout(fields);

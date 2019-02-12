@@ -4,7 +4,7 @@ name: ff-qt
 version: 0.9
 
 build-type: Simple
-extra-source-files: MainWindow.hpp Types.hpp
+extra-source-files: MainWindow.hpp proxy.hpp
 
 executable ff-qt
     default-language: Haskell2010
@@ -40,20 +40,21 @@ executable ff-qt
             /usr/include/x86_64-linux-gnu/qt5
             /usr/include/x86_64-linux-gnu/qt5/QtWidgets
     if os(osx)
-        -- cxx-options: -std=gnu++11
+        c-sources: proxy.cpp
+        cc-options: -std=gnu++11
             -- TODO(cblp, 2019-02-08) why this doesn't work?
-        ghc-options:
-            -pgmc=gcc-8
-                -- hack to use C++11
-            -pie
-                -- hack to use gcc
+        -- ghc-options:
+        --     -pgmc=gcc-8
+        --         -- hack to use C++11
+        --     -pie
+        --         -- hack to use gcc
         ghc-options:
             -framework-path=/usr/local/opt/qt5/lib
             -framework=QtCore
             -framework=QtGui
             -framework=QtWidgets
-            -optl=-stdlib=libstdc++
-            -optl=-lstdc++
+            -- -optl=-stdlib=libstdc++
+            -- -optl=-lstdc++
         include-dirs:
             /usr/local/opt/qt5/include
             /usr/local/opt/qt5/include/QtCore
