@@ -4,8 +4,6 @@
 
 #include <map>
     using std::map;
-#include <string>
-    using std::string;
 #include <vector>
     using std::vector;
 #include <experimental/optional>
@@ -15,7 +13,7 @@
 
 struct StorageHandle { void * ptr; };
 
-struct NoteId { string str; };
+struct NoteId { QByteArray bytes; };
 
 // \todo(2019-02-10, cblp) generate with ron-schema
 struct Note {
@@ -58,7 +56,7 @@ public:
         {
             auto menu = new QMenu;
             menu->addAction("Postpone", [=]{
-                ff_postpone(storage, id.str.c_str());
+                ff_postpone(storage, id.bytes);
             });
             setMenu(menu);
         }
