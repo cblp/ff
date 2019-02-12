@@ -105,7 +105,7 @@ addTask mainWindow Entity{entityId = DocId id, entityVal = note} = do
         endIsJust = isJust note_end
         (endYear, endMonth, endDay) = maybe (0, 0, 0) toGregorianC note_end
     [Cpp.block| void {
-        Note note = {
+        $(MainWindow * mainWindow)->addTask({
             .id = NoteId{$bs-ptr:docidBS},
             .text = $bs-ptr:noteTextBS,
             .start =
@@ -114,8 +114,7 @@ addTask mainWindow Entity{entityId = DocId id, entityVal = note} = do
                 $(bool endIsJust)
                     ? QDate($(int endYear), $(int endMonth), $(int endDay))
                     : QDate()
-        };
-        $(MainWindow * mainWindow)->addTask(note);
+        });
     }|]
 
 toGregorianC :: Day -> (CInt, CInt, CInt)
