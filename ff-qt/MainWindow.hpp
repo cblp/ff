@@ -113,7 +113,7 @@ public:
         setPalette(p);
     }
 
-    void addTask(Note task) {
+    void upsertTask(Note task) {
         auto item = new QStandardItem;
         model().appendRow(item);
         auto wrap = new QWidget(this);
@@ -157,7 +157,7 @@ public:
         restoreState(settings.value("mainWindowState").toByteArray());
     }
 
-    void addTask(Note note) { agenda->addTask(note); }
+    void upsertTask(Note note) { agenda->upsertTask(note); }
 
     void closeEvent(QCloseEvent * event) override {
         // https://wiki.qt.io/Saving_Window_Size_State

@@ -83,22 +83,22 @@ main = do
     }|]
 
     activeTasks <- runStorage storage loadActiveTasks
-    for_ activeTasks $ addTask mainWindow
+    for_ activeTasks $ upsertTask mainWindow
 
     void $ forkIO $
         subscribeForever storage $
             \(CollectionDocId docid) -> case docid of
                 (cast -> Just (noteId :: NoteId)) -> do
                     note <- runStorage storage $ load noteId
-                    addTask mainWindow note
+                    upsertTask mainWindow note
                 _ -> pure ()
 
     [Cpp.block| void {
         qApp->exec();
     }|]
 
-addTask :: Ptr MainWindow -> Entity Note -> IO ()
-addTask mainWindow Entity{entityId = DocId id, entityVal = note} = do
+upsertTask :: Ptr MainWindow -> Entity Note -> IO ()
+upsertTask mainWindow Entity{entityId = DocId id, entityVal = note} = do
     let docidBS = stringZ id
         Note{note_text, note_start, note_end} = note
         noteTextBS = stringZ note_text
@@ -106,7 +106,7 @@ addTask mainWindow Entity{entityId = DocId id, entityVal = note} = do
         endIsJust = isJust note_end
         (endYear, endMonth, endDay) = maybe (0, 0, 0) toGregorianC note_end
     [Cpp.block| void {
-        $(MainWindow * mainWindow)->addTask({
+        $(MainWindow * mainWindow)->upsertTask({
             .id = NoteId{$bs-ptr:docidBS},
             .text = $bs-ptr:noteTextBS,
             .start =
