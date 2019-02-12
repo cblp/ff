@@ -39,6 +39,7 @@ executable ff-qt
         extra-libraries: Qt5Core Qt5Gui Qt5Widgets
         include-dirs:
             /usr/include/x86_64-linux-gnu/qt5
+            /usr/include/x86_64-linux-gnu/qt5/QtCore
             /usr/include/x86_64-linux-gnu/qt5/QtWidgets
     if os(osx)
         cc-options: -std=gnu++11
