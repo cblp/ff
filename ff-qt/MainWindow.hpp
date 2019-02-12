@@ -116,14 +116,8 @@ public:
     void upsertTask(Note task) {
         auto item = new QStandardItem;
         model().appendRow(item);
-        auto wrap = new QWidget(this);
-        {
-            // trick: a transparent widget around an opaque one
-            auto wrapBox = new QVBoxLayout(wrap);
-            auto taskWidget = new TaskWidget(wrap, storage, task);
-            wrapBox->addWidget(taskWidget);
-        }
-        setIndexWidget(item->index(), wrap);
+        auto taskWidget = new TaskWidget(this, storage, task);
+        setIndexWidget(item->index(), taskWidget);
     }
 
     QStandardItemModel & model() const {
