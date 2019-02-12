@@ -4,7 +4,7 @@ name: ff-qt
 version: 0.9
 
 build-type: Simple
-extra-source-files: MainWindow.hpp
+extra-source-files: MainWindow.hpp Types.hpp
 
 executable ff-qt
     default-language: Haskell2010
@@ -54,4 +54,5 @@ executable ff-qt
             -optl=-lstdc++
         include-dirs:
             /usr/local/opt/qt5/include
+            /usr/local/opt/qt5/include/QtCore
             /usr/local/opt/qt5/include/QtWidgets

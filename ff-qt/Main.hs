@@ -55,6 +55,7 @@ $(let
     in Cpp.context $ Cpp.cppCtx <> Cpp.bsCtx <> myCtx)
 Cpp.include "<QtWidgets>"
 Cpp.include "MainWindow.hpp"; addDependentFile "MainWindow.hpp" $> []
+Cpp.include "Types.hpp";      addDependentFile "Types.hpp"      $> []
 
 main :: IO ()
 main = do

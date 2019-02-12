@@ -4,27 +4,7 @@
 
 #include <QtWidgets>
 
-
-struct StorageHandle { void * ptr; };
-
-struct NoteId { QByteArray bytes; };
-
-// \todo(2019-02-10, cblp) generate with ron-schema
-struct Note {
-    NoteId id;
-    QString text;
-    QDate start;
-    QDate end; // isNull() if the end is not set
-};
-
-extern "C" {
-    void c_postpone(StorageHandle, const char * noteId);
-}
-
-struct Storage {
-    StorageHandle handle;
-    void postpone(NoteId id) const { c_postpone(handle, id.bytes); }
-};
+#include "Types.hpp"
 
 
 class DateComponent: public QHBoxLayout {
@@ -106,10 +86,8 @@ public:
         setHeaderHidden(true);
         setModel(new QStandardItemModel);
 
-        QPalette p = palette();
-        p.setColor(
-            QPalette::Highlight, p.color(QPalette::Highlight).lighter(200)
-        );
+        auto p = palette();
+        p.setColor(QPalette::Highlight, QColor(179, 215, 255));
         setPalette(p);
     }
 
