@@ -2,12 +2,6 @@
 #define ff_qt_MainWindow_hpp
 
 
-#include <map>
-    using std::map;
-#include <vector>
-    using std::vector;
-#include <experimental/optional>
-    using std::experimental::optional;
 #include <QtWidgets>
 
 
@@ -20,7 +14,7 @@ struct Note {
     NoteId id;
     QString text;
     QDate start;
-    optional<QDate> end;
+    QDate end; // may be invalid
 };
 
 extern "C" {
@@ -82,8 +76,7 @@ public:
         {
             auto fields = new QHBoxLayout;
             fields->addLayout(new DateComponent("Start:", task.start));
-            if (task.end)
-                fields->addLayout(new DateComponent("Deadline:", *task.end));
+            fields->addLayout(new DateComponent("Deadline:", task.end));
             fields->addWidget(new TaskActionsButton(storage, task.id));
             fields->addStretch();
             box->addLayout(fields);

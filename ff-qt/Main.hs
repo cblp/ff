@@ -53,8 +53,6 @@ $(let
                 ]
         }
     in Cpp.context $ Cpp.cppCtx <> Cpp.bsCtx <> myCtx)
-Cpp.include "<experimental/optional>"
-Cpp.using   "std::experimental::optional"
 Cpp.include "<QtWidgets>"
 Cpp.include "MainWindow.hpp"; addDependentFile "MainWindow.hpp" $> []
 
@@ -115,7 +113,7 @@ addTask mainWindow Entity{entityId = DocId id, entityVal = note} = do
             .end =
                 $(bool endIsJust)
                     ? QDate($(int endYear), $(int endMonth), $(int endDay))
-                    : optional<QDate>()
+                    : QDate()
         };
         $(MainWindow * mainWindow)->addTask(note);
     }|]
