@@ -14,7 +14,6 @@ import           Control.Monad.Extra (void)
 import           Data.ByteString (ByteString)
 import qualified Data.ByteString as BS
 import           Data.Foldable (for_)
-import           Data.Functor (($>))
 import           Data.Maybe (isJust)
 import qualified Data.Text as Text
 import qualified Data.Text.Encoding as Text
@@ -25,7 +24,6 @@ import           Foreign (Ptr)
 import           Foreign.C (CInt, CString, peekCAString)
 import           Foreign.StablePtr (StablePtr, deRefStablePtr, newStablePtr)
 import qualified Language.C.Inline.Cpp as Cpp
-import           Language.Haskell.TH.Syntax (addDependentFile)
 import           RON.Storage.IO (CollectionDocId (CollectionDocId),
                                  DocId (DocId), runStorage, subscribeForever)
 import qualified RON.Storage.IO as Storage
@@ -35,12 +33,12 @@ import           FF.Config (loadConfig)
 import           FF.Types (Entity (Entity), Note (Note), NoteId, entityId,
                            entityVal, note_end, note_start, note_text)
 
-import           Cpp (MainWindow, ffCtx)
+import           Cpp (MainWindow, ffCtx, includeDependent)
 import           Paths_ff_qt (version)
 
 Cpp.context $ Cpp.cppCtx <> Cpp.bsCtx <> ffCtx
-Cpp.include "MainWindow.hpp"; addDependentFile "MainWindow.hpp" $> []
-Cpp.include "Types.hpp";      addDependentFile "Types.hpp"      $> []
+includeDependent "MainWindow.hpp"
+includeDependent "Types.hpp"
 
 main :: IO ()
 main = do
