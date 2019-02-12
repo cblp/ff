@@ -68,7 +68,8 @@ main = do
     -- TODO(2019-02-10, cblp) minimize inline C/C++ code with cxx-sources
     mainWindow <- [Cpp.block| MainWindow * {
         int argc = 0;
-        char * argv[] = {const_cast<char*>("ff-qt"), NULL};
+        char * argv0 = "ff-qt";
+        char * argv[] = {argv0, NULL};
 
         auto app = new QApplication(argc, argv);
         app->setOrganizationDomain("ff.cblp.su");
