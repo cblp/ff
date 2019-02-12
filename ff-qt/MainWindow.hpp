@@ -14,7 +14,7 @@ struct Note {
     NoteId id;
     QString text;
     QDate start;
-    QDate end; // may be invalid
+    QDate end; // isNull() if the end is not set
 };
 
 extern "C" {
