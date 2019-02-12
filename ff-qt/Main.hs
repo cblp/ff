@@ -10,7 +10,7 @@ module Main (main) where
 import           Prelude hiding (id)
 
 import           Control.Concurrent (forkIO)
-import           Control.Monad.Extra (void)
+import           Control.Monad (void)
 import           Data.ByteString (ByteString)
 import qualified Data.ByteString as BS
 import           Data.Foldable (for_)
@@ -21,14 +21,14 @@ import           Data.Time (Day, toGregorian)
 import           Data.Typeable (cast)
 import           Data.Version (showVersion)
 import           Foreign (Ptr)
-import           Foreign.C (CInt, CString, peekCAString)
-import           Foreign.StablePtr (StablePtr, deRefStablePtr, newStablePtr)
+import           Foreign.C (CInt)
+import           Foreign.StablePtr (newStablePtr)
 import qualified Language.C.Inline.Cpp as Cpp
 import           RON.Storage.IO (CollectionDocId (CollectionDocId),
                                  DocId (DocId), runStorage, subscribeForever)
 import qualified RON.Storage.IO as Storage
 
-import           FF (cmdPostpone, getDataDir, load, loadActiveTasks)
+import           FF (getDataDir, load, loadActiveTasks)
 import           FF.Config (loadConfig)
 import           FF.Types (Entity (Entity), Note (Note), NoteId, entityId,
                            entityVal, note_end, note_start, note_text)
@@ -108,11 +108,3 @@ toGregorianC day = (y, m, d) where
 
 stringZ :: String -> ByteString
 stringZ = (`BS.snoc` 0) . Text.encodeUtf8 . Text.pack
-
-foreign export ccall c_postpone :: StablePtr Storage.Handle -> CString -> IO ()
-c_postpone :: StablePtr Storage.Handle -> CString -> IO ()
-c_postpone storagePtr noteIdStr = do
-    storageHandle <- deRefStablePtr storagePtr
-    noteId <- peekCAString noteIdStr
-    void $ runStorage storageHandle $ cmdPostpone $ DocId noteId
-{-# ANN c_postpone ("HLint: ignore Use camelCase" :: String) #-}

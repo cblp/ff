@@ -31,6 +31,7 @@ executable ff-qt
     main-is: Main.hs
     other-modules:
         Cpp
+        FFI
         Paths_ff_qt
 
     if os(linux)
