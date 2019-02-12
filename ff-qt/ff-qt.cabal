@@ -42,19 +42,11 @@ executable ff-qt
     if os(osx)
         c-sources: proxy.cpp
         cc-options: -std=gnu++11
-            -- TODO(cblp, 2019-02-08) why this doesn't work?
-        -- ghc-options:
-        --     -pgmc=gcc-8
-        --         -- hack to use C++11
-        --     -pie
-        --         -- hack to use gcc
         ghc-options:
             -framework-path=/usr/local/opt/qt5/lib
             -framework=QtCore
             -framework=QtGui
             -framework=QtWidgets
-            -- -optl=-stdlib=libstdc++
-            -- -optl=-lstdc++
         include-dirs:
             /usr/local/opt/qt5/include
             /usr/local/opt/qt5/include/QtCore
