@@ -23,7 +23,6 @@ addons:
 
 before_install:
   # Download and unpack the stack executable
-  - dpkg --listfiles qtbase5-dev
   - mkdir -p ~/.local/bin
   - export PATH=$HOME/.local/bin:$PATH
   - >
