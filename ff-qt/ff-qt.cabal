@@ -8,6 +8,7 @@ extra-source-files: MainWindow.hpp proxy.hpp
 
 executable ff-qt
     c-sources: proxy.cpp
+    cc-options: -std=gnu++11
     default-language: Haskell2010
 
     build-depends:
@@ -47,7 +48,6 @@ executable ff-qt
             /usr/include/x86_64-linux-gnu/qt5/QtCore
             /usr/include/x86_64-linux-gnu/qt5/QtWidgets
     if os(osx)
-        cc-options: -std=gnu++11
         ghc-options:
             -framework-path=/usr/local/opt/qt5/lib
             -framework=QtCore
