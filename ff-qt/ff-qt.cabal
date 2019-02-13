@@ -38,6 +38,11 @@ executable ff-qt
     if os(linux)
         extra-libraries: Qt5Core Qt5Gui Qt5Widgets
         include-dirs:
+            -- Ubuntu on Travis
+            /usr/include/qt5
+            /usr/include/qt5/QtCore
+            /usr/include/qt5/QtWidgets
+            -- latest Ubuntu
             /usr/include/x86_64-linux-gnu/qt5
             /usr/include/x86_64-linux-gnu/qt5/QtCore
             /usr/include/x86_64-linux-gnu/qt5/QtWidgets
