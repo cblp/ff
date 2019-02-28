@@ -17,7 +17,8 @@ import           Data.String.Interpolate.IsString (i)
 import qualified Data.Text as Text
 import           Data.Text.Lazy.Encoding (encodeUtf8)
 import           Data.Time (Day, UTCTime (..), fromGregorian)
-import           GitHub (Issue (..), IssueState (..), Milestone (..), URL (..))
+import           GitHub (Issue (..), IssueNumber (IssueNumber), IssueState (..),
+                         Milestone (..), URL (..))
 import           GitHub.Data.Definitions (SimpleUser (..))
 import           GitHub.Data.Id (Id (..))
 import           GitHub.Data.Name (Name (..))
@@ -212,7 +213,7 @@ issues = pure Issue
     , issueHtmlUrl = Just $ URL "https://github.com/ff-notes/ff/issues/60"
     , issueClosedBy = Nothing
     , issueLabels = mempty
-    , issueNumber = 60
+    , issueNumber = IssueNumber 60
     , issueAssignees = mempty
     , issueUser = cblp
     , issueTitle = "import issues (GitHub -> ff)"

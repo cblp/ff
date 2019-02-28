@@ -1,7 +1,7 @@
 {-# LANGUAGE LambdaCase #-}
 {-# LANGUAGE NamedFieldPuns #-}
 {-# LANGUAGE OverloadedStrings #-}
-{-# LANGUAGE RecordWildCards #-}
+{-# LANGUAGE TypeApplications #-}
 {-# LANGUAGE ViewPatterns #-}
 
 module FF.Github (
@@ -21,13 +21,14 @@ import qualified Data.Text.Lazy as TextL
 import qualified Data.Text.Lazy.Encoding as TextL
 import           Data.Time (Day, UTCTime (..))
 import           Data.Vector (Vector)
-import           GitHub (FetchCount (..), Issue (..), IssueRepoMod,
+import           GitHub (FetchCount (..), Issue (Issue), IssueRepoMod,
                          IssueState (..), Milestone (..), URL (..),
-                         executeRequest', issueCreatedAt, issueHtmlUrl, issueId,
-                         issueMilestone, issueState, issueTitle, mkOwnerName,
-                         mkRepoName, stateAll, stateOpen)
+                         executeRequest', issueBody, issueCreatedAt,
+                         issueHtmlUrl, issueMilestone, issueNumber, issueState,
+                         issueTitle, mkOwnerName, mkRepoName, stateAll,
+                         stateOpen, unIssueNumber)
 import           GitHub.Endpoints.Issues (issuesForRepoR)
-import           System.Process.Typed (readProcessStdout_, proc)
+import           System.Process.Typed (proc, readProcessStdout_)
 
 import           FF (splitModes, takeSamples)
 import           FF.Types (Limit, ModeMap, Note (..), NoteStatus (..), Sample,
@@ -104,7 +105,7 @@ noteViewList address mlimit =
     map (issueToNote address) . maybe id (take . fromIntegral) mlimit . toList
 
 issueToNote :: Text -> Issue -> Note
-issueToNote address Issue{..} = Note
+issueToNote address issue = Note
     { note_status = toStatus issueState
     , note_text   = Text.unpack $ issueTitle <> body
     , note_start  = utctDay issueCreatedAt
@@ -117,7 +118,16 @@ issueToNote address Issue{..} = Note
         }
     }
   where
-    track_externalId = Text.pack $ show issueNumber
+    Issue   { issueBody
+            , issueCreatedAt
+            , issueHtmlUrl
+            , issueMilestone
+            , issueNumber
+            , issueState
+            , issueTitle
+            }
+        = issue
+    track_externalId = Text.pack . show @Int $ unIssueNumber issueNumber
     track_url = case issueHtmlUrl of
         Just (URL url) -> url
         Nothing ->
