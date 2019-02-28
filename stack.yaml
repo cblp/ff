@@ -1,4 +1,4 @@
-resolver: lts-12.20
+resolver: lts-13.9
 
 packages:
   - ff
@@ -7,8 +7,9 @@ packages:
   - ff-test
 
 extra-deps:
-  # ff:
-  - crdt-10.3
+  # ff-core:
+  - crdt-10.4
+  - github-0.21
   # - ron-0.5
   # - ron-rdt-0.5
   # - ron-schema-0.5
@@ -17,14 +18,8 @@ extra-deps:
     commit: '40258cf59584d85183fb4644631156ebd1003923'
     subdirs: [ron, ron-rdt, ron-schema, ron-storage]
 
-  # ron:
-  - hedn-0.2.0.0@sha256:ffa03dec3ad6d76e20e99a951347be160de177a8f37ac2ed85688c689121e110
-
-  # hedn:
-  - megaparsec-7.0.4@sha256:a7397151601cbe6b8f831f8bdad1a10118dcd6d9a7ee50d6bbdcfbd1181b4ba2
-
-  # ff-qt:
-  - inline-c-cpp-0.3.0.1@sha256:916ffd22c097f399a47f6ddb9313e2ce36d8051755dd702c23f8d20a370fee09
+  # ff-test:
+  - tasty-hedgehog-0.2.0.0
 
 # reduce some deps?
 # flags: {comonad: {contravariant: False}}

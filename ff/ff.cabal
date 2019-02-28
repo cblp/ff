@@ -12,7 +12,7 @@ executable ff
     build-depends:
         -- global
         async,
-        base >= 4 && < 4.12,
+        base >= 4 && < 4.13,
         directory,
         filepath,
         gitrev,
