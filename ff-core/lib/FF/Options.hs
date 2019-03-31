@@ -226,7 +226,7 @@ parseOptions h =
     searchW = switch $ long "wiki" <> short 'w' <> help "Search among wiki"
     searchC =
         switch $ long "contacts" <> short 'c' <> help "Search among contacts"
-    searchA = switch $ long "archived" <> short 'a' <> help "Search among deleted"
+    searchA = switch $ long "archived" <> short 'a' <> help "Search among archived"
     noteid = argument readDocId $
         metavar "ID" <> help "note id" <> completer completeNoteIds
     noteTextArgument = strArgument $ metavar "TEXT" <> help "note text"

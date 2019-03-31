@@ -7,43 +7,6 @@
             "label": "stack exec ff-qt",
             "type": "shell",
             "command": "stack exec ff-qt"
-        },
-        {
-            "label": "stylish-haskell",
-            "type": "shell",
-            "command": "stylish-haskell -i ${relativeFile}",
-            "problemMatcher": [],
-            "presentation": {
-                "reveal": "never"
-            },
-            "group": {
-                "kind": "build",
-                "isDefault": true
-            }
-        },
-        {
-            "label": "stack-repl",
-            "type": "shell",
-            "command": "stack repl ${relativeFile}",
-            "problemMatcher": [],
-            "presentation": {
-                "reveal": "always",
-                "panel": "new",
-                "focus": true
-            },
-            "group": "none",
-        },
-        {
-            "label": "stack-test",
-            "type": "shell",
-            "command": "stack test",
-            "problemMatcher": [],
-            "presentation": {
-                "reveal": "always",
-                "panel": "new"
-            },
-            "group": "test",
         }
-        
     ]
 }

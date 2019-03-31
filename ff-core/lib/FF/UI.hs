@@ -49,7 +49,7 @@ prettyDocId (DocId name) = pretty name
 prettyTasksWikisContacts
     :: Bool                 -- ^ is output brief
     -> ModeMap NoteSample   -- ^ tasks
-    -> Maybe NoteSample     -- ^ wikis
+    -> NoteSample           -- ^ wikis
     -> ContactSample        -- ^ contacts
     -> Bool                 -- ^ does search involve tasks
     -> Bool                 -- ^ does search involve wikis
@@ -82,16 +82,15 @@ prettyContactSample isBrief samples = stack isBrief $
             withHeader "Contacts:" . stack isBrief $
             map ((bullet <>) . indent 1 . prettyContact isBrief) items
 
-prettyWikiSample :: Bool -> Maybe NoteSample -> Doc AnsiStyle
+prettyWikiSample :: Bool -> NoteSample -> Doc AnsiStyle
 prettyWikiSample isBrief samples = stack isBrief $
     prettyWikiSample' samples :
     [pretty numOmitted <> " task(s) omitted" | numOmitted > 0]
   where
-    numOmitted = maybe 0 omitted samples
+    numOmitted = omitted samples
     prettyWikiSample' = \case
-        Nothing -> red "Wiki aren`t archived anyhow. Ask developers why!"
-        Just Sample{total = 0} -> red "No wikis to show"
-        Just Sample{items} ->
+        Sample{total = 0} -> red "No wikis to show"
+        Sample{items} ->
             withHeader "Wiki:" .
             stack isBrief $
             map ((bullet <>) . indent 1 . prettyNote isBrief) items

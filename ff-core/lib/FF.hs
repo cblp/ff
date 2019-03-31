@@ -25,7 +25,7 @@ module FF (
     getUtcToday,
     getWikiSamples,
     load,
-    loadActiveTasks,
+    loadTasks,
     loadAll,
     splitModes,
     takeSamples,
@@ -81,10 +81,10 @@ import           FF.Types (Contact (..), ContactId, ContactSample, Entity (..),
                            Limit, ModeMap, Note (..), NoteId, NoteSample,
                            NoteStatus (..), Sample (..), Status (..), Track,
                            contact_name_zoom, contact_status_assign,
-                           note_end_assign, note_end_read, note_start_assign,
-                           note_start_read, note_status_assign,
-                           note_status_read, note_text_zoom, note_track_read,
-                           taskMode)
+                           emptySample, note_end_assign, note_end_read,
+                           note_start_assign, note_start_read,
+                           note_status_assign, note_status_read, note_text_zoom,
+                           note_track_read, taskMode)
 
 load :: (Collection a, MonadStorage m) => DocId a -> m (Entity a)
 load docid = do
@@ -95,13 +95,12 @@ load docid = do
 loadAll :: (Collection a, MonadStorage m) => m [Entity a]
 loadAll = getDocuments >>= traverse load
 
-loadActiveContacts :: MonadStorage m => m [Entity Contact]
-loadActiveContacts =
-    filter ((== Active) . contact_status . entityVal) <$> loadAll
+searchStatus :: Bool -> Status
+searchStatus = bool Active Archived
 
-loadArchivedContacts :: MonadStorage m => m [Entity Contact]
-loadArchivedContacts =
-    filter ((== Archived) . contact_status . entityVal) <$> loadAll
+loadContacts :: MonadStorage m => Bool -> m [Entity Contact]
+loadContacts isArchived =
+    filter ((== searchStatus isArchived) . contact_status . entityVal) <$> loadAll
 
 getContactSamples :: MonadStorage m => Bool -> m ContactSample
 getContactSamples = getContactSamplesWith $ const True
@@ -111,18 +110,14 @@ getContactSamplesWith
     => (Text -> Bool)  -- ^ predicate to filter contacts by text
     -> Bool            -- ^ search within archived contacts
     -> m ContactSample
-getContactSamplesWith predicate archive = do
-    contacts <- bool loadActiveContacts loadArchivedContacts archive
+getContactSamplesWith predicate isArchived = do
+    contacts <- loadContacts isArchived
     pure . (\ys -> Sample ys $ genericLength ys) $
         filter (predicate . Text.pack . contact_name . entityVal) contacts
 
-loadActiveTasks :: MonadStorage m => m [Entity Note]
-loadActiveTasks =
-    filter ((TaskStatus Active ==) . note_status . entityVal) <$> loadAll
-
-loadArchivedTasks :: MonadStorage m => m [Entity Note]
-loadArchivedTasks =
-    filter ((TaskStatus Archived ==) . note_status . entityVal) <$> loadAll
+loadTasks :: MonadStorage m => Bool -> m [Entity Note]
+loadTasks isArchived =
+    filter ((TaskStatus (searchStatus isArchived) ==) . note_status . entityVal) <$> loadAll
 
 loadWikis :: MonadStorage m => m [Entity Note]
 loadWikis = filter ((Wiki ==) . note_status . entityVal) <$> loadAll
@@ -144,8 +139,8 @@ getTaskSamplesWith
     -> Maybe Limit
     -> Day             -- ^ today
     -> m (ModeMap NoteSample)
-getTaskSamplesWith predicate archive ConfigUI{shuffle} limit today = do
-    tasks <- bool loadActiveTasks loadArchivedTasks archive
+getTaskSamplesWith predicate isArchived ConfigUI{shuffle} limit today = do
+    tasks <- loadTasks isArchived
     pure .
         takeSamples limit .
         shuffleOrSort .
@@ -166,7 +161,7 @@ getWikiSamples
     -> ConfigUI
     -> Maybe Limit
     -> Day             -- ^ today
-    -> m (Maybe NoteSample)
+    -> m NoteSample
 getWikiSamples = getWikiSamplesWith $ const True
 
 getWikiSamplesWith
@@ -176,16 +171,16 @@ getWikiSamplesWith
     -> ConfigUI
     -> Maybe Limit
     -> Day             -- ^ today
-    -> m (Maybe NoteSample)
+    -> m NoteSample
 getWikiSamplesWith predicate archive ConfigUI{shuffle} limit today =
-    if archive then pure Nothing
+    if archive then pure emptySample
     else do
         wikis0 <- loadWikis
         let wikis1 = filter (predicate . Text.pack . note_text . entityVal) wikis0
         let wikis2 = case limit of
                 Nothing -> wikis1
                 Just l -> take (fromIntegral l) wikis1
-        pure . Just . toSample $ shuffleOrSort wikis2
+        pure . toSample $ shuffleOrSort wikis2
   where
     toSample ys = Sample ys $ genericLength ys
     gen = mkStdGen . fromIntegral $ toModifiedJulianDay today
@@ -300,7 +295,7 @@ cmdSearch
     -> ConfigUI
     -> Maybe Limit
     -> Day          -- ^ today
-    -> Storage (ModeMap NoteSample, Maybe NoteSample, ContactSample)
+    -> Storage (ModeMap NoteSample, NoteSample, ContactSample)
 cmdSearch substr archive ui limit today = do
     -- TODO(cblp, 2018-12-21) search tasks and wikis in one step
     tasks    <- getTaskSamplesWith    predicate archive ui limit today
