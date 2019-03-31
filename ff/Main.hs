@@ -2,6 +2,7 @@
 {-# LANGUAGE LambdaCase #-}
 {-# LANGUAGE NamedFieldPuns #-}
 {-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE RecordWildCards #-}
 {-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE TupleSections #-}
 
@@ -102,7 +103,7 @@ runCmdAction ui cmd isBrief = do
     today <- getUtcToday
     case cmd of
         CmdAgenda mlimit -> do
-            notes <- getTaskSamples ui mlimit today
+            notes <- getTaskSamples False ui mlimit today
             pprint $ prettyTaskSections isBrief notes
         CmdContact contact -> cmdContact isBrief contact
         CmdDelete notes ->
@@ -123,8 +124,8 @@ runCmdAction ui cmd isBrief = do
             for_ notes $ \noteId -> do
                 note <- cmdPostpone noteId
                 pprint $ withHeader "Postponed:" $ prettyNote isBrief note
-        CmdSearch Search{text, limit, inTasks, inWikis, inContacts} -> do
-            (tasks, wikis, contacts) <- cmdSearch text ui limit today
+        CmdSearch Search{..} -> do
+            (tasks, wikis, contacts) <- cmdSearch text inArchived ui limit today
             pprint $
                 prettyTasksWikisContacts
                     isBrief tasks wikis contacts inTasks inWikis inContacts
@@ -141,7 +142,7 @@ runCmdAction ui cmd isBrief = do
             upgradeDatabase
             liftIO $ putStrLn "Upgraded"
         CmdWiki mlimit -> do
-            wikis <- getWikiSamples ui mlimit today
+            wikis <- getWikiSamples False ui mlimit today
             pprint $ prettyWikiSample isBrief wikis
 
 cmdTrack :: Track -> Day -> Bool -> Storage ()
@@ -178,7 +179,7 @@ cmdContact isBrief = \case
         contact <- cmdDeleteContact cid
         pprint $ withHeader "Deleted:" $ prettyContact isBrief contact
     Nothing -> do
-        contacts <- getContactSamples
+        contacts <- getContactSamples False
         pprint $ prettyContactSample isBrief contacts
 
 -- | Template taken from stack:

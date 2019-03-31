@@ -6,6 +6,9 @@ and this project adheres to
 [Compatible Versioning](https://github.com/staltz/comver).
 
 ## [Unreleased]
+### Added
+- ff:
+  - Search within archived contacts and tasks.
 
 ## [0.11] - 2019-03-02
 ### Added
