@@ -25,7 +25,7 @@ import           RON.Storage.IO (CollectionDocId (CollectionDocId),
                                  DocId (DocId), runStorage, subscribeForever)
 import qualified RON.Storage.IO as Storage
 
-import           FF (getDataDir, load, loadActiveTasks)
+import           FF (getDataDir, load, loadTasks)
 import           FF.Config (loadConfig)
 import           FF.Types (Entity (Entity), Note (Note), NoteId,
                            NoteStatus (TaskStatus), Status (Active), entityId,
@@ -68,7 +68,7 @@ main = do
 
     -- load current data to the view, asynchronously
     _ <- forkIO $ do
-        activeTasks <- runStorage storage loadActiveTasks
+        activeTasks <- runStorage storage (loadTasks False)
         for_ activeTasks $ upsertTask mainWindow
 
     -- update the view with future changes
