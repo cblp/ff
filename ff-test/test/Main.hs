@@ -49,7 +49,7 @@ main = $(defaultMainGenerator)
 prop_not_exist :: Property
 prop_not_exist = property $ do
     (agenda, fs') <-
-        evalEither $ runStorageSim fs $ getTaskSamples ui agendaLimit today
+        evalEither $ runStorageSim fs $ getTaskSamples False ui agendaLimit today
     Map.empty === agenda
     fs === fs'
   where
@@ -58,7 +58,7 @@ prop_not_exist = property $ do
 prop_smoke :: Property
 prop_smoke = property $ do
     (agenda', fs') <-
-        evalEither $ runStorageSim fs123 $ getTaskSamples ui agendaLimit today
+        evalEither $ runStorageSim fs123 $ getTaskSamples False ui agendaLimit today
     agenda === agenda'
     fs123  === fs'
   where
