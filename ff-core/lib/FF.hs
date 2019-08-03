@@ -10,12 +10,12 @@
 {-# LANGUAGE ViewPatterns #-}
 
 module FF
-  ( cmdDeleteNote,
-    cmdDeleteContact,
+  ( cmdDeleteContact,
+    cmdDeleteNote,
     cmdDone,
     cmdEdit,
-    cmdNewNote,
     cmdNewContact,
+    cmdNewNote,
     cmdPostpone,
     cmdSearch,
     cmdUnarchive,
@@ -26,9 +26,7 @@ module FF
     getTaskSamples,
     getUtcToday,
     getWikiSamples,
-    load,
     loadTasks,
-    loadAll,
     noDataDirectoryMessage,
     splitModes,
     takeSamples,
@@ -81,6 +79,7 @@ import FF.Types
     contact_name_zoom,
     contact_status_assign,
     emptySample,
+    loadNote,
     note_end_assign,
     note_end_read,
     note_start_assign,
@@ -138,6 +137,9 @@ load docid = do
 loadAll :: (Collection a, MonadStorage m) => m [Entity a]
 loadAll = getDocuments >>= traverse load
 
+loadAllNotes :: MonadStorage m => m [Entity Note]
+loadAllNotes = getDocuments >>= traverse loadNote
+
 searchStatus :: Bool -> Status
 searchStatus = bool Active Archived
 
@@ -167,13 +169,13 @@ fromRgaM :: Maybe (RGA a) -> [a]
 fromRgaM = maybe [] fromRga
 
 loadTasks :: MonadStorage m => Bool -> m [Entity Note]
-loadTasks isArchived = filter isArchived' <$> loadAll
+loadTasks isArchived = filter isArchived' <$> loadAllNotes
   where
     isArchived' =
       (Just (TaskStatus $ searchStatus isArchived) ==) . note_status . entityVal
 
 loadWikis :: MonadStorage m => m [Entity Note]
-loadWikis = filter ((Just Wiki ==) . note_status . entityVal) <$> loadAll
+loadWikis = filter ((Just Wiki ==) . note_status . entityVal) <$> loadAllNotes
 
 getTaskSamples
   :: MonadStorage m

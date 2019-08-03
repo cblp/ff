@@ -6,7 +6,7 @@
 {-# LANGUAGE TemplateHaskell #-}
 
 module Database
-  ( dataTests
+  ( databaseTests
     )
 where
 
@@ -60,13 +60,15 @@ import Test.Tasty (TestTree, testGroup)
 import Test.Tasty.Hedgehog (testProperty)
 import Test.Tasty.TH (testGroupGenerator)
 
-dataTests :: TestTree
-dataTests = $(testGroupGenerator)
+databaseTests :: TestTree
+databaseTests = $(testGroupGenerator)
 
 prop_not_exist :: Property
 prop_not_exist = property $ do
   (agenda, fs') <-
-    evalEither $ runStorageSim fs $ getTaskSamples False defaultConfigUI agendaLimit today
+    evalEither
+      $ runStorageSim fs
+      $ getTaskSamples False defaultConfigUI agendaLimit today
   Map.empty === agenda
   fs        === fs'
   where
@@ -75,7 +77,9 @@ prop_not_exist = property $ do
 prop_smoke :: Property
 prop_smoke = property $ do
   (agenda', fs') <-
-    evalEither $ runStorageSim fs123 $ getTaskSamples False defaultConfigUI agendaLimit today
+    evalEither
+      $ runStorageSim fs123
+      $ getTaskSamples False defaultConfigUI agendaLimit today
   agenda === agenda'
   fs123  === fs'
   where
@@ -88,10 +92,10 @@ prop_smoke = property $ do
                   (DocId "B00000000002D-200000000002D")
                   Note
                     { note_status = Just $ TaskStatus Active,
-                      note_text = Just $ RGA "helloworld",
-                      note_start = Just $ fromGregorian 22 11 24,
-                      note_end = Just $ fromGregorian 17 06 19,
-                      note_track = Nothing
+                      note_text   = Just $ RGA "helloworld",
+                      note_start  = Just $ fromGregorian 22 11 24,
+                      note_end    = Just $ fromGregorian 17 06 19,
+                      note_track  = Nothing
                       }
                 ],
             total = 1
@@ -145,23 +149,23 @@ today = fromGregorian 1018 02 10
 
 prop_new :: Property
 prop_new =
-  let text = "Мир"
+  let text  = "Мир"
       start = Just $ fromGregorian 2154 5 6
-      end = Just $ fromGregorian 3150 1 2
+      end   = Just $ fromGregorian 3150 1 2
       fs =
         Map.singleton "note" $ Map.singleton "B000000001NDU-2000000000012"
-          $ Map.singleton "B000000003C3M-2000000000012"
+          $ Map.singleton "B00000000AJ6M-2000000000012"
           $ map encodeUtf8
           $ mconcat
-              [ [ "*lww #B/0000000Drz+000000000Y !",
-                  "\t@` :end 3150 1 2",
-                  "\t:start 2154 5 6",
-                  "\t:status >Active",
-                  "\t:text >}IOM",
-                  "\t:track"
+              [ [ "*set #B/0000000Drz+000000000Y !",
+                  "\t@`}IOM >end 3150 1 2",
+                  "\t@}QUM >start 2154 5 6",
+                  "\t@}_QM >status >Active",
+                  "\t@}mnM >text >B/0000000qnM+000000000Y",
+                  "\t@{1A9r >track"
                   ],
-                [ "*rga #}IOM @0 :0 !",
-                  "\t@`}QGh 'М'",
+                [ "*rga #}qnM @0 !",
+                  "\t@`}y_h 'М'",
                   "\t@)i 'и'",
                   "\t@)j 'р'",
                   "."
@@ -211,21 +215,22 @@ prop_repo =
       Map.singleton
         (Overdue 10)
         Sample
-          { items = pure
-              Note
-                { note_status = Just $ TaskStatus Active,
-                  note_text   = Just $ RGA "import issues (GitHub -> ff)",
-                  note_start  = Just $ fromGregorian 2018 06 21,
-                  note_end    = Just $ fromGregorian 2018 06 15,
-                  note_track  = Just
-                    Track
-                      { track_provider   = Just "github",
-                        track_source     = Just "ff-notes/ff",
-                        track_externalId = Just "60",
-                        track_url        =
-                          Just "https://github.com/ff-notes/ff/issues/60"
-                        }
-                  },
+          { items =
+              [ Note
+                  { note_status = Just $ TaskStatus Active,
+                    note_text   = Just $ RGA "import issues (GitHub -> ff)",
+                    note_start  = Just $ fromGregorian 2018 06 21,
+                    note_end    = Just $ fromGregorian 2018 06 15,
+                    note_track  = Just
+                      Track
+                        { track_provider   = Just "github",
+                          track_source     = Just "ff-notes/ff",
+                          track_externalId = Just "60",
+                          track_url        = Just
+                            "https://github.com/ff-notes/ff/issues/60"
+                          }
+                    }
+                ],
             total = 1
             }
 
@@ -288,60 +293,130 @@ prop_json2ron :: Property
 prop_json2ron = property $ do
   -- read JSON, merge, write RON
   do
-    ((), db') <- evalEither $ runStorageSim fs123json upgradeDatabase
+    ((), db') <- evalEither $ runStorageSim fs123jsonAndLww upgradeDatabase
     fs123merged === db'
   -- idempotency
   do
     ((), db') <- evalEither $ runStorageSim fs123merged upgradeDatabase
     fs123merged === db'
 
-fs123json :: TestDB
-fs123json =
-  Map.singleton "note" $ Map.singleton "000000000008K-000000000001J"
+fs123jsonAndLww :: TestDB
+fs123jsonAndLww =
+  Map.singleton "note"
     $ Map.fromList
-        [ ( "event 2 72",
-            BSLC.lines
-              [i|{
-                "end"   : ["17-06-19", 20, 21],
-                "start" : ["22-11-24", 25, 26],
-                "status": ["Active",   29, 30],
-                "text"  : ["hello",     6,  7]
-                } |]
+        [ ( "000000000008K-000000000001J",
+            Map.fromList
+              [ ( "event 2 72",
+                  BSLC.lines
+                    [i|{
+                      "end"   : ["17-06-19", 20, 21],
+                      "start" : ["22-11-24", 25, 26],
+                      "status": ["Active",   29, 30],
+                      "text"  : ["hello",     6,  7]
+                      }|]
+                  ),
+                ( "event 2 78",
+                  BSLC.lines
+                    [i|{
+                      "end"   : ["12-01-14", 15, 16],
+                      "start" : ["9-10-11",   7,  8],
+                      "status": ["Active",   27, 28],
+                      "text"  : ["world",     4,  5]
+                      }|]
+                  )
+                ]
             ),
-          ( "event 2 78",
-            BSLC.lines
-              [i|{
-                "end"   : ["12-01-14", 15, 16],
-                "start" : ["9-10-11",   7,  8],
-                "status": ["Active",   27, 28],
-                "text"  : ["world",     4,  5]
-                } |]
+          ( "000000000008M-000000000001J",
+            Map.singleton "event 3 24"
+              $ mconcat
+                  [ [ "*lww #000000004M$000000000o !",
+                      "\t@B/6n7T8JWK0K+000000000L :end 17 6 19",
+                      "\t@B/6n7T8JWK0P+000000000Q :start 22 11 24",
+                      "\t@B/6n7T8JWK0T+000000000U :status >Active",
+                      "\t@` :text >)P",
+                      "\t:track >)Q"
+                      ],
+                    [ "*lww #)Q !",
+                      "\t:externalId '54'",
+                      "\t:provider 'github'",
+                      "\t:source 'ff-notes/ff'",
+                      "\t:url 'https://github.com/ff-notes/ff/pull/54'",
+                      "*rga #)P @0 :0 !"
+                      ],
+                    [ "\t@B/6n7T8JWK06+0000000007 'h'",
+                      "\t@)7 'e'",
+                      "\t@)8 'l'",
+                      "\t@)9 'l'",
+                      "\t@)A 'o'",
+                      "\t@B/6n7T8JWK04+0000000005 'w'",
+                      "\t@)5 'o'",
+                      "\t@)6 'r'",
+                      "\t@)7 'l'",
+                      "\t@)8 'd'",
+                      "."
+                      ]
+                    ]
             )
           ]
 
 fs123merged :: TestDB
 fs123merged =
-  Map.singleton "note" $ Map.singleton "000000000008K-000000000001J"
-    $ Map.singleton "B000000001NDU-2000000000012"
-    $ mconcat
-        [ [ "*lww #000000004K$000000000o !",
-            "\t@B/6n7T8JWK0K+000000000L :end 17 6 19",
-            "\t@B/6n7T8JWK0P+000000000Q :start 22 11 24",
-            "\t@B/6n7T8JWK0T+000000000U :status >Active",
-            "\t@` :text >)L",
-            "\t:track"
-            ],
-          [ "*rga #)L @0 :0 !",
-            "\t@B/6n7T8JWK06+0000000007 'h'",
-            "\t@)7 'e'",
-            "\t@)8 'l'",
-            "\t@)9 'l'",
-            "\t@)A 'o'",
-            "\t@B/6n7T8JWK04+0000000005 'w'",
-            "\t@)5 'o'",
-            "\t@)6 'r'",
-            "\t@)7 'l'",
-            "\t@)8 'd'",
-            "."
-            ]
+  Map.singleton "note"
+    $ Map.fromList
+        [ ( "000000000008K-000000000001J",
+            Map.singleton "B000000006N4M-2000000000012"
+              $ mconcat
+                  [ [ "*set #000000004K$000000000o !",
+                      "\t@B/0000000Drz+000000000Y >end 17 6 19",
+                      "\t@}IOM >start 22 11 24",
+                      "\t@}QUM >status >Active",
+                      "\t@}_QM >text >000000004L$000000000o",
+                      "\t@}mnM >track"
+                      ],
+                    [ "*rga #)L @0 !",
+                      "\t@B/6n7T8JWK06+0000000007 'h'",
+                      "\t@)7 'e'",
+                      "\t@)8 'l'",
+                      "\t@)9 'l'",
+                      "\t@)A 'o'",
+                      "\t@B/6n7T8JWK04+0000000005 'w'",
+                      "\t@)5 'o'",
+                      "\t@)6 'r'",
+                      "\t@)7 'l'",
+                      "\t@)8 'd'",
+                      "."
+                      ]
+                    ]
+            ),
+          ( "000000000008M-000000000001J",
+            Map.singleton "B00000000PN4M-2000000000012"
+              $ mconcat
+                  [ [ "*set #000000004M$000000000o !",
+                      "\t@B/0000000ynM+000000000Y >end 17 6 19",
+                      "\t@{1DnM >start 22 11 24",
+                      "\t@}TnM >status >Active",
+                      "\t@}inM >text >000000004P$000000000o",
+                      "\t@}ynM >track >000000004Q$000000000o"
+                      ],
+                    [ "*rga #)P @0 !",
+                      "\t@B/6n7T8JWK06+0000000007 'h'",
+                      "\t@)7 'e'",
+                      "\t@)8 'l'",
+                      "\t@)9 'l'",
+                      "\t@)A 'o'",
+                      "\t@B/6n7T8JWK04+0000000005 'w'",
+                      "\t@)5 'o'",
+                      "\t@)6 'r'",
+                      "\t@)7 'l'",
+                      "\t@)8 'd'"
+                      ],
+                    [ "*set #)Q @0 !",
+                      "\t@B/0000002DnM+000000000Y >externalId '54'",
+                      "\t@}TnM >provider 'github'",
+                      "\t@}inM >source 'ff-notes/ff'",
+                      "\t@}ynM >url 'https://github.com/ff-notes/ff/pull/54'",
+                      "."
+                      ]
+                    ]
+            )
           ]

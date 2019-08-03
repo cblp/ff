@@ -7,9 +7,11 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE PatternSynonyms #-}
 {-# LANGUAGE QuasiQuotes #-}
+{-# LANGUAGE RecordWildCards #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE StandaloneDeriving #-}
 {-# LANGUAGE TemplateHaskell #-}
+{-# LANGUAGE TypeApplications #-}
 {-# LANGUAGE TypeFamilies #-}
 
 module FF.Types where
@@ -18,6 +20,8 @@ import qualified CRDT.Cv.RGA as CRDT
 import qualified CRDT.LWW as CRDT
 import qualified CRDT.LamportClock as CRDT
 import Control.Monad ((>=>))
+import Control.Monad.Except (throwError)
+import Control.Monad.Reader (ask, runReaderT)
 import Data.Aeson ((.:), (.:?), FromJSON, eitherDecode, parseJSON, withObject)
 import qualified Data.Aeson as JSON
 import Data.Aeson.TH (defaultOptions, deriveFromJSON)
@@ -35,8 +39,11 @@ import FF.CrdtAesonInstances ()
 import GHC.Generics (Generic)
 import Numeric.Natural (Natural)
 import RON.Data
-  ( Replicated (encoding),
+  ( MonadObjectState,
+    Replicated (encoding),
     ReplicatedAsPayload (fromPayload, toPayload),
+    evalObjectState,
+    getObject,
     payloadEncoding,
     stateFromChunk,
     stateToWireChunk
@@ -45,12 +52,20 @@ import RON.Data.LWW (lwwType)
 import RON.Data.RGA (RgaRep)
 import RON.Data.Time (Day)
 import RON.Epoch (localEpochTimeFromUnix)
-import RON.Error (MonadE, liftEitherString)
+import RON.Error (Error (Error), MonadE, liftEitherString)
 import RON.Event (Event (Event), applicationSpecific, encodeEvent)
 import RON.Schema.TH (mkReplicated)
-import RON.Storage (Collection, DocId, collectionName, fallbackParse)
+import RON.Storage
+  ( Collection,
+    DocId,
+    collectionName,
+    fallbackParse,
+    loadDocument
+    )
+import RON.Storage.Backend (Document (Document, objectFrame), MonadStorage)
 import RON.Types
   ( Atom (AUuid),
+    Object (Object),
     ObjectFrame (ObjectFrame, frame, uuid),
     Op (Op),
     Payload,
@@ -86,24 +101,43 @@ instance ReplicatedAsPayload NoteStatus where
   (opaque atoms NoteStatus)
     ; TODO(2018-12-05, cblp) (enum NoteStatus (extends Status) Wiki)
 
-  (struct_lww Contact
+  (struct_set Contact
     #haskell {field_prefix "contact_"}
-    status  Status
+    status  Status  #ron{merge LWW}
     name    RgaString)
 
-  (struct_lww Track
-    #haskell {field_prefix "track_"}
+  ; TODO(2019-08-08, cblp) remove a year after release of Track(3)
+  ; release is planned on 2019-08
+  (struct_lww TrackV2
+    #haskell {field_prefix "trackV2_"}
     provider    String
     source      String
     externalId  String
     url         String)
 
-  (struct_lww Note
-    #haskell {field_prefix "note_"}
+  (struct_set Track
+    #haskell {field_prefix "track_"}
+    provider    String  #ron{merge LWW}
+    source      String  #ron{merge LWW}
+    externalId  String  #ron{merge LWW}
+    url         String  #ron{merge LWW})
+
+  ; TODO(2019-08-08, cblp) remove a year after release of Note(3)
+  ; release is planned on 2019-08
+  (struct_lww NoteV2
+    #haskell {field_prefix "noteV2_"}
     status  NoteStatus
     text    RgaString
     start   Day
     end     Day
+    track   TrackV2)
+
+  (struct_set Note
+    #haskell {field_prefix "note_"}
+    status  NoteStatus  #ron{merge LWW}
+    text    RgaString
+    start   Day         #ron{merge LWW}
+    end     Day         #ron{merge LWW}
     track   Track)
 |]
 
@@ -209,6 +243,41 @@ data Entity a = Entity {entityId :: DocId a, entityVal :: a}
   deriving (Eq, Show)
 
 type EntitySample a = Sample (Entity a)
+
+-- * Legacy, v2
+loadNote :: MonadStorage m => NoteId -> m (Entity Note)
+loadNote docid = do
+  Document {objectFrame} <- loadDocument docid
+  let tryCurrentEncoding = evalObjectState objectFrame getObject
+  case tryCurrentEncoding of
+    Right note -> pure $ Entity docid note
+    Left e1 -> do
+      let tryNote2Encoding = evalObjectState objectFrame getNoteFromV2
+      case tryNote2Encoding of
+        Right note -> pure $ Entity docid note
+        Left e2 -> throwError $ Error "loadNote" [e1, e2]
+
+getNoteFromV2 :: (MonadE m, MonadObjectState a m) => m Note
+getNoteFromV2 = do
+  Object uuid <- ask
+  NoteV2 {..} <- runReaderT getObject (Object @NoteV2 uuid)
+  pure
+    Note
+      { note_end    = noteV2_end,
+        note_start  = noteV2_start,
+        note_status = noteV2_status,
+        note_text   = noteV2_text,
+        note_track  = trackFromV2 <$> noteV2_track
+        }
+
+trackFromV2 :: TrackV2 -> Track
+trackFromV2 TrackV2 {..} =
+  Track
+    { track_externalId = trackV2_externalId,
+      track_provider   = trackV2_provider,
+      track_source     = trackV2_source,
+      track_url        = trackV2_url
+      }
 
 -- * Legacy, v1
 parseNoteV1 :: MonadE m => UUID -> ByteString -> m (ObjectFrame Note)

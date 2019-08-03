@@ -22,7 +22,6 @@ import Data.Version (showVersion)
 import FF
   ( fromRgaM,
     getDataDir,
-    load,
     loadTasks,
     noDataDirectoryMessage
     )
@@ -35,6 +34,7 @@ import FF.Types
     Status (Active),
     entityId,
     entityVal,
+    loadNote,
     note_end,
     note_start,
     note_status,
@@ -108,7 +108,7 @@ getDataDirOrFail = do
 upsertDocument :: Storage.Handle -> Ptr MainWindow -> CollectionDocId -> IO ()
 upsertDocument storage mainWindow (CollectionDocId docid) = case docid of
   (cast -> Just (noteId :: NoteId)) -> do
-    note <- runStorage storage $ load noteId
+    note <- runStorage storage $ loadNote noteId
     upsertTask mainWindow note
   _ -> pure ()
 
