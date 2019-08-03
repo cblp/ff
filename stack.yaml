@@ -11,10 +11,23 @@ extra-deps:
   # ff-core:
   - crdt-10.4
   - github-0.22
-  - ron-0.7
-  - ron-rdt-0.7
-  - ron-schema-0.7
-  - ron-storage-0.8
+  - ron-0.8
+  - ron-rdt-0.8
+  - ron-schema-0.8
+  - ron-storage-0.9
+
+  # - git: git@github.com:ff-notes/ron.git
+  #   commit: 46f222c369c8329eaeb969aab64bee16550dc9de  # master @2019-08-05
+  #   subdirs:
+      # - ron
+      # - ron-rdt
+      # - ron-schema
+      # - ron-storage
+
+  # - ../ron/ron
+  # - ../ron/ron-rdt
+  # - ../ron/ron-schema
+  # - ../ron/ron-storage
 
   # ff-gtk:
   - gi-gtk-declarative-0.4.3
@@ -37,3 +50,5 @@ extra-deps:
 docker:
   enable: false
   image: ff-ubuntu-16.04
+
+flags: {ff-gtk: {gtk: False}}

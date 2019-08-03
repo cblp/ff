@@ -33,14 +33,17 @@ day = fromGregorian
     <*> integral (Range.constant 1 31)
 
 contact :: Gen Contact
-contact = Contact <$> (RGA <$> string (Range.linear 1 100) unicode) <*> status
+contact =
+    Contact
+    <$> maybe (RGA <$> string (Range.linear 1 100) unicode)
+    <*> (Just <$> status)
 
 note :: Gen Note
 note = Note
     <$> maybe day
-    <*> day
-    <*> noteStatus
-    <*> (RGA <$> string (Range.linear 1 100) unicode)
+    <*> (Just <$> day)
+    <*> (Just <$> noteStatus)
+    <*> maybe (RGA <$> string (Range.linear 1 100) unicode)
     <*> maybe track
 
 noteStatus :: Gen NoteStatus
@@ -48,10 +51,10 @@ noteStatus = choice [TaskStatus <$> status, pure Wiki]
 
 track :: Gen Track
 track = Track
-    <$> text (Range.linear 1 100) unicode
-    <*> text (Range.linear 1 100) unicode
-    <*> text (Range.linear 1 100) unicode
-    <*> text (Range.linear 1 100) unicode
+    <$> (Just <$> text (Range.linear 1 100) unicode)
+    <*> (Just <$> text (Range.linear 1 100) unicode)
+    <*> (Just <$> text (Range.linear 1 100) unicode)
+    <*> (Just <$> text (Range.linear 1 100) unicode)
 
 status :: Gen Status
 status = enumBounded

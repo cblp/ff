@@ -107,15 +107,15 @@ noteViewList address mlimit =
 
 issueToNote :: Text -> Issue -> Note
 issueToNote address issue = Note
-    { note_status = toStatus issueState
-    , note_text   = RGA $ Text.unpack $ issueTitle <> body
-    , note_start  = utctDay issueCreatedAt
+    { note_status = Just $ toStatus issueState
+    , note_text   = Just $ RGA $ Text.unpack $ issueTitle <> body
+    , note_start  = Just $ utctDay issueCreatedAt
     , note_end
     , note_track  = Just Track
-        { track_provider   = "github"
-        , track_source     = address
-        , track_externalId
-        , track_url
+        { track_provider   = Just "github"
+        , track_source     = Just address
+        , track_externalId = Just externalId
+        , track_url        = Just trackUrl
         }
     }
   where
@@ -128,11 +128,10 @@ issueToNote address issue = Note
             , issueTitle
             }
         = issue
-    track_externalId = Text.pack . show @Int $ unIssueNumber issueNumber
-    track_url = case issueHtmlUrl of
+    externalId = Text.pack . show @Int $ unIssueNumber issueNumber
+    trackUrl = case issueHtmlUrl of
         Just (URL url) -> url
-        Nothing ->
-            "https://github.com/" <> address <> "/issues/" <> track_externalId
+        Nothing -> "https://github.com/" <> address <> "/issues/" <> externalId
     note_end = case issueMilestone of
         Just Milestone { milestoneDueOn = Just UTCTime { utctDay } } ->
             Just utctDay

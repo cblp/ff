@@ -50,6 +50,7 @@ library
         FF.Config
         FF.Github
         FF.Options
+        FF.Storage
         FF.Types
         FF.UI
         FF.Upgrade
@@ -62,5 +63,6 @@ test-suite features
         base,
         blaze-html,
         interpolate
+    default-language: Haskell2010
     main-is: Features.hs
     type: exitcode-stdio-1.0

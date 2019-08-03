@@ -20,6 +20,7 @@ module FF.UI (
 import           Data.Char (isSpace)
 import           Data.List (genericLength, intersperse)
 import qualified Data.Map.Strict as Map
+import           Data.Maybe (fromJust)
 import           Data.Semigroup ((<>))
 import           Data.Text (Text)
 import qualified Data.Text as Text
@@ -30,9 +31,9 @@ import           Data.Text.Prettyprint.Doc.Render.Terminal (AnsiStyle,
                                                             Color (..), bold,
                                                             color)
 import           Data.Time (Day)
-import           RON.Data.RGA (RGA (RGA))
 import           RON.Storage.Backend (DocId (DocId))
 
+import           FF (fromRgaM)
 import           FF.Types (Contact (..), ContactSample, Entity (..), ModeMap,
                            Note (..), NoteSample, NoteStatus (Wiki),
                            Sample (..), TaskMode (..), Track (..), omitted)
@@ -105,7 +106,7 @@ prettyNote
     :: Bool  -- ^ is brief
     -> Entity Note
     -> Doc AnsiStyle
-prettyNote isBrief (Entity entityId Note{..}) = case isBrief of
+prettyNote isBrief (Entity entityId note) = case isBrief of
     True -> fillSep [title text, meta] where
         meta = green "|" <+> cyan "id" <+> prettyDocId entityId
     False -> sparsedStack [wrapLines $ Text.pack text, sep meta] where
@@ -114,11 +115,11 @@ prettyNote isBrief (Entity entityId Note{..}) = case isBrief of
                 [   [ green "|" <+> cyan "id" <+> prettyDocId entityId
                     | entityId /= DocId ""
                     ]
-                ,   [ green "|" <+> cyan "start" <+> viaShow @Day note_start
-                    | note_status /= Wiki
+                ,   [ green "|" <+> cyan "start" <+> viaShow @Day start
+                    | note_status /= Just Wiki
                     ]
                 ,   [ green "|" <+> cyan "end" <+> viaShow @Day end
-                    | note_status /= Wiki
+                    | note_status /= Just Wiki
                     , Just end <- [note_end]
                     ]
                 ]
@@ -126,7 +127,9 @@ prettyNote isBrief (Entity entityId Note{..}) = case isBrief of
                 | Just Track{..} <- [note_track]
                 ]
   where
-    RGA text = note_text
+    Note{note_end, note_start, note_status, note_text, note_track} = note
+    start = fromJust note_start
+    text  = fromRgaM note_text
 
 title :: String -> Doc ann
 title
@@ -186,7 +189,7 @@ sampleLabel = \case
 prettyContact :: Bool -> Entity Contact -> Doc AnsiStyle
 prettyContact _isBrief (Entity entityId Contact{..}) = sep [pretty name, meta]
   where
-    RGA name = contact_name
+    name = fromRgaM contact_name
     meta = green "|" <+> cyan "id" <+> prettyDocId entityId
 
 wrapLines :: Text -> Doc ann

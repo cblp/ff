@@ -1,4 +1,4 @@
-cabal-version:  >= 1.2
+cabal-version:  >= 1.10
 
 name:           ff-gtk
 version:        0
