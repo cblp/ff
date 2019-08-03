@@ -70,7 +70,7 @@ import FF.Options
     parseOptions
     )
 import qualified FF.Options as Options
-import FF.Types (Entity (..))
+import FF.Types (Entity (..), loadNote)
 import FF.UI
   ( prettyContact,
     prettyContactSample,
@@ -104,8 +104,8 @@ cli version = do
       Nothing   -> pure handle'
       Just path -> Just <$> StorageFS.newHandle path
   case cmd of
-    CmdConfig param  -> runCmdConfig cfg param
-    CmdVersion       -> runCmdVersion version
+    CmdConfig param -> runCmdConfig cfg param
+    CmdVersion -> runCmdVersion version
     CmdAction action -> case handle of
       Nothing -> fail noDataDirectoryMessage
       Just h  -> runStorage h $ runCmdAction ui action brief
@@ -181,7 +181,7 @@ runCmdAction ui cmd isBrief = do
             inWikis
             inContacts
     CmdShow noteIds -> do
-      notes <- for noteIds load
+      notes <- for noteIds loadNote
       pprint $ prettyNoteList isBrief notes
     CmdTrack track ->
       cmdTrack track today isBrief
