@@ -39,7 +39,6 @@ import FF
     cmdNewNote,
     cmdPostpone,
     cmdSearch,
-    cmdShow,
     cmdUnarchive,
     getContactSamples,
     getDataDir,
@@ -70,7 +69,7 @@ import FF.Options
     parseOptions
     )
 import qualified FF.Options as Options
-import FF.Types (Entity (..))
+import FF.Types (Entity (..), loadNote)
 import FF.UI
   ( prettyContact,
     prettyContactSample,
@@ -82,9 +81,9 @@ import FF.UI
     withHeader
     )
 import FF.Upgrade (upgradeDatabase)
-import RON.Storage.Backend (DocId (DocId))
-import RON.Storage.FS (Storage, runStorage)
-import qualified RON.Storage.FS as StorageFS
+import RON.Storage.Backend (DocId (DocId), MonadStorage)
+import RON.Storage.FS (runStorage)
+import qualified RON.Storage.FS as Storage
 import qualified System.Console.Terminal.Size as Terminal
 import System.Directory (doesDirectoryExist, getHomeDirectory)
 import System.Environment (lookupEnv, setEnv)
@@ -97,15 +96,15 @@ cli :: Version -> IO ()
 cli version = do
   cfg@Config {ui} <- loadConfig
   dataDir <- getDataDir cfg
-  handle' <- traverse StorageFS.newHandle dataDir
+  handle' <- traverse Storage.newHandle dataDir
   Options {brief, customDir, cmd} <- parseOptions handle'
   handle <-
     case customDir of
       Nothing   -> pure handle'
-      Just path -> Just <$> StorageFS.newHandle path
+      Just path -> Just <$> Storage.newHandle path
   case cmd of
-    CmdConfig param  -> runCmdConfig cfg param
-    CmdVersion       -> runCmdVersion version
+    CmdConfig param -> runCmdConfig cfg param
+    CmdVersion -> runCmdVersion version
     CmdAction action -> case handle of
       Nothing -> fail noDataDirectoryMessage
       Just h  -> runStorage h $ runCmdAction ui action brief
@@ -142,7 +141,8 @@ runCmdConfig cfg@Config {dataDir, ui} = \case
       where
         ui' = ConfigUI {shuffle = shuffle'}
 
-runCmdAction :: ConfigUI -> CmdAction -> Bool -> Storage ()
+runCmdAction
+  :: (MonadIO m, MonadStorage m) => ConfigUI -> CmdAction -> Bool -> m ()
 runCmdAction ui cmd isBrief = do
   today <- getUtcToday
   case cmd of
@@ -180,7 +180,7 @@ runCmdAction ui cmd isBrief = do
             inWikis
             inContacts
     CmdShow noteIds -> do
-      notes <- for noteIds cmdShow
+      notes <- for noteIds loadNote
       pprint $ prettyNoteList isBrief notes
     CmdTrack track ->
       cmdTrack track today isBrief
@@ -195,7 +195,7 @@ runCmdAction ui cmd isBrief = do
       wikis <- getWikiSamples False ui mlimit today
       pprint $ prettyWikiSample isBrief wikis
 
-cmdTrack :: Track -> Day -> Bool -> Storage ()
+cmdTrack :: (MonadIO m, MonadStorage m) => Track -> Day -> Bool -> m ()
 cmdTrack Track {dryRun, address, limit} today isBrief
   | dryRun =
     liftIO $ do
@@ -226,7 +226,7 @@ cmdTrack Track {dryRun, address, limit} today isBrief
           exitFailure
         Right issues -> pure issues
 
-cmdContact :: Bool -> Maybe Contact -> Storage ()
+cmdContact :: (MonadIO m, MonadStorage m) => Bool -> Maybe Contact -> m ()
 cmdContact isBrief = \case
   Just (Add name) -> do
     contact <- cmdNewContact name

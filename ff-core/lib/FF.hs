@@ -10,15 +10,14 @@
 {-# LANGUAGE ViewPatterns #-}
 
 module FF
-  ( cmdDeleteNote,
-    cmdDeleteContact,
+  ( cmdDeleteContact,
+    cmdDeleteNote,
     cmdDone,
     cmdEdit,
-    cmdNewNote,
     cmdNewContact,
+    cmdNewNote,
     cmdPostpone,
     cmdSearch,
-    cmdShow,
     cmdUnarchive,
     fromRga,
     fromRgaM,
@@ -29,7 +28,6 @@ module FF
     getWikiSamples,
     load,
     loadTasks,
-    loadAll,
     noDataDirectoryMessage,
     splitModes,
     takeSamples,
@@ -82,6 +80,7 @@ import FF.Types
     contact_name_zoom,
     contact_status_assign,
     emptySample,
+    loadNote,
     note_end_assign,
     note_end_read,
     note_start_assign,
@@ -140,6 +139,9 @@ load docid = do
 loadAll :: (Collection a, MonadStorage m) => m [Entity a]
 loadAll = getDocuments >>= traverse load
 
+loadAllNotes :: MonadStorage m => m [Entity Note]
+loadAllNotes = getDocuments >>= traverse loadNote
+
 searchStatus :: Bool -> Status
 searchStatus = bool Active Archived
 
@@ -169,13 +171,13 @@ fromRgaM :: Maybe (RGA a) -> [a]
 fromRgaM = maybe [] fromRga
 
 loadTasks :: MonadStorage m => Bool -> m [Entity Note]
-loadTasks isArchived = filter isArchived' <$> loadAll
+loadTasks isArchived = filter isArchived' <$> loadAllNotes
   where
     isArchived' =
       (Just (TaskStatus $ searchStatus isArchived) ==) . note_status . entityVal
 
 loadWikis :: MonadStorage m => m [Entity Note]
-loadWikis = filter ((Just Wiki ==) . note_status . entityVal) <$> loadAll
+loadWikis = filter ((Just Wiki ==) . note_status . entityVal) <$> loadAllNotes
 
 getTaskSamples
   :: MonadStorage m
@@ -365,9 +367,6 @@ cmdSearch substr archive ui limit today = do
   where
     predicate = Text.isInfixOf (Text.toCaseFold substr) . Text.toCaseFold
 
-cmdShow :: MonadStorage m => NoteId -> m (Entity Note)
-cmdShow = load
-
 cmdDeleteNote :: MonadStorage m => NoteId -> m (Entity Note)
 cmdDeleteNote nid = modifyAndView nid $ do
   assertNoteIsNative
@@ -389,8 +388,8 @@ cmdEdit :: (MonadIO m, MonadStorage m) => Edit -> m [Entity Note]
 cmdEdit edit = case edit of
   Edit {ids = _ :| _ : _, text = Just _} ->
     throwError "Can't edit content of multiple notes"
-  Edit {ids = id :| [], text, start = Nothing, end = Nothing} ->
-    fmap (: []) $ modifyAndView id $ do
+  Edit {ids = nid :| [], text, start = Nothing, end = Nothing} ->
+    fmap (: []) $ modifyAndView nid $ do
       assertNoteIsNative
       note_text_zoom $ do
         noteText' <-
@@ -401,8 +400,8 @@ cmdEdit edit = case edit of
               liftIO $ runExternalEditor noteText
         RGA.editText noteText'
   Edit {ids, text, start, end} ->
-    fmap toList . for ids $ \id ->
-      modifyAndView id $ do
+    fmap toList . for ids $ \nid ->
+      modifyAndView nid $ do
         -- check text editability
         whenJust text $ const assertNoteIsNative
         -- check start and end editability
