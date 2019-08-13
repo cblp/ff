@@ -328,7 +328,12 @@ fs123jsonAndLww =
                 "\t@B/6n7T8JWK0P+000000000Q :start 22 11 24",
                 "\t@B/6n7T8JWK0T+000000000U :status >Active",
                 "\t@` :text >)L",
-                "\t:track",
+                "\t:track >)M",
+                "*lww #)M !",
+                "\t:externalId '54'",
+                "\t:provider 'github'",
+                "\t:source 'ff-notes/ff'",
+                "\t:url 'https://github.com/ff-notes/ff/pull/54'",
                 "*rga #)L @0 :0 !",
                 "\t@B/6n7T8JWK06+0000000007 'h'",
                 "\t@)7 'e'",
@@ -350,14 +355,14 @@ fs123merged =
   Map.singleton "note"
     $ Map.fromList
         [ ( "000000000008K-000000000001J",
-            Map.singleton "B000000001NDU-2000000000012"
-              [ "*lww #000000004K$000000000o !",
-                "\t@B/6n7T8JWK0K+000000000L :end 17 6 19",
-                "\t@B/6n7T8JWK0P+000000000Q :start 22 11 24",
-                "\t@B/6n7T8JWK0T+000000000U :status >Active",
-                "\t@` :text >)L",
-                "\t:track",
-                "*rga #)L @0 :0 !",
+            Map.singleton "B000000006N4M-2000000000012"
+              [ "*set #000000004K$000000000o !",
+                "\t@B/0000000Drz+000000000Y >end 17 6 19",
+                "\t@}IOM >start 22 11 24",
+                "\t@}QUM >status >Active",
+                "\t@}_QM >text >000000004L$000000000o",
+                "\t@}mnM >track",
+                "*rga #)L @0 !",
                 "\t@B/6n7T8JWK06+0000000007 'h'",
                 "\t@)7 'e'",
                 "\t@)8 'l'",
@@ -371,8 +376,8 @@ fs123merged =
                 "."
                 ]
             ),
-          ( "000000000018K-000000000001J",
-            Map.singleton "event 3 24"
+          ( "000000000008M-000000000001J",
+            Map.singleton "B00000000FN4M-2000000000012"
               [ "*set #000000004K$000000000o !",
                 "\t@B/6n7T8JWK0K+000000000L >end 17 6 19",
                 "\t@B/6n7T8JWK0P+000000000Q >start 22 11 24",
@@ -390,6 +395,7 @@ fs123merged =
                 "\t@)6 'r'",
                 "\t@)7 'l'",
                 "\t@)8 'd'",
+                "*set #)M @0 !",
                 "."
                 ]
             )
