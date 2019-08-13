@@ -128,21 +128,21 @@ upsertTask mainWindow Entity {entityId = DocId id, entityVal = note} = do
       externalId = encodeUtf8 $ fromMaybe "" $ note_track >>= track_externalId
       url = encodeUtf8 $ fromMaybe "" $ note_track >>= track_url
   [Cpp.block| void {
-        $(MainWindow * mainWindow)->upsertTask({
-            .id = $bs-cstr:id',
-            .isActive = $(bool isActive),
-            .text = $bs-cstr:text,
-            .start = {$(int startYear), $(int startMonth), $(int startDay)},
-            .end   = {$(int   endYear), $(int   endMonth), $(int   endDay)},
-            .isTracking = $(bool isTracking),
-            .track = {
-                .provider   = $bs-cstr:provider,
-                .source     = $bs-cstr:source,
-                .externalId = $bs-cstr:externalId,
-                .url        = $bs-cstr:url,
-            },
-        });
-    } |]
+    $(MainWindow * mainWindow)->upsertTask({
+      .id = $bs-cstr:id',
+      .isActive = $(bool isActive),
+      .text = $bs-cstr:text,
+      .start = {$(int startYear), $(int startMonth), $(int startDay)},
+      .end   = {$(int   endYear), $(int   endMonth), $(int   endDay)},
+      .isTracking = $(bool isTracking),
+      .track = {
+        .provider   = $bs-cstr:provider,
+        .source     = $bs-cstr:source,
+        .externalId = $bs-cstr:externalId,
+        .url        = $bs-cstr:url,
+      },
+    });
+  } |]
 
 toGregorianC :: Day -> (CInt, CInt, CInt)
 toGregorianC day = (y, m, d)
