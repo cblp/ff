@@ -15,8 +15,9 @@ where
 import Data.Foldable (for_)
 import qualified Data.Map.Strict as Map
 import FF.Types (Note)
-import RON.Data (ObjectStateT, Rep, getObjectStateChunk)
+import RON.Data (ObjectStateT, Rep, getObjectStateChunk, reducibleOpType)
 import RON.Data.LWW (lwwType)
+import RON.Data.ORSet (ORSetRep)
 import RON.Error (Error (Error), MonadE, liftMaybe)
 import RON.Event (getEventUuid)
 import RON.Prelude
@@ -60,10 +61,9 @@ convertLwwToSet uuid = do
     $ Error "bad type"
         [Error "expected lww" [], Error ("got " <> show stateType) []]
   -- (a, chunk') <- f chunk
-  -- modify'
-  --   $ Map.insert uuid
-  --   $ WireStateChunk {stateType = reducibleOpType @(Rep a), stateBody = chunk'}
-  _
+  modify'
+    $ Map.insert uuid
+    $ WireStateChunk {stateType = reducibleOpType @ORSetRep, stateBody = chunk'}
 
 upgradeDocId :: (Collection a, MonadStorage m) => DocId a -> m (DocId a)
 upgradeDocId docid = do
