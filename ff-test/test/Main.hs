@@ -7,7 +7,7 @@ module Main
 where
 
 import Config (configTests)
-import Database (dataTests)
+import Database (databaseTests)
 import Readme (readmeTest)
 import Regression (mkRegressionTest)
 import System.IO.Temp (withSystemTempDirectory)
@@ -18,4 +18,5 @@ main = do
   regressionTest <- mkRegressionTest
   withSystemTempDirectory "ff-test" $ \tmp ->
     defaultMain
-      $ testGroup "" [configTests, dataTests, readmeTest, regressionTest tmp]
+      $ testGroup ""
+          [configTests, databaseTests, readmeTest, regressionTest tmp]

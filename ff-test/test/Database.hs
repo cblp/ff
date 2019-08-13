@@ -6,7 +6,7 @@
 {-# LANGUAGE TemplateHaskell #-}
 
 module Database
-  ( dataTests
+  ( databaseTests
     )
 where
 
@@ -57,8 +57,8 @@ import Test.Tasty (TestTree, testGroup)
 import Test.Tasty.Hedgehog (testProperty)
 import Test.Tasty.TH (testGroupGenerator)
 
-dataTests :: TestTree
-dataTests = $(testGroupGenerator)
+databaseTests :: TestTree
+databaseTests = $(testGroupGenerator)
 
 prop_not_exist :: Property
 prop_not_exist = property $ do
@@ -200,8 +200,7 @@ test_JSON_Tests =
 prop_repo :: Property
 prop_repo =
   property
-    $ ideal
-    === Github.sampleMap "ff-notes/ff" limit todayForIssues issues
+    (ideal === Github.sampleMap "ff-notes/ff" limit todayForIssues issues)
   where
     ideal =
       Map.singleton
@@ -289,57 +288,109 @@ prop_json2ron :: Property
 prop_json2ron = property $ do
   -- read JSON, merge, write RON
   do
-    ((), db') <- evalEither $ runStorageSim fs123json upgradeDatabase
+    ((), db') <- evalEither $ runStorageSim fs123jsonAndLww upgradeDatabase
     fs123merged === db'
   -- idempotency
   do
     ((), db') <- evalEither $ runStorageSim fs123merged upgradeDatabase
     fs123merged === db'
 
-fs123json :: TestDB
-fs123json =
-  Map.singleton "note" $ Map.singleton "000000000008K-000000000001J"
+fs123jsonAndLww :: TestDB
+fs123jsonAndLww =
+  Map.singleton "note"
     $ Map.fromList
-        [ ( "event 2 72",
-            BSLC.lines
-              [i|{
-                "end"   : ["17-06-19", 20, 21],
-                "start" : ["22-11-24", 25, 26],
-                "status": ["Active",   29, 30],
-                "text"  : ["hello",     6,  7]
-                }|]
+        [ ( "000000000008K-000000000001J",
+            Map.fromList
+              [ ( "event 2 72",
+                  BSLC.lines
+                    [i|{
+                      "end"   : ["17-06-19", 20, 21],
+                      "start" : ["22-11-24", 25, 26],
+                      "status": ["Active",   29, 30],
+                      "text"  : ["hello",     6,  7]
+                      }|]
+                  ),
+                ( "event 2 78",
+                  BSLC.lines
+                    [i|{
+                      "end"   : ["12-01-14", 15, 16],
+                      "start" : ["9-10-11",   7,  8],
+                      "status": ["Active",   27, 28],
+                      "text"  : ["world",     4,  5]
+                      }|]
+                  )
+                ]
             ),
-          ( "event 2 78",
-            BSLC.lines
-              [i|{
-                "end"   : ["12-01-14", 15, 16],
-                "start" : ["9-10-11",   7,  8],
-                "status": ["Active",   27, 28],
-                "text"  : ["world",     4,  5]
-                }|]
+          ( "000000000018K-000000000001J",
+            Map.singleton "event 3 24"
+              [ "*lww #000000004K$000000000o !",
+                "\t@B/6n7T8JWK0K+000000000L :end 17 6 19",
+                "\t@B/6n7T8JWK0P+000000000Q :start 22 11 24",
+                "\t@B/6n7T8JWK0T+000000000U :status >Active",
+                "\t@` :text >)L",
+                "\t:track",
+                "*rga #)L @0 :0 !",
+                "\t@B/6n7T8JWK06+0000000007 'h'",
+                "\t@)7 'e'",
+                "\t@)8 'l'",
+                "\t@)9 'l'",
+                "\t@)A 'o'",
+                "\t@B/6n7T8JWK04+0000000005 'w'",
+                "\t@)5 'o'",
+                "\t@)6 'r'",
+                "\t@)7 'l'",
+                "\t@)8 'd'",
+                "."
+                ]
             )
           ]
 
 fs123merged :: TestDB
 fs123merged =
-  Map.singleton "note" $ Map.singleton "000000000008K-000000000001J"
-    $ Map.singleton "B000000001NDU-2000000000012"
-        [ "*lww #000000004K$000000000o !",
-          "\t@B/6n7T8JWK0K+000000000L :end 17 6 19",
-          "\t@B/6n7T8JWK0P+000000000Q :start 22 11 24",
-          "\t@B/6n7T8JWK0T+000000000U :status >Active",
-          "\t@` :text >)L",
-          "\t:track",
-          "*rga #)L @0 :0 !",
-          "\t@B/6n7T8JWK06+0000000007 'h'",
-          "\t@)7 'e'",
-          "\t@)8 'l'",
-          "\t@)9 'l'",
-          "\t@)A 'o'",
-          "\t@B/6n7T8JWK04+0000000005 'w'",
-          "\t@)5 'o'",
-          "\t@)6 'r'",
-          "\t@)7 'l'",
-          "\t@)8 'd'",
-          "."
+  Map.singleton "note"
+    $ Map.fromList
+        [ ( "000000000008K-000000000001J",
+            Map.singleton "B000000001NDU-2000000000012"
+              [ "*lww #000000004K$000000000o !",
+                "\t@B/6n7T8JWK0K+000000000L :end 17 6 19",
+                "\t@B/6n7T8JWK0P+000000000Q :start 22 11 24",
+                "\t@B/6n7T8JWK0T+000000000U :status >Active",
+                "\t@` :text >)L",
+                "\t:track",
+                "*rga #)L @0 :0 !",
+                "\t@B/6n7T8JWK06+0000000007 'h'",
+                "\t@)7 'e'",
+                "\t@)8 'l'",
+                "\t@)9 'l'",
+                "\t@)A 'o'",
+                "\t@B/6n7T8JWK04+0000000005 'w'",
+                "\t@)5 'o'",
+                "\t@)6 'r'",
+                "\t@)7 'l'",
+                "\t@)8 'd'",
+                "."
+                ]
+            ),
+          ( "000000000018K-000000000001J",
+            Map.singleton "event 3 24"
+              [ "*set #000000004K$000000000o !",
+                "\t@B/6n7T8JWK0K+000000000L >end 17 6 19",
+                "\t@B/6n7T8JWK0P+000000000Q >start 22 11 24",
+                "\t@B/6n7T8JWK0T+000000000U >status >Active",
+                "\t@` :text >)L",
+                "\t:track",
+                "*rga #)L @0 :0 !",
+                "\t@B/6n7T8JWK06+0000000007 'h'",
+                "\t@)7 'e'",
+                "\t@)8 'l'",
+                "\t@)9 'l'",
+                "\t@)A 'o'",
+                "\t@B/6n7T8JWK04+0000000005 'w'",
+                "\t@)5 'o'",
+                "\t@)6 'r'",
+                "\t@)7 'l'",
+                "\t@)8 'd'",
+                "."
+                ]
+            )
           ]
