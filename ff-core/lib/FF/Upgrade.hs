@@ -1,6 +1,7 @@
 {-# LANGUAGE AllowAmbiguousTypes #-}
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE LambdaCase #-}
+{-# LANGUAGE MultiWayIf #-}
 {-# LANGUAGE NamedFieldPuns #-}
 {-# LANGUAGE NoImplicitPrelude #-}
 {-# LANGUAGE OverloadedStrings #-}
@@ -74,17 +75,21 @@ convertLwwToSet uuid =
     frame <- get
     WireStateChunk {stateType, stateBody} <-
       liftMaybe "no such object in chunk" $ Map.lookup uuid frame
-    unless (stateType == lwwType)
-      $ throwError
-      $ Error "bad type"
-          [Error "expected lww" [], Error ("got " <> show stateType) []]
-    stateBody' <-
-      for stateBody $ \Op {refId, payload} -> do
-        opId <- getEventUuid
-        pure Op {opId, refId = Zero, payload = AUuid refId : payload}
-    modify'
-      $ Map.insert uuid
-          WireStateChunk {stateType = setType, stateBody = stateBody'}
+    if | stateType == lwwType ->
+         do
+           stateBody' <-
+             for stateBody $ \Op {refId, payload} -> do
+               opId <- getEventUuid
+               pure Op {opId, refId = Zero, payload = AUuid refId : payload}
+           modify'
+             $ Map.insert uuid
+                 WireStateChunk {stateType = setType, stateBody = stateBody'}
+       | stateType == setType ->
+         pure () -- OK
+       | otherwise ->
+         throwError
+           $ Error "bad type"
+               [Error "expected lww" [], Error ("got " <> show stateType) []]
   where
     setType = reducibleOpType @ORSetRep
 
