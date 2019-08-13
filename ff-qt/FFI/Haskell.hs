@@ -6,15 +6,12 @@ import Control.Monad (void)
 import Data.List.NonEmpty (NonEmpty ((:|)))
 import Data.Time (fromGregorian)
 import FF (cmdDone, cmdEdit, cmdPostpone)
-import FF.Options
-  ( Edit (Edit, end, ids, start, text),
-    MaybeClear (Clear, Set)
-    )
-import FF.Storage (runFFStorage)
-import qualified FF.Storage as Storage
+import FF.Options (Edit (Edit, end, ids, start, text), MaybeClear (Clear, Set))
 import Foreign.C (CInt (CInt), CString, peekCAString)
 import Foreign.StablePtr (StablePtr, deRefStablePtr)
 import RON.Storage.Backend (DocId (DocId))
+import RON.Storage.FS (runStorage)
+import qualified RON.Storage.FS as Storage
 
 {-# ANN module "HLint: ignore Use camelCase" #-}
 
@@ -38,7 +35,7 @@ c_assignStart storagePtr noteIdStr year month day = do
               (fromIntegral year)
               (fromIntegral month)
               (fromIntegral day)
-  void $ runFFStorage storageHandle
+  void $ runStorage storageHandle
     $ cmdEdit
         Edit {ids = DocId noteId :| [], text = Nothing, start, end = Nothing}
 
@@ -58,7 +55,7 @@ c_assignEnd storagePtr noteIdStr year month day = do
                 (fromIntegral year)
                 (fromIntegral month)
                 (fromIntegral day)
-  void $ runFFStorage storageHandle
+  void $ runStorage storageHandle
     $ cmdEdit
         Edit {ids = DocId noteId :| [], text = Nothing, end, start = Nothing}
 
@@ -68,7 +65,7 @@ c_done :: StablePtr Storage.Handle -> CString -> IO ()
 c_done storagePtr noteIdStr = do
   storageHandle <- deRefStablePtr storagePtr
   noteId <- peekCAString noteIdStr
-  void $ runFFStorage storageHandle $ cmdDone $ DocId noteId
+  void $ runStorage storageHandle $ cmdDone $ DocId noteId
 
 foreign export ccall
   c_postpone :: StablePtr Storage.Handle -> CString -> IO ()
@@ -77,4 +74,4 @@ c_postpone :: StablePtr Storage.Handle -> CString -> IO ()
 c_postpone storagePtr noteIdStr = do
   storageHandle <- deRefStablePtr storagePtr
   noteId <- peekCAString noteIdStr
-  void $ runFFStorage storageHandle $ cmdPostpone $ DocId noteId
+  void $ runStorage storageHandle $ cmdPostpone $ DocId noteId

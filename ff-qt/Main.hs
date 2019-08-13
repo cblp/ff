@@ -27,8 +27,6 @@ import FF
     noDataDirectoryMessage
     )
 import FF.Config (loadConfig)
-import FF.Storage (runFFStorage, subscribeForever)
-import qualified FF.Storage as Storage
 import FF.Types
   ( Entity (Entity),
     Note (Note),
@@ -53,7 +51,12 @@ import Foreign.StablePtr (newStablePtr)
 import qualified Language.C.Inline.Cpp as Cpp
 import Paths_ff_qt (version)
 import RON.Storage.Backend (DocId (DocId))
-import RON.Storage.FS (CollectionDocId (CollectionDocId))
+import qualified RON.Storage.FS as Storage
+import RON.Storage.FS
+  ( CollectionDocId (CollectionDocId),
+    runStorage,
+    subscribeForever
+    )
 import Prelude hiding (id)
 
 Cpp.context $ Cpp.cppCtx <> Cpp.bsCtx <> ffCtx
@@ -88,7 +91,7 @@ main = do
   -- load current data to the view, asynchronously
   _ <-
     forkIO $ do
-      activeTasks <- runFFStorage storage (loadTasks False)
+      activeTasks <- runStorage storage (loadTasks False)
       for_ activeTasks $ upsertTask mainWindow
   -- update the view with future changes
   _ <- forkIO $ subscribeForever storage $ upsertDocument storage mainWindow
@@ -106,7 +109,7 @@ getDataDirOrFail = do
 upsertDocument :: Storage.Handle -> Ptr MainWindow -> CollectionDocId -> IO ()
 upsertDocument storage mainWindow (CollectionDocId docid) = case docid of
   (cast -> Just (noteId :: NoteId)) -> do
-    note <- runFFStorage storage $ load noteId
+    note <- runStorage storage $ load noteId
     upsertTask mainWindow note
   _ -> pure ()
 

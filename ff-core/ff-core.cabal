@@ -50,7 +50,6 @@ library
         FF.Config
         FF.Github
         FF.Options
-        FF.Storage
         FF.Types
         FF.UI
         FF.Upgrade

@@ -14,7 +14,7 @@ where
 import Data.Aeson.TH (defaultOptions, deriveToJSON)
 import Data.Traversable (for)
 import Data.Yaml (encodeFile)
-import FF.Storage (Handle, newHandle, runFFStorage)
+import RON.Storage.FS (Handle, newHandle, runStorage)
 import FF.Types
   ( Entity (Entity, entityVal),
     Note,
@@ -45,7 +45,7 @@ deriveToJSON defaultOptions ''Track
 mkRegressionTest :: IO (FilePath -> TestTree)
 mkRegressionTest = do
   h <- newHandle "../.ff"
-  collections <- runFFStorage h getCollections
+  collections <- runStorage h getCollections
   tests <-
     for collections $ \collection -> case collection of
       "note" -> testNoteCollection h collection
@@ -54,7 +54,7 @@ mkRegressionTest = do
 
 testNoteCollection :: Handle -> CollectionName -> IO (FilePath -> TestTree)
 testNoteCollection h collectionName = do
-  docs <- runFFStorage h $ getDocuments @_ @Note
+  docs <- runStorage h $ getDocuments @_ @Note
   pure $ \tmp -> testGroup collectionName $ map (testNote h tmp) docs
 
 testNote :: Handle -> FilePath -> NoteId -> TestTree
@@ -63,7 +63,7 @@ testNote h tmp docid =
   where
     outFile = tmp </> show docid
     action = do
-      Entity {entityVal = val} <- runFFStorage h $ loadNote docid
+      Entity {entityVal = val} <- runStorage h $ loadNote docid
       createDirectoryIfMissing True $ takeDirectory outFile
       encodeFile outFile val
 

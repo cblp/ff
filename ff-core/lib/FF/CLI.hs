@@ -69,8 +69,6 @@ import FF.Options
     parseOptions
     )
 import qualified FF.Options as Options
-import FF.Storage (runFFStorage)
-import qualified FF.Storage as Storage
 import FF.Types (Entity (..), loadNote)
 import FF.UI
   ( prettyContact,
@@ -84,6 +82,8 @@ import FF.UI
     )
 import FF.Upgrade (upgradeDatabase)
 import RON.Storage.Backend (DocId (DocId), MonadStorage)
+import RON.Storage.FS (runStorage)
+import qualified RON.Storage.FS as Storage
 import qualified System.Console.Terminal.Size as Terminal
 import System.Directory (doesDirectoryExist, getHomeDirectory)
 import System.Environment (lookupEnv, setEnv)
@@ -107,7 +107,7 @@ cli version = do
     CmdVersion -> runCmdVersion version
     CmdAction action -> case handle of
       Nothing -> fail noDataDirectoryMessage
-      Just h -> runFFStorage h $ runCmdAction ui action brief
+      Just h -> runStorage h $ runCmdAction ui action brief
 
 runCmdConfig :: Config -> Maybe Options.Config -> IO ()
 runCmdConfig cfg@Config {dataDir, ui} = \case

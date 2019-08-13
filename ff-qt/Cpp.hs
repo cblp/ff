@@ -10,13 +10,13 @@ module Cpp
 where
 
 import qualified Data.Map.Strict as Map
-import qualified FF.Storage as Storage
 import Foreign.StablePtr (StablePtr)
 import Language.C.Inline (include)
 import Language.C.Inline.Context (Context, ctxTypesTable)
 import Language.C.Types (TypeSpecifier (TypeName))
 import Language.Haskell.TH (DecsQ)
 import Language.Haskell.TH.Syntax (addDependentFile)
+import qualified RON.Storage.FS as Storage
 
 data MainWindow
 

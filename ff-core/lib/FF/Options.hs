@@ -29,8 +29,7 @@ import qualified Data.List.NonEmpty as NonEmpty
 import Data.Semigroup ((<>))
 import Data.Text (Text)
 import Data.Time (Day)
-import FF.Storage (runFFStorage)
-import qualified FF.Storage as Storage
+import qualified RON.Storage.FS as Storage
 import FF.Types (ContactId, Limit, Note, NoteId)
 import qualified FF.Types
 import Options.Applicative
@@ -70,7 +69,7 @@ import Options.Applicative
     switch
     )
 import RON.Storage.Backend (DocId (DocId), getDocuments)
-import RON.Storage.FS (Collection)
+import RON.Storage.FS (Collection, runStorage)
 
 data Cmd
   = CmdConfig (Maybe Config)
@@ -337,7 +336,7 @@ parser h =
     docIdCompleter = case h of
       Nothing -> listCompleter []
       Just h' ->
-        listIOCompleter $ map unDocId <$> runFFStorage h' (getDocuments @_ @a)
+        listIOCompleter $ map unDocId <$> runStorage h' (getDocuments @_ @a)
     unDocId (DocId name) = name
     readDocId = DocId <$> str
 
