@@ -20,6 +20,8 @@ module FF
     cmdSearch,
     cmdShow,
     cmdUnarchive,
+    fromRga,
+    fromRgaM,
     getContactSamples,
     getDataDir,
     getTaskSamples,

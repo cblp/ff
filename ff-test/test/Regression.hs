@@ -1,6 +1,7 @@
 {-# OPTIONS_GHC -Wno-orphans #-}
 
 {-# LANGUAGE AllowAmbiguousTypes #-}
+{-# LANGUAGE NamedFieldPuns #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE TypeApplications #-}
@@ -14,7 +15,7 @@ import           Data.Yaml (encodeFile)
 import           RON.Data (evalObjectState, getObject)
 import           RON.Data.RGA (RGA)
 import           RON.Storage (Collection, CollectionName, DocId, loadDocument)
-import           RON.Storage.Backend (Document (Document, value),
+import           RON.Storage.Backend (Document (Document, objectFrame),
                                       getCollections, getDocuments)
 import           RON.Storage.FS (Handle, newHandle, runStorage)
 import           System.Directory (createDirectoryIfMissing)
@@ -54,8 +55,7 @@ testDoc h tmp docid =
   where
     outFile = tmp </> show docid
     action = do
-        -- _ <- getCurrentDirectory >>= error
-        Document{value = objectFrame} <- runStorage h $ loadDocument docid
+        Document{objectFrame} <- runStorage h $ loadDocument docid
         val <- either (fail . show) pure $ evalObjectState objectFrame getObject
         createDirectoryIfMissing True $ takeDirectory outFile
         encodeFile outFile val

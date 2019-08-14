@@ -11,7 +11,6 @@ import           Data.Aeson (FromJSON, ToJSON, parseJSON, toJSON)
 import           Data.Aeson.Types (parseEither)
 import qualified Data.ByteString.Lazy.Char8 as BSLC
 import qualified Data.Map.Strict as Map
-import           Data.Maybe (fromMaybe)
 import           Data.Semigroup ((<>))
 import           Data.String.Interpolate.IsString (i)
 import qualified Data.Text as Text
@@ -24,7 +23,7 @@ import           GitHub.Data.Id (Id (..))
 import           GitHub.Data.Name (Name (..))
 import           Hedgehog (Gen, Property, evalEither, forAll, property, (===))
 import           RON.Data (ReplicatedAsObject, evalObjectState, getObject,
-                           newObjectState)
+                           newObjectFrame)
 import           RON.Data.RGA (RGA (RGA))
 import           RON.Storage.Backend (DocId (DocId))
 import           RON.Storage.Test (TestDB, runStorageSim)
@@ -71,9 +70,9 @@ prop_smoke = property $ do
                 [Entity
                     (DocId "B00000000002D-200000000002D")
                     Note
-                        { note_status = TaskStatus Active
-                        , note_text   = RGA "helloworld"
-                        , note_start  = fromGregorian 22 11 24
+                        { note_status = Just $ TaskStatus Active
+                        , note_text   = Just $ RGA "helloworld"
+                        , note_start  = Just $ fromGregorian 22 11 24
                         , note_end    = Just $ fromGregorian 17 06 19
                         , note_track  = Nothing
                         }]
@@ -149,10 +148,10 @@ prop_new = let
             evalEither $ runStorageSim mempty $
             cmdNewNote New{text, start, end, isWiki = False} today
         let Note{note_text, note_start, note_end} = entityVal note
-        RGA (Text.unpack text) === note_text
-        fromMaybe today start  === note_start
-        end                    === note_end
-        fs                     === fs'
+        Just (RGA $ Text.unpack text) === note_text
+        start                         === note_start -- TODO today?
+        end                           === note_end
+        fs                            === fs'
 
 jsonRoundtrip :: (Eq a, FromJSON a, Show a, ToJSON a) => Gen a -> Property
 jsonRoundtrip genA = property $ do
@@ -163,7 +162,7 @@ jsonRoundtrip genA = property $ do
 ronRoundtrip :: (Eq a, ReplicatedAsObject a, Show a) => Gen a -> Property
 ronRoundtrip genA = property $ do
     a <- forAll genA
-    (obj, _) <- evalEither $ runStorageSim mempty $ newObjectState a
+    (obj, _) <- evalEither $ runStorageSim mempty $ newObjectFrame a
     let (u, bs) = serializeObject obj
     obj' <- evalEither $ parseObject u bs
     obj === obj'
@@ -185,15 +184,16 @@ prop_repo = property $
         (Overdue 10)
         Sample
             { items = pure Note
-                { note_status = TaskStatus Active
-                , note_text   = RGA "import issues (GitHub -> ff)"
-                , note_start  = fromGregorian 2018 06 21
+                { note_status = Just $ TaskStatus Active
+                , note_text   = Just $ RGA "import issues (GitHub -> ff)"
+                , note_start  = Just $ fromGregorian 2018 06 21
                 , note_end    = Just $ fromGregorian 2018 06 15
                 , note_track  = Just Track
-                    { track_provider = "github"
-                    , track_source = "ff-notes/ff"
-                    , track_externalId = "60"
-                    , track_url = "https://github.com/ff-notes/ff/issues/60"
+                    { track_provider = Just "github"
+                    , track_source = Just $ "ff-notes/ff"
+                    , track_externalId = Just $ "60"
+                    , track_url =
+                        Just "https://github.com/ff-notes/ff/issues/60"
                     }
                 }
             , total = 1
@@ -283,15 +283,15 @@ fs123json =
 fs123merged :: TestDB
 fs123merged =
     Map.singleton "note" $ Map.singleton "000000000008K-000000000001J" $
-    Map.singleton "B000000PSDNDU-2000000000012"
-        [ "*lww #000000004K$000000000o @B/6n7T8JWK0T+000000000U !"
-        ,   "\t@B/6n7T8JWK0K+000000000L :end >some 17 6 19"
+    Map.singleton "B000000001NDU-2000000000012"
+        [ "*lww #000000004K$000000000o !"
+        ,   "\t@B/6n7T8JWK0K+000000000L :end 17 6 19"
         ,   "\t@B/6n7T8JWK0P+000000000Q :start 22 11 24"
         ,   "\t@B/6n7T8JWK0T+000000000U :status >Active"
         ,   "\t@` :text >)L"
-        ,   "\t:track >none"
-        , "*rga #)L @B/6n7T8JWK0A+0000000007 :0 !"
-        ,   "\t@)6 'h'"
+        ,   "\t:track"
+        , "*rga #)L @0 :0 !"
+        ,   "\t@B/6n7T8JWK06+0000000007 'h'"
         ,   "\t@)7 'e'"
         ,   "\t@)8 'l'"
         ,   "\t@)9 'l'"
