@@ -149,7 +149,7 @@ prop_new = let
             cmdNewNote New{text, start, end, isWiki = False} today
         let Note{note_text, note_start, note_end} = entityVal note
         Just (RGA $ Text.unpack text) === note_text
-        start                         === note_start -- TODO today?
+        start                         === note_start
         end                           === note_end
         fs                            === fs'
 
