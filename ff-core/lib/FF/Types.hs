@@ -10,6 +10,7 @@
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE StandaloneDeriving #-}
 {-# LANGUAGE TemplateHaskell #-}
+{-# LANGUAGE TypeFamilies #-}
 
 module FF.Types where
 
@@ -36,10 +37,9 @@ import Numeric.Natural (Natural)
 import RON.Data
   ( Replicated (encoding),
     ReplicatedAsPayload (fromPayload, toPayload),
-    mkStateChunk,
     payloadEncoding,
     stateFromChunk,
-    stateToChunk
+    stateToWireChunk
     )
 import RON.Data.LWW (lwwType)
 import RON.Data.RGA (RgaRep)
@@ -51,9 +51,11 @@ import RON.Schema.TH (mkReplicated)
 import RON.Storage (Collection, DocId, collectionName, fallbackParse)
 import RON.Types
   ( Atom (AUuid),
-    ObjectState (ObjectState, frame, uuid),
+    ObjectFrame (ObjectFrame, frame, uuid),
     Op (Op),
-    UUID
+    Payload,
+    UUID,
+    WireStateChunk (WireStateChunk, stateBody, stateType)
     )
 import qualified RON.UUID as UUID
 import Prelude hiding (id)
@@ -102,8 +104,8 @@ instance ReplicatedAsPayload NoteStatus where
     status  NoteStatus
     text    RgaString
     start   Day
-    end     (Option Day)
-    track   (Option Track))
+    end     Day
+    track   Track)
 |]
 
 deriving instance Eq Contact
@@ -185,15 +187,16 @@ instance Ord TaskMode where
 taskMode :: Day -> Note -> TaskMode
 taskMode today Note {note_start, note_end} = case note_end of
   Nothing
-    | note_start <= today -> Actual
-    | otherwise           -> starting note_start today
+    | start <= today -> Actual
+    | otherwise      -> starting start today
   Just e -> case compare e today of
     LT -> overdue today e
     EQ -> EndToday
     GT
-      | note_start <= today -> endSoon e today
-      | otherwise           -> starting note_start today
+      | start <= today -> endSoon e today
+      | otherwise      -> starting start today
   where
+    start        = fromJust note_start
     overdue      = helper Overdue
     endSoon      = helper EndSoon
     starting     = helper Starting
@@ -209,7 +212,7 @@ data Entity a = Entity {entityId :: DocId a, entityVal :: a}
 type EntitySample a = Sample (Entity a)
 
 -- * Legacy, v1
-parseNoteV1 :: MonadE m => UUID -> ByteString -> m (ObjectState Note)
+parseNoteV1 :: MonadE m => UUID -> ByteString -> m (ObjectFrame Note)
 parseNoteV1 objectId = liftEitherString . (eitherDecode >=> parseEither p)
   where
     p = withObject "Note" $ \obj -> do
@@ -221,7 +224,7 @@ parseNoteV1 objectId = liftEitherString . (eitherDecode >=> parseEither p)
       let endTime'    = timeFromV1 endTime
           startTime'  = timeFromV1 startTime
           statusTime' = timeFromV1 statusTime
-      let trackPayload = toPayload $ mTracked $> trackId
+      let trackPayload = toPayloadM $ mTracked $> trackId
       mTrackObject <-
         case mTracked of
           Nothing -> pure Nothing
@@ -233,7 +236,7 @@ parseNoteV1 objectId = liftEitherString . (eitherDecode >=> parseEither p)
             pure
               $ Just
                   ( trackId,
-                    mkStateChunk lwwType
+                    mkLww
                       [ Op trackId externalIdName $ toPayload externalId,
                         Op trackId providerName   $ toPayload provider,
                         Op trackId sourceName     $ toPayload source,
@@ -243,18 +246,19 @@ parseNoteV1 objectId = liftEitherString . (eitherDecode >=> parseEither p)
       let frame =
             Map.fromList
               $ [ ( objectId,
-                    mkStateChunk lwwType
-                      [ Op endTime'    endName    $ toPayload end,
+                    mkLww
+                      [ Op endTime'    endName    $ toPayloadM end,
                         Op startTime'  startName  $ toPayload start,
                         Op statusTime' statusName $ toPayload status,
                         Op objectId    textName   $ toPayload textId,
                         Op objectId    trackName    trackPayload
                         ]
                     ),
-                  (textId, stateToChunk $ rgaFromV1 text) -- rgaType
+                  (textId, stateToWireChunk $ rgaFromV1 text) -- rgaType
                   ]
               ++ maybeToList mTrackObject
-      pure ObjectState {uuid = objectId, frame}
+      pure ObjectFrame {uuid = objectId, frame}
+    mkLww stateBody = WireStateChunk {stateType = lwwType, stateBody}
     textId  = UUID.succValue objectId
     trackId = UUID.succValue textId
     endName        = $(UUID.liftName "end")
@@ -266,6 +270,9 @@ parseNoteV1 objectId = liftEitherString . (eitherDecode >=> parseEither p)
     providerName   = $(UUID.liftName "provider")
     sourceName     = $(UUID.liftName "source")
     urlName        = $(UUID.liftName "url")
+
+toPayloadM :: ReplicatedAsPayload a => Maybe a -> Payload
+toPayloadM = maybe [] toPayload
 
 timeFromV1 :: CRDT.LamportTime -> UUID
 timeFromV1 (CRDT.LamportTime unixTime (CRDT.Pid pid)) =

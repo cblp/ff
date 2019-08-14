@@ -7,6 +7,7 @@
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE TupleSections #-}
 {-# LANGUAGE TypeOperators #-}
+{-# LANGUAGE ViewPatterns #-}
 
 module FF
   ( cmdDeleteNote,
@@ -39,7 +40,7 @@ import Control.Arrow ((&&&))
 import Control.Monad (unless, void, when)
 import Control.Monad.Except (throwError)
 import Control.Monad.IO.Class (MonadIO, liftIO)
-import Control.Monad.State.Strict (evalState, state)
+import Control.Monad.State.Strict (MonadState, evalState, state)
 import Data.Bool (bool)
 import Data.Foldable (asum, for_, toList)
 import Data.HashMap.Strict (HashMap)
@@ -94,7 +95,7 @@ import RON.Data
     ObjectStateT,
     evalObjectState,
     getObject,
-    newObjectState,
+    newObjectFrame,
     runObjectState
     )
 import RON.Data.RGA (RGA (RGA))
@@ -109,14 +110,12 @@ import RON.Storage
     loadDocument
     )
 import RON.Storage.Backend
-  ( Document (Document),
-    MonadStorage,
-    createVersion,
-    getDocuments,
-    value
+  ( Document (Document, objectFrame),
+    MonadStorage (getDocuments),
+    createVersion
     )
 import RON.Storage.FS (Storage)
-import RON.Types (ObjectState (ObjectState, uuid))
+import RON.Types (ObjectFrame (ObjectFrame, uuid))
 import System.Directory
   ( doesDirectoryExist,
     findExecutable,
@@ -133,8 +132,8 @@ import Prelude hiding (id)
 
 load :: (Collection a, MonadStorage m) => DocId a -> m (Entity a)
 load docid = do
-  Document {value = obj} <- loadDocument docid
-  entityVal <- evalObjectState obj getObject
+  Document {objectFrame} <- loadDocument docid
+  entityVal <- evalObjectState objectFrame getObject
   pure $ Entity docid entityVal
 
 loadAll :: (Collection a, MonadStorage m) => m [Entity a]
@@ -145,7 +144,8 @@ searchStatus = bool Active Archived
 
 loadContacts :: MonadStorage m => Bool -> m [Entity Contact]
 loadContacts isArchived =
-  filter ((== searchStatus isArchived) . contact_status . entityVal) <$> loadAll
+  filter ((== Just (searchStatus isArchived)) . contact_status . entityVal)
+    <$> loadAll
 
 getContactSamples :: MonadStorage m => Bool -> m ContactSample
 getContactSamples = getContactSamplesWith $ const True
@@ -157,21 +157,24 @@ getContactSamplesWith
   -> m ContactSample
 getContactSamplesWith predicate isArchived = do
   contacts <- loadContacts isArchived
-  pure . (\ys -> Sample ys $ genericLength ys)
-    $ filter
-        (predicate . Text.pack . fromRga . contact_name . entityVal)
-        contacts
+  pure . (\ys -> Sample ys $ genericLength ys) $ filter predicate' contacts
+  where
+    predicate' = predicate . Text.pack . fromRgaM . contact_name . entityVal
 
 fromRga :: RGA a -> [a]
 fromRga (RGA xs) = xs
 
+fromRgaM :: Maybe (RGA a) -> [a]
+fromRgaM = maybe [] fromRga
+
 loadTasks :: MonadStorage m => Bool -> m [Entity Note]
-loadTasks isArchived =
-  filter ((TaskStatus (searchStatus isArchived) ==) . note_status . entityVal)
-    <$> loadAll
+loadTasks isArchived = filter isArchived' <$> loadAll
+  where
+    isArchived' =
+      (Just (TaskStatus $ searchStatus isArchived) ==) . note_status . entityVal
 
 loadWikis :: MonadStorage m => m [Entity Note]
-loadWikis = filter ((Wiki ==) . note_status . entityVal) <$> loadAll
+loadWikis = filter ((Just Wiki ==) . note_status . entityVal) <$> loadAll
 
 getTaskSamples
   :: MonadStorage m
@@ -196,7 +199,7 @@ getTaskSamplesWith predicate isArchived ConfigUI {shuffle} limit today = do
     . takeSamples limit
     . shuffleOrSort
     . splitModesBy entityVal today
-    $ filter (predicate . Text.pack . fromRga . note_text . entityVal) tasks
+    $ filter (predicate . Text.pack . fromRgaM . note_text . entityVal) tasks
   where
     gen = mkStdGen . fromIntegral $ toModifiedJulianDay today
     shuffleOrSort
@@ -229,15 +232,13 @@ getWikiSamplesWith predicate archive ConfigUI {shuffle} limit today =
   else
     do
       wikis0 <- loadWikis
-      let wikis1 =
-            filter
-              (predicate . Text.pack . fromRga . note_text . entityVal)
-              wikis0
+      let wikis1 = filter predicate' wikis0
       let wikis2 = case limit of
             Nothing -> wikis1
             Just l  -> take (fromIntegral l) wikis1
       pure . toSample $ shuffleOrSort wikis2
   where
+    predicate' = predicate . Text.pack . fromRgaM . note_text . entityVal
     toSample ys = Sample ys $ genericLength ys
     gen = mkStdGen . fromIntegral $ toModifiedJulianDay today
     shuffleOrSort
@@ -250,6 +251,7 @@ getWikiSamplesWith predicate archive ConfigUI {shuffle} limit today =
 shuffleItems :: StdGen -> [b] -> [b]
 shuffleItems gen = (`evalState` gen) . shuf
 
+shuf :: MonadState StdGen m => [b] -> m [b]
 shuf xs = do
   g <- state split
   pure . map snd . sortOn fst $ zip (randoms g :: [Int]) xs
@@ -281,20 +283,20 @@ takeSamples (Just limit) = (`evalState` limit) . traverse takeSample
 
 updateTrackedNote
   :: MonadStorage m
-  => HashMap Track NoteId s -- ^ selection of all aready tracked notes
+  => HashMap Track NoteId -- ^ selection of all aready tracked notes
   -> Note -- ^ external note to insert
   -> m ()
 updateTrackedNote oldNotes note = case note of
   Note {note_track = Just track} -> case HashMap.lookup track oldNotes of
     Nothing -> do
-      obj <- newObjectState note
+      obj <- newObjectFrame note
       createDocument obj
     Just noteid -> void $ modify noteid $ do
       note_status_assignIfDiffer note_status
       note_text_zoom $ RGA.edit text
   _ -> throwError "External note is expected to be supplied with tracking"
   where
-    Note {note_status, note_text = RGA text} = note
+    Note {note_status, note_text = (fromRgaM -> text)} = note
 
 updateTrackedNotes :: [Note] -> Storage ()
 updateTrackedNotes newNotes = do
@@ -303,8 +305,8 @@ updateTrackedNotes newNotes = do
   notes <- getDocuments
   oldNotesM <-
     for notes $ \noteId -> do
-      Document {value = obj} <- loadDocument noteId
-      mTrack <- evalObjectState obj note_track_read
+      Document {objectFrame} <- loadDocument noteId
+      mTrack <- evalObjectState objectFrame note_track_read
       pure $ (,noteId) <$> mTrack
   let oldNotes = HashMap.fromList $ catMaybes oldNotesM
   for_ newNotes $ updateTrackedNote oldNotes
@@ -313,19 +315,19 @@ cmdNewNote :: MonadStorage m => New -> Day -> m (Entity Note)
 cmdNewNote New {text, start, end, isWiki} today = do
   let start' = fromMaybe today start
   whenJust end $ assertStartBeforeEnd start'
-  (note_status, note_end, note_start) <-
+  (status, note_end, noteStart) <-
     case end of
       _ | not isWiki -> pure (TaskStatus Active, end, start')
       Nothing -> pure (Wiki, Nothing, today)
       Just _ -> throwError "A wiki must have no end date."
   let note = Note
         { note_end,
-          note_start,
-          note_status,
-          note_text = RGA $ Text.unpack text,
-          note_track = Nothing
+          note_start  = Just noteStart,
+          note_status = Just status,
+          note_text   = Just $ RGA $ Text.unpack text,
+          note_track  = Nothing
           }
-  obj@ObjectState {uuid} <- newObjectState note
+  obj@ObjectFrame {uuid} <- newObjectFrame note
   createDocument obj
   pure $ Entity (docIdFromUuid uuid) note
 
@@ -333,16 +335,16 @@ cmdNewContact :: MonadStorage m => Text -> m (Entity Contact)
 cmdNewContact name = do
   let contact =
         Contact
-          { contact_name = RGA $ Text.unpack name,
-            contact_status = Active
+          { contact_name   = Just $ RGA $ Text.unpack name,
+            contact_status = Just Active
             }
-  obj@ObjectState {uuid} <- newObjectState contact
+  obj@ObjectFrame {uuid} <- newObjectFrame contact
   createDocument obj
   pure $ Entity (docIdFromUuid uuid) contact
 
 cmdDeleteContact :: MonadStorage m => ContactId -> m (Entity Contact)
 cmdDeleteContact cid = modifyAndView cid $ do
-  contact_status_assign Deleted
+  contact_status_assign $ Just Deleted
   contact_name_zoom $ RGA.editText ""
 
 cmdSearch
@@ -367,18 +369,19 @@ cmdShow = load
 cmdDeleteNote :: MonadStorage m => NoteId -> m (Entity Note)
 cmdDeleteNote nid = modifyAndView nid $ do
   assertNoteIsNative
-  note_status_assign $ TaskStatus Deleted
+  note_status_assign $ Just $ TaskStatus Deleted
   note_text_zoom $ RGA.editText ""
-  note_start_assign $ fromGregorian 0 1 1
+  note_start_assign $ Just $ fromGregorian 0 1 1
   note_end_assign Nothing
 
 cmdDone :: MonadStorage m => NoteId -> m (Entity Note)
 cmdDone nid = modifyAndView nid $ do
   assertNoteIsNative
-  note_status_assign $ TaskStatus Archived
+  note_status_assign $ Just $ TaskStatus Archived
 
 cmdUnarchive :: MonadStorage m => NoteId -> m (Entity Note)
-cmdUnarchive nid = modifyAndView nid $ note_status_assign $ TaskStatus Active
+cmdUnarchive nid =
+  modifyAndView nid $ note_status_assign $ Just $ TaskStatus Active
 
 cmdEdit :: Edit -> Storage [Entity Note]
 cmdEdit edit = case edit of
@@ -403,30 +406,30 @@ cmdEdit edit = case edit of
         -- check start and end editability
         when (isJust start || isJust end) $ do
           status <- note_status_read
-          when (status == Wiki)
+          when (status == Just Wiki)
             $ throwError "Wiki dates are immutable"
         -- check start and end relation
         do
           curStart <- note_start_read
-          curEnd <- note_end_read
+          curEnd   <- note_end_read
           let newStartEnd =
                 (,)
-                  <$> (start <|> Just curStart)
-                  <*> (end' <|> curEnd)
+                  <$> (start <|> curStart)
+                  <*> (end'  <|> curEnd)
               end' = end >>= maybeClearToMaybe
           whenJust newStartEnd
             $ uncurry assertStartBeforeEnd
         -- update
-        whenJust end $ note_end_assign . maybeClearToMaybe
-        whenJust start note_start_assign
-        whenJust text $ note_text_zoom . RGA.editText
+        whenJust end   $ note_end_assign   . maybeClearToMaybe
+        whenJust start $ note_start_assign . Just
+        whenJust text  $ note_text_zoom    . RGA.editText
 
 cmdPostpone :: NoteId -> Storage (Entity Note)
 cmdPostpone nid = modifyAndView nid $ do
   today <- getUtcToday
   start <- note_start_read
-  let start' = addDays 1 $ max today start
-  note_start_assign start'
+  let start' = addDays 1 $ maybe today (max today) start
+  note_start_assign $ Just start'
   mEnd <- note_end_read
   case mEnd of
     Just end | end < start' -> note_end_assign $ Just start'
@@ -441,8 +444,8 @@ modify
   -> m b
 modify docid f = do
   oldDoc <- loadDocument docid
-  (b, value') <- runObjectState (value oldDoc) f
-  createVersion (Just (docid, oldDoc)) value'
+  (b, objectFrame') <- runObjectState (objectFrame oldDoc) f
+  createVersion (Just (docid, oldDoc)) objectFrame'
   pure b
 
 modifyAndView
@@ -484,7 +487,7 @@ assertStartBeforeEnd start end =
 
 note_status_assignIfDiffer
   :: (ReplicaClock m, MonadE m, MonadObjectState Note m)
-  => NoteStatus
+  => Maybe NoteStatus
   -> m ()
 note_status_assignIfDiffer newStatus = do
   curStatus <- note_status_read
@@ -497,7 +500,9 @@ assertNoteIsNative = do
   -- `some`
   tracking <- note_track_read
   whenJust tracking $ \Track {track_url} ->
-    throwErrorText $ "A tracked note must be edited in its source: " <> track_url
+    throwErrorText
+      $ "A tracked note must be edited in its source"
+      <> maybe "" (" :" <>) track_url
 
 getDataDir :: Config -> IO (Maybe FilePath)
 getDataDir Config {dataDir} = do
