@@ -11,10 +11,6 @@ extra-deps:
   # ff-core:
   - crdt-10.4
   - github-0.22
-  # - ron-0.7
-  # - ron-rdt-0.7
-  # - ron-schema-0.7
-  # - ron-storage-0.8
   - ron-0.8
   - ron-rdt-0.8
   - ron-schema-0.8
