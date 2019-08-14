@@ -127,19 +127,19 @@ prop_new = let
     start = Just $ fromGregorian 2154 5 6
     end   = Just $ fromGregorian 3150 1 2
     fs    =
-        Map.singleton "note" $ Map.singleton "B000004S54I8M-2000000000012" $
-        Map.singleton "B000005IQBICM-2000000000012" $
+        Map.singleton "note" $ Map.singleton "B000000001NDU-2000000000012" $
+        Map.singleton "B000000003C3M-2000000000012" $
         map encodeUtf8
-            [ "*lww #B/00004tK__M+000000000Y @` !"
-            ,   "\t:end >some 3150 1 2"
+            [ "*lww #B/0000000Drz+000000000Y !"
+            ,   "\t@` :end 3150 1 2"
             ,   "\t:start 2154 5 6"
             ,   "\t:status >Active"
-            ,   "\t:text >(2j5K7M"
-            ,   "\t:track >none"
-            , "*rga #(2j5K7M @(0qmj3f :0 !"
-            ,   "\t@)d 'М'"
-            ,   "\t@)e 'и'"
-            ,   "\t@)f 'р'"
+            ,   "\t:text >}IOM"
+            ,   "\t:track"
+            , "*rga #}IOM @0 :0 !"
+            ,   "\t@`}QGh 'М'"
+            ,   "\t@)i 'и'"
+            ,   "\t@)j 'р'"
             , "."
             ]
     in
@@ -190,8 +190,8 @@ prop_repo = property $
                 , note_end    = Just $ fromGregorian 2018 06 15
                 , note_track  = Just Track
                     { track_provider = Just "github"
-                    , track_source = Just $ "ff-notes/ff"
-                    , track_externalId = Just $ "60"
+                    , track_source = Just "ff-notes/ff"
+                    , track_externalId = Just "60"
                     , track_url =
                         Just "https://github.com/ff-notes/ff/issues/60"
                     }
