@@ -1,9 +1,6 @@
+{-# LANGUAGE LambdaCase #-}
 {-# LANGUAGE NamedFieldPuns #-}
-{-# LANGUAGE OverloadedStrings #-}
-{-# LANGUAGE QuasiQuotes #-}
 {-# LANGUAGE ScopedTypeVariables #-}
-{-# LANGUAGE TemplateHaskell #-}
-{-# LANGUAGE ViewPatterns #-}
 
 module Main
   ( main,
@@ -11,96 +8,94 @@ module Main
 where
 
 import Control.Concurrent (forkIO)
-import Cpp (MainWindow, ffCtx, includeDependent)
+import Control.Concurrent.STM (TChan, atomically, tryReadTChan)
 import Data.Foldable (for_)
-import Data.Maybe (fromJust, fromMaybe, isJust)
-import qualified Data.Text as Text
-import Data.Text.Encoding (encodeUtf8)
-import Data.Time (Day, toGregorian)
-import Data.Typeable (cast)
 import Data.Version (showVersion)
-import FF
-  ( fromRgaM,
-    getDataDir,
-    loadTasks,
-    noDataDirectoryMessage,
-    toNoteView,
-  )
+import FF (getDataDir, loadTasks, noDataDirectoryMessage, toNoteView)
 import FF.Config (loadConfig)
+import qualified FF.Qt.TaskListWidget as TaskListWidget
+import FF.Qt.TaskListWidget (TaskListWidget (TaskListWidget, view))
 import FF.Types
-  ( Entity (Entity),
+  ( Entity,
     EntityView,
-    Note (Note),
-    NoteId,
-    NoteStatus (TaskStatus),
+    Note,
     Status (Active),
-    View (NoteView, note),
-    entityId,
-    entityVal,
+    View (note),
     loadNote,
-    note_end,
-    note_start,
-    note_status,
-    note_text,
-    note_track,
-    track_externalId,
-    track_provider,
-    track_source,
-    track_url,
   )
-import Foreign (Ptr)
-import Foreign.C (CInt)
-import Foreign.StablePtr (newStablePtr)
-import qualified Language.C.Inline.Cpp as Cpp
+import Foreign.Hoppy.Runtime (withScopedPtr)
+import qualified Graphics.UI.Qtah.Core.QCoreApplication as QCoreApplication
+import qualified Graphics.UI.Qtah.Core.QSettings as QSettings
+import qualified Graphics.UI.Qtah.Core.QTimer as QTimer
+import qualified Graphics.UI.Qtah.Core.QVariant as QVariant
+import Graphics.UI.Qtah.Event (onEvent)
+import Graphics.UI.Qtah.Gui.QCloseEvent (QCloseEvent)
+import Graphics.UI.Qtah.Gui.QShowEvent (QShowEvent)
+import Graphics.UI.Qtah.Signal (connect_)
+import Graphics.UI.Qtah.Widgets.QApplication (QApplication)
+import qualified Graphics.UI.Qtah.Widgets.QApplication as QApplication
+import Graphics.UI.Qtah.Widgets.QMainWindow (QMainWindow, QMainWindowPtr)
+import qualified Graphics.UI.Qtah.Widgets.QMainWindow as QMainWindow
+import qualified Graphics.UI.Qtah.Widgets.QTabWidget as QTabWidget
+import qualified Graphics.UI.Qtah.Widgets.QWidget as QWidget
 import Paths_ff_qt (version)
-import RON.Storage.Backend (DocId (DocId))
+import RON.Storage.Backend (CollectionName, DocId (DocId), RawDocId)
 import qualified RON.Storage.FS as Storage
-import RON.Storage.FS
-  ( CollectionDocId (CollectionDocId),
-    runStorage,
-    subscribeForever,
-  )
+import RON.Storage.FS (runStorage)
+import System.Environment (getArgs)
+import System.IO (hPutStrLn, stderr)
 
-Cpp.context $ Cpp.cppCtx <> Cpp.bsCtx <> ffCtx
+type MainWindow = QMainWindow
 
-Cpp.include "<QtWidgets/QApplication>"
-
-includeDependent "FFI/Cxx.hxx"
-
-includeDependent "MainWindow.hxx"
+data UI = UI {window :: MainWindow, agenda :: TaskListWidget}
 
 main :: IO ()
 main = do
-  let version' = encodeUtf8 . Text.pack $ showVersion version
   path <- getDataDirOrFail
   storage <- Storage.newHandle path
-  storagePtr <- newStablePtr storage
-  -- set up UI
-  mainWindow <-
-    [Cpp.block| MainWindow * {
-      int argc = 0;
-      char argv0[] = "ff-qt";
-      char * argv[] = {argv0, NULL};
+  changedDocs <- Storage.subscribe storage
+  withApp $ \_ -> do
+    setupApp
+    ui@UI {window} <- setupUI
+    QWidget.show window
+    -- load current data to the view, asynchronously
+    _ <-
+      forkIO $ do
+        activeTasks <-
+          runStorage storage (loadTasks Active >>= traverse toNoteView)
+        for_ activeTasks $ upsertTask ui . note
+    -- update the view with future changes
+    whenUIIsIdle $ receiveDocChanges storage ui changedDocs
+    -- run UI
+    QCoreApplication.exec
 
-      auto app = new QApplication(argc, argv);
-      app->setOrganizationDomain("ff.cblp.su");
-      app->setOrganizationName("ff");
-      app->setApplicationName("ff");
-      app->setApplicationVersion(QString::fromStdString($bs-cstr:version'));
+withApp :: (QApplication -> IO a) -> IO a
+withApp = withScopedPtr $ do
+  args <- getArgs
+  QApplication.new args
 
-      auto window = new MainWindow($(StorageHandle storagePtr));
-      window->show();
-      return window;
-    } |]
-  -- load current data to the view, asynchronously
-  _ <-
-    forkIO $ do
-      activeTasks <- runStorage storage (loadTasks Active)
-      for_ activeTasks $ upsertTask mainWindow
-  -- update the view with future changes
-  _ <- forkIO $ subscribeForever storage $ upsertDocument storage mainWindow
-  -- run UI
-  [Cpp.block| void { qApp->exec(); } |]
+setupApp :: IO ()
+setupApp = do
+  QCoreApplication.setOrganizationDomain "ff.cblp.su"
+  QCoreApplication.setOrganizationName "ff"
+  QCoreApplication.setApplicationName "ff"
+  QCoreApplication.setApplicationVersion $ showVersion version
+
+setupUI :: IO UI
+setupUI = do
+  -- window
+  window <- QMainWindow.new
+  saveWindowSizeState window
+  QWidget.setWindowTitle window "ff"
+  -- agenda
+  agenda@TaskListWidget {view = agendaView} <- TaskListWidget.new
+  QMainWindow.setCentralWidget window =<< do
+    tabs <- QTabWidget.new
+    _ <- QTabWidget.addTab tabs agendaView "Agenda"
+    pure tabs
+  QWidget.setFocus agendaView
+  --
+  pure UI {window, agenda}
 
 getDataDirOrFail :: IO FilePath
 getDataDirOrFail = do
@@ -110,46 +105,50 @@ getDataDirOrFail = do
     Nothing -> fail noDataDirectoryMessage
     Just path -> pure path
 
-upsertDocument :: Storage.Handle -> Ptr MainWindow -> CollectionDocId -> IO ()
-upsertDocument storage mainWindow (CollectionDocId docid) = case docid of
-  (cast -> Just (noteId :: NoteId)) -> do
-    note <- runStorage storage $ loadNote noteId >>= toNoteView
-    upsertTask mainWindow note
-  _ -> pure ()
+receiveDocChanges
+  :: Storage.Handle -> UI -> TChan (CollectionName, RawDocId) -> IO ()
+receiveDocChanges storage mainWindow changes =
+  atomically (tryReadTChan changes) >>= \case
+    Just ("note", noteId) -> do
+      note <- runStorage storage $ loadNote $ DocId noteId
+      upsertTask mainWindow note
+    Just (collection, _) ->
+      hPutStrLn stderr $ "unknown collection " <> show collection
+    Nothing -> pure ()
 
-upsertTask :: Ptr MainWindow -> EntityView Note -> IO ()
-upsertTask mainWindow Entity {entityId = DocId nid, entityVal = noteView} = do
-  let nid' = encodeUtf8 $ Text.pack nid
-      Note {note_text, note_start, note_end, note_track, note_status} = note
-      NoteView {note} = noteView
-      isActive = note_status == Just (TaskStatus Active)
-      noteText = fromRgaM note_text
-      text = encodeUtf8 $ Text.pack noteText
-      (startYear, startMonth, startDay) = toGregorianC $ fromJust note_start
-      (endYear, endMonth, endDay) = maybe (0, 0, 0) toGregorianC note_end
-      isTracking = isJust note_track
-      provider = encodeUtf8 $ fromMaybe "" $ note_track >>= track_provider
-      source = encodeUtf8 $ fromMaybe "" $ note_track >>= track_source
-      externalId = encodeUtf8 $ fromMaybe "" $ note_track >>= track_externalId
-      url = encodeUtf8 $ fromMaybe "" $ note_track >>= track_url
-  [Cpp.block| void {
-    $(MainWindow * mainWindow)->upsertTask({
-      .id = $bs-cstr:nid',
-      .isActive = $(bool isActive),
-      .text = $bs-cstr:text,
-      .start = {$(int startYear), $(int startMonth), $(int startDay)},
-      .end   = {$(int   endYear), $(int   endMonth), $(int   endDay)},
-      .isTracking = $(bool isTracking),
-      .track = {
-        .provider   = $bs-cstr:provider,
-        .source     = $bs-cstr:source,
-        .externalId = $bs-cstr:externalId,
-        .url        = $bs-cstr:url,
-      },
-    });
-  } |]
+upsertTask :: UI -> EntityView Note -> IO ()
+upsertTask UI {agenda} = TaskListWidget.upsertTask agenda
 
-toGregorianC :: Day -> (CInt, CInt, CInt)
-toGregorianC day = (y, m, d)
-  where
-    (fromIntegral -> y, fromIntegral -> m, fromIntegral -> d) = toGregorian day
+whenUIIsIdle :: IO () -> IO ()
+whenUIIsIdle action = do
+  t <- QTimer.new
+  connect_ t QTimer.timeoutSignal action
+  QTimer.start t 0
+
+-- https://wiki.qt.io/Saving_Window_Size_State
+saveWindowSizeState :: QMainWindowPtr window => window -> IO ()
+saveWindowSizeState this = do
+  _ <-
+    onEvent this $ \(_ :: QShowEvent) -> do
+      withScopedPtr QSettings.new $ \settings -> do
+        _ <-
+          QSettings.value settings "mainWindowGeometry"
+            >>= QVariant.toByteArray
+            >>= QWidget.restoreGeometry this
+        _ <-
+          QSettings.value settings "mainWindowState"
+            >>= QVariant.toByteArray
+            >>= QMainWindow.restoreState this
+        pure ()
+      pure False
+  _ <-
+    onEvent this $ \(_ :: QCloseEvent) -> do
+      withScopedPtr QSettings.new $ \settings -> do
+        QSettings.setValue settings "mainWindowGeometry"
+          =<< QVariant.newWithByteArray
+          =<< QWidget.saveGeometry this
+        QSettings.setValue settings "mainWindowState"
+          =<< QVariant.newWithByteArray
+          =<< QMainWindow.saveState this
+      pure False
+  pure ()

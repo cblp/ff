@@ -1,5 +1,3 @@
-dist: xenial
-
 branches:
   only:
     - master
@@ -13,15 +11,17 @@ cache:
     - $HOME/.local/bin
     - $HOME/.stack
 
-before_install:
-  # Install packages
-  - sudo apt-add-repository --yes ppa:beineri/opt-qt-5.12.0-xenial
-  - sudo apt update
-  - sudo apt install colordiff                            # common
-  - sudo apt install libgmp-dev                           # GHC
-  - sudo apt install mesa-common-dev qt512base            # ff-qt
-  - sudo apt install libgirepository1.0-dev libgtk-3-dev  # ff-gtk
+# Ensure necessary system libraries are present
+addons:
+  apt:
+    packages:
+      - colordiff
+      - libgmp-dev
+      - qt5-default
+      - libgirepository1.0-dev  # ff-gtk
+      - libgtk-3-dev            # ff-gtk
 
+before_install:
   # Download and unpack the stack executable
   - mkdir -p ~/.local/bin
   - export PATH=$HOME/.local/bin:$PATH

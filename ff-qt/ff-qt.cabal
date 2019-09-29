@@ -5,18 +5,6 @@ version: 0.12
 
 build-type: Simple
 
-extra-source-files:
-    Builder.hxx
-    DateComponent.hxx
-    FFI/Cxx.hxx
-    LinkButton.hxx
-    MainWindow.hxx
-    Model.hxx
-    TaskActionsBar.hxx
-    TaskListWidget.hxx
-    TaskWidget.hxx
-    util.hxx
-
 flag qt
     description: Build ff-qt package
     default: True
@@ -30,69 +18,28 @@ common language
     else
         buildable: False
 
-library ff-qt-ffi
-    import: language
-    build-depends:
-        -- global
-        time,
-        containers,
-        -- organization
-        ron-storage,
-        -- project
-        ff-core
-    other-modules:
-        FFI.Haskell
-
 executable ff-qt
     import: language
     build-depends:
         -- global
         containers,
+        hoppy-runtime,
         inline-c,
         inline-c-cpp,
+        qtah,
+        stm,
         template-haskell,
         text,
         time,
+        unordered-containers,
         -- organization
         ron-rdt,
         ron-storage,
         -- project
         ff-core,
-        -- package
-        ff-qt-ffi
-    cxx-sources:
-        DateComponent.cxx
-        LinkButton.cxx
-        MainWindow.cxx
-        Model.cxx
-        TaskActionsBar.cxx
-        TaskListWidget.cxx
-        TaskWidget.cxx
-        util.cxx
-    cxx-options: -pedantic -std=c++11 -Wall -Wextra -Werror
-    ghc-options: -threaded
+    ghc-options: -dynamic -threaded
     main-is: Main.hs
     other-modules:
-        Cpp
+        FF.Qt.TaskListModel
+        FF.Qt.TaskListWidget
         Paths_ff_qt
-
-    if os(linux)
-        extra-libraries: Qt5Core Qt5Gui Qt5Widgets
-        extra-lib-dirs:
-            -- Ubuntu on Travis
-            /opt/qt512/lib
-        ghc-options: -optc=-fPIC -optc=-std=c++11
-        include-dirs:
-            -- Ubuntu on Travis
-            /opt/qt512/include
-            -- latest Ubuntu
-            /usr/include/x86_64-linux-gnu/qt5
-            -- Arch Linux
-            /usr/include/qt
-    if os(osx)
-        cc-options: -Qunused-arguments
-            -- ignore unused arguments warning from clang
-        extra-framework-dirs: /usr/local/opt/qt5/lib
-        frameworks: QtCore QtGui QtWidgets
-        ghc-options: -optc=-std=c++11 -pgmc=clang++
-        include-dirs: /usr/local/opt/qt5/include

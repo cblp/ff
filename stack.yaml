@@ -12,16 +12,28 @@ extra-deps:
   - crdt-10.4
   - github-0.23
   - git: https://github.com/ff-notes/ron.git
-    commit: f6a1a3adfe71bbb30a436f3561778b72f8852796  # ron-0.9+
-    subdirs: [ron]
+    commit:
+      7be4385725be7992e134f65c529845dc927fa7f0
+      # ron-0.9+, ron-rdt-0.9+, ron-storage-0.10+
+    subdirs: [ron, ron-rdt, ron-storage]
   # - ron-0.10
-  - ron-rdt-0.9
+  # - ron-rdt-0.10
+  # - ron-storage-0.11
   - ron-schema-0.9
-  - ron-storage-0.10
 
   # ff-gtk:
   - gi-gtk-declarative-0.5.0
   - gi-gtk-declarative-app-simple-0.5.0
+
+  # ff-qt:
+  - git: https://gitlab.com/khumba/hoppy.git
+    commit:
+      45dded1e21c29409a09eb88ec92bd33b4f6ed0f3
+      # 0.5.1 + Compatibility with GHC 8.6, Cabal 2.4
+    subdirs: [generator, runtime, std]
+  - git: https://gitlab.com/cblp/qtah.git
+    commit: 53216276acc884fc197a51f07917a5e3526d8bc7  # 0.6.0 + patches
+    subdirs: [qtah, qtah-cpp, qtah-generator]
 
   # gi-gtk-declarative:
   - haskell-gi-0.22.6
