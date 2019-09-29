@@ -48,11 +48,14 @@ executable ff-qt
     build-depends:
         -- global
         containers,
+        hoppy-runtime,
         inline-c,
         inline-c-cpp,
+        qtah,
         template-haskell,
         text,
         time,
+        unordered-containers,
         -- organization
         ron-rdt,
         ron-storage,
@@ -70,10 +73,12 @@ executable ff-qt
         TaskWidget.cxx
         util.cxx
     cxx-options: -pedantic -std=c++11 -Wall -Wextra -Werror
-    ghc-options: -threaded
+    ghc-options: -dynamic -threaded
     main-is: Main.hs
     other-modules:
         Cpp
+        FF.Qt.TaskListModel
+        FF.Qt.TaskListWidget
         Paths_ff_qt
 
     if os(linux)
