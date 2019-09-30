@@ -52,6 +52,7 @@ executable ff-qt
         inline-c,
         inline-c-cpp,
         qtah,
+        stm,
         template-haskell,
         text,
         time,

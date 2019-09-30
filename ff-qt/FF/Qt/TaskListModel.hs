@@ -2,13 +2,14 @@
 
 module FF.Qt.TaskListModel
   ( TaskListModel,
+    newWithView,
     upsertTask,
   )
 where
 
 import Data.HashMap.Strict (HashMap)
 import qualified Data.HashMap.Strict as HashMap
-import Data.IORef (IORef, modifyIORef', readIORef)
+import Data.IORef (IORef, modifyIORef', newIORef, readIORef)
 import FF.Types
   ( Entity (Entity, entityId, entityVal),
     Note (Note, note_status),
@@ -20,12 +21,21 @@ import Graphics.UI.Qtah.Gui.QStandardItem (QStandardItem)
 import qualified Graphics.UI.Qtah.Gui.QStandardItem as QStandardItem
 import Graphics.UI.Qtah.Gui.QStandardItemModel (QStandardItemModel)
 import qualified Graphics.UI.Qtah.Gui.QStandardItemModel as QStandardItemModel
+import Graphics.UI.Qtah.Widgets.QAbstractItemView (QAbstractItemViewPtr)
+import qualified Graphics.UI.Qtah.Widgets.QAbstractItemView as QAbstractItemView
 
 data TaskListModel
   = TaskListModel
       { model :: QStandardItemModel,
         itemIndex :: IORef (HashMap NoteId QStandardItem)
       }
+
+newWithView :: QAbstractItemViewPtr view => view -> IO TaskListModel
+newWithView view = do
+  model <- QStandardItemModel.new
+  QAbstractItemView.setModel view model
+  itemIndex <- newIORef mempty
+  pure TaskListModel {model, itemIndex}
 
 upsertTask :: TaskListModel -> Entity Note -> IO ()
 upsertTask this@TaskListModel {itemIndex} task@Entity {entityId, entityVal} = do
