@@ -1,0 +1,45 @@
+cabal-version: 2.2
+
+name: ff-qt
+version: 0.12
+
+build-type: Simple
+
+flag qt
+    description: Build ff-qt package
+    default: True
+    manual: True
+
+common language
+    build-depends: base
+    default-language: Haskell2010
+    if flag(qt)
+        buildable: True
+    else
+        buildable: False
+
+executable ff-qt
+    import: language
+    build-depends:
+        -- global
+        containers,
+        hoppy-runtime,
+        inline-c,
+        inline-c-cpp,
+        qtah,
+        stm,
+        template-haskell,
+        text,
+        time,
+        unordered-containers,
+        -- organization
+        ron-rdt,
+        ron-storage,
+        -- project
+        ff-core,
+    ghc-options: -dynamic -threaded
+    main-is: Main.hs
+    other-modules:
+        FF.Qt.TaskListModel
+        FF.Qt.TaskListWidget
+        Paths_ff_qt
