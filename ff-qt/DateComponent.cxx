@@ -1,6 +1,5 @@
 #include <QtCore/QDate>
 
-#include "Builder.hxx"
 #include "DateComponent.hxx"
 
 using std::function;
@@ -19,10 +18,9 @@ DateComponent::DateComponent(
     addWidget(label);
     if (isEditable) {
         label->setText(title);
-        dateEdit =
-            New<QDateEdit>(date)
-            .setCalendarPopup(true)
-            .onDateChanged(onDateChanged);
+        dateEdit = new QDateEdit(date);
+        dateEdit->setCalendarPopup(true);
+        connect(dateEdit, &QDateEdit::dateChanged, onDateChanged);
         addWidget(dateEdit);
     }
     setDate(date);

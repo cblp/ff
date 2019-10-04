@@ -1,4 +1,5 @@
-#include "Builder.hxx"
+#include <QtCore/QSettings>
+
 #include "MainWindow.hxx"
 
 
@@ -9,7 +10,11 @@ MainWindow::MainWindow(StorageHandle storage):
     QSettings settings;
     restoreGeometry(settings.value("mainWindowGeometry").toByteArray());
 
-    setCentralWidget(New<QTabWidget>().addTab(agenda, "Agenda"));
+    setCentralWidget([this]{
+        auto tabs = new QTabWidget();
+        tabs->addTab(agenda, "Agenda");
+        return tabs;
+    }());
     setWindowTitle("ff");
     agenda->setFocus();
 

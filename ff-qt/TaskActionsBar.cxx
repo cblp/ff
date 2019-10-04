@@ -1,4 +1,6 @@
-#include "Builder.hxx"
+#include <QtWidgets/QMenu>
+#include <QtWidgets/QToolButton>
+
 #include "TaskActionsBar.hxx"
 
 
@@ -7,19 +9,21 @@ TaskActionsBar::TaskActionsBar(StorageHandle storageHandle, Note task) {
     auto id = task.id;
 
     auto doneAction =
-        addAction("Done and archive", [storage, id]{ storage.done(id); });
+        addAction("Done and archive", [&]{ storage.done(id); });
     if (task.isTracking) {
         doneAction->setEnabled(false);
         doneAction->setToolTip("External task must be done first.");
     }
 
-    addWidget(
-        New<QToolButton>()
-        .setMenu(
-            New<QMenu>()
-            .addAction("Postpone", [storage, id]{ storage.postpone(id); })
-        )
-        .setPopupMode(QToolButton::InstantPopup)
-        .setText("▼")
-    );
+    addWidget([&]{
+        auto btn = new QToolButton;
+        btn->setMenu([&]{
+            auto menu = new QMenu;
+            menu->addAction("Postpone", [&]{ storage.postpone(id); });
+            return menu;
+        }());
+        btn->setPopupMode(QToolButton::InstantPopup);
+        btn->setText("▼");
+        return btn;
+    }());
 }

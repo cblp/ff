@@ -1,4 +1,6 @@
-#include "Builder.hxx"
+#include <QtGui/QClipboard>
+#include <QtWidgets/QApplication>
+
 #include "DateComponent.hxx"
 #include "FFI/Cxx.hxx"
 #include "LinkButton.hxx"
@@ -44,13 +46,14 @@ TaskWidget::TaskWidget(
 
     auto box = new QVBoxLayout(this);
     box->addWidget(label);
-    box->addLayout(
-        New<QHBoxLayout>()
-        .addLayout(start)
-        .addLayout(end)
-        .addWidget(new TaskActionsBar(storageHandle, task))
-        .addStretch()
-    );
+    box->addLayout([&]{
+        auto box = new QHBoxLayout;
+        box->addLayout(start);
+        box->addLayout(end);
+        box->addWidget(new TaskActionsBar(storageHandle, task));
+        box->addStretch();
+        return box;
+    }());
     if (task.isTracking) {
         box->addWidget(new LinkButton(
             QString::fromStdString(
@@ -63,10 +66,15 @@ TaskWidget::TaskWidget(
 
     // context menu
     setContextMenuPolicy(Qt::ActionsContextMenu);
-    addAction(
-        New<QAction>("Copy text")
-        .onTriggered([text]{ qApp->clipboard()->setText(text); })
-    );
+    addAction([&]{
+        auto action = new QAction("Copy text");
+        connect(
+            action,
+            &QAction::triggered,
+            [&]{ qApp->clipboard()->setText(text); }
+        );
+        return action;
+    }());
 }
 
 
