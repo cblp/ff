@@ -72,11 +72,14 @@ main = do
   -- set up UI
   mainWindow <-
     [Cpp.block| MainWindow * {
-      int argc = 0;
-      char argv0[] = "ff-qt";
-      char * argv[] = {argv0, NULL};
+      // This leaks memory, but it's OK because memory is when the application
+      // is closing
+      auto argc = new int(0);
+      auto argv0 = new char[6];
+      strcpy(argv0, "ff-qt");
+      auto argv = new char* [2] {argv0, NULL};
+      auto app = new QApplication(*argc, argv);
 
-      auto app = new QApplication(argc, argv);
       app->setOrganizationDomain("ff.cblp.su");
       app->setOrganizationName("ff");
       app->setApplicationName("ff");
