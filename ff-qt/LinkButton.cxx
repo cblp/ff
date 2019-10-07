@@ -1,5 +1,7 @@
 #include <QtCore/QProcess>
+#include <QtCore/QUrl>
 #include <QtGui/QClipboard>
+#include <QtGui/QDesktopServices>
 #include <QtWidgets/QAction>
 #include <QtWidgets/QApplication>
 
