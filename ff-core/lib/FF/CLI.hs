@@ -44,15 +44,15 @@ import FF
     cmdUnarchive,
     getContactSamples,
     getDataDir,
-    viewTaskSamples,
     getUtcToday,
-    viewWikiSamples,
-    loadAllTagTexts,
     loadAllNotes,
+    loadAllTagTexts,
     noDataDirectoryMessage,
     sponsors,
-    toNoteView,
     updateTrackedNotes,
+    viewNote,
+    viewTaskSamples,
+    viewWikiSamples,
   )
 import FF.Config
   ( Config (..),
@@ -72,7 +72,7 @@ import FF.Options
     Options (..),
     Search (..),
     Shuffle (..),
-    Tags(Tags),
+    Tags (Tags),
     Track (..),
     parseOptions,
   )
@@ -163,25 +163,25 @@ runCmdAction ui cmd isBrief = do
     CmdDelete notes ->
       for_ notes $ \noteId -> do
         note <- cmdDeleteNote noteId
-        noteview <- toNoteView note
+        noteview <- viewNote note
         pprint $ withHeader "Deleted:" $ prettyNote isBrief noteview
     CmdDone notes ->
       for_ notes $ \noteId -> do
         note <- cmdDone noteId
-        noteview <- toNoteView note
+        noteview <- viewNote note
         pprint $ withHeader "Archived:" $ prettyNote isBrief noteview
     CmdEdit edit -> do
       notes <- cmdEdit edit
-      notes' <- traverse toNoteView notes
+      notes' <- traverse viewNote notes
       pprint $ withHeader "Edited:" $ prettyNoteList isBrief notes'
     CmdNew new -> do
       note <- cmdNewNote new today
-      noteview <- toNoteView note
+      noteview <- viewNote note
       pprint $ withHeader "Added:" $ prettyNote isBrief noteview
     CmdPostpone notes ->
       for_ notes $ \noteId -> do
         note <- cmdPostpone noteId
-        noteview <- toNoteView note
+        noteview <- viewNote note
         pprint $ withHeader "Postponed:" $ prettyNote isBrief noteview
     CmdSearch Search {..} -> do
       (tasks, wikis, contacts) <- cmdSearch text status ui limit today tags withoutTags
@@ -197,7 +197,7 @@ runCmdAction ui cmd isBrief = do
             tags
     CmdShow noteIds -> do
       notes <- for noteIds loadNote
-      notes' <- traverse toNoteView notes
+      notes' <- traverse viewNote notes
       pprint $ prettyNoteList isBrief $ toList notes'
     CmdTags -> do
       allTags <- loadAllTagTexts
@@ -208,7 +208,7 @@ runCmdAction ui cmd isBrief = do
     CmdUnarchive tasks ->
       for_ tasks $ \taskId -> do
         task <- cmdUnarchive taskId
-        noteview <- toNoteView task
+        noteview <- viewNote task
         pprint . withHeader "Unarchived:" $ prettyNote isBrief noteview
     CmdUpgrade -> do
       upgradeDatabase

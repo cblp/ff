@@ -28,7 +28,7 @@ import FF
     getDataDir,
     loadAllNotes,
     noDataDirectoryMessage,
-    toNoteView,
+    viewNote,
   )
 import FF.Config (loadConfig)
 import FF.Types
@@ -93,7 +93,7 @@ main = do
         runStorage storage $ do
           notes <- loadAllNotes
           let filtered = filterTasksByStatus Active notes
-          traverse toNoteView filtered
+          traverse viewNote filtered
       for_ activeTasks $ upsertTask mainWindow
   -- update the view with future changes
   _ <-
@@ -119,7 +119,7 @@ upsertDocument
   :: Storage.Handle -> Ptr MainWindow -> CollectionName -> RawDocId -> IO ()
 upsertDocument storage mainWindow collection docid
   | collection == collectionName @Note = do
-    note <- runStorage storage $ loadNote (DocId docid) >>= toNoteView
+    note <- runStorage storage $ loadNote (DocId docid) >>= viewNote
     upsertTask mainWindow note
   | otherwise = pure ()
 

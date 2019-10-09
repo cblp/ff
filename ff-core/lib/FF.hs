@@ -36,8 +36,8 @@ module FF
     splitModes,
     sponsors,
     takeSamples,
-    toNoteView,
     updateTrackedNotes,
+    viewNote,
     viewNoteSample,
   )
 where
@@ -57,14 +57,20 @@ import Data.List.NonEmpty (NonEmpty ((:|)))
 import qualified Data.Map.Strict as Map
 import Data.Maybe (catMaybes, fromMaybe, isJust, mapMaybe)
 import qualified Data.Set as Set
-import Data.Set (Set, (\\), isSubsetOf, disjoint)
+import Data.Set (Set, (\\), disjoint, isSubsetOf)
 import Data.Text (Text)
 import qualified Data.Text as Text
 import qualified Data.Text.IO as Text
 import Data.Time (Day, addDays, getCurrentTime, toModifiedJulianDay, utctDay)
 import Data.Traversable (for)
 import FF.Config (Config (Config), ConfigUI (ConfigUI), dataDir, shuffle)
-import FF.Options (Assign (Clear, Set), Edit (..), New (..), Tags(..), assignToMaybe)
+import FF.Options
+  ( Assign (Clear, Set),
+    Edit (..),
+    New (..),
+    Tags (..),
+    assignToMaybe,
+  )
 import FF.Types
   ( Contact (..),
     ContactId,
@@ -203,8 +209,8 @@ getOrCreateTags tags
     createdTagRefs <- createTags newTags
     pure $ existentTagRefs <> createdTagRefs
 
-toNoteView :: MonadStorage m => EntityDoc Note -> m (EntityView Note)
-toNoteView Entity {entityId, entityVal} = do
+viewNote :: MonadStorage m => EntityDoc Note -> m (EntityView Note)
+viewNote Entity {entityId, entityVal} = do
   tags <- loadTagsByRefs tagRefs
   pure Entity
     { entityId,
@@ -216,7 +222,7 @@ toNoteView Entity {entityId, entityVal} = do
 
 viewNoteSample :: MonadStorage m => Sample (EntityDoc Note) -> m NoteSample
 viewNoteSample Sample {items, total} = do
-  noteviews <- mapM toNoteView items
+  noteviews <- mapM viewNote items
   pure $ Sample noteviews total
 
 getContactSamples :: MonadStorage m => Status -> m ContactSample
@@ -281,15 +287,17 @@ viewTaskSamplesWith
   withoutTags
   notes = do
     let filtered = filterTasksByStatus status notes
-    allTasks <- traverse toNoteView filtered
+    allTasks <- traverse viewNote filtered
     let tasks = case tagsRequested of
-          Tags tagsRequested'  -> filter
-            ( \Entity {entityVal = NoteView {tags}} ->
-              tagsRequested' `isSubsetOf` tags &&
-              withoutTags `disjoint` tags
-            ) allTasks
-          NoTags -> filter
-            ( \Entity {entityVal = NoteView {tags}} -> null tags) allTasks
+          Tags tagsRequested' ->
+            filter
+              ( \Entity {entityVal = NoteView {tags}} ->
+                  tagsRequested' `isSubsetOf` tags
+                    && withoutTags `disjoint` tags
+              )
+              allTasks
+          NoTags ->
+            filter (\Entity {entityVal = NoteView {tags}} -> null tags) allTasks
     pure
       . takeSamples limit
       . shuffleOrSort
@@ -393,12 +401,12 @@ updateTrackedNote
   => HashMap Track NoteId -- ^ selection of all aready tracked notes
   -> View Note -- ^ external note (with tags) to insert
   -> m ()
-updateTrackedNote oldNotes NoteView{note,tags} = case note of
+updateTrackedNote oldNotes NoteView {note, tags} = case note of
   Note {note_track = Just track} -> do
     newRefs <- getOrCreateTags tags
     case HashMap.lookup track oldNotes of
       Nothing -> do
-        obj <- newObjectFrame $ note{note_tags = toList newRefs}
+        obj <- newObjectFrame note {note_tags = toList newRefs}
         createDocument obj
       Just noteid -> void $ modify noteid $ do
         note_status_setIfDiffer note_status

@@ -17,7 +17,7 @@ import Data.Aeson.TH (defaultOptions, deriveToJSON)
 import qualified Data.Text as Text
 import Data.Traversable (for)
 import Data.Yaml (encodeFile)
-import FF (load, toNoteView)
+import FF (load, viewNote)
 import FF.Types
   ( Entity (Entity, entityVal),
     Link,
@@ -92,7 +92,7 @@ testNote h tmp docid =
   where
     outFile = tmp </> show docid
     action = do
-      Entity {entityVal} <- runStorage h $ loadNote docid >>= toNoteView
+      Entity {entityVal} <- runStorage h $ loadNote docid >>= viewNote
       createDirectoryIfMissing True $ takeDirectory outFile
       encodeFile outFile entityVal
 
