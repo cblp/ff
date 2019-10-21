@@ -18,11 +18,11 @@ import           FF.Options (Assign (Clear, Set),
 
 {-# ANN module "HLint: ignore Use camelCase" #-}
 
-foreign export ccall c_assignStart
+foreign export ccall hs_assignStart
     :: StablePtr StorageFS.Handle -> CString -> CInt -> CInt -> CInt -> IO ()
-c_assignStart
+hs_assignStart
     :: StablePtr StorageFS.Handle -> CString -> CInt -> CInt -> CInt -> IO ()
-c_assignStart storagePtr noteIdStr year month day = do
+hs_assignStart storagePtr noteIdStr year month day = do
     storageHandle <- deRefStablePtr storagePtr
     noteId <- peekCAString noteIdStr
     let start =
@@ -39,11 +39,11 @@ c_assignStart storagePtr noteIdStr year month day = do
             , deleteTags = Set.empty
             }
 
-foreign export ccall c_assignEnd
+foreign export ccall hs_assignEnd
     :: StablePtr StorageFS.Handle -> CString -> CInt -> CInt -> CInt -> IO ()
-c_assignEnd
+hs_assignEnd
     :: StablePtr StorageFS.Handle -> CString -> CInt -> CInt -> CInt -> IO ()
-c_assignEnd storagePtr noteIdStr year month day = do
+hs_assignEnd storagePtr noteIdStr year month day = do
     storageHandle <- deRefStablePtr storagePtr
     noteId <- peekCAString noteIdStr
     let end = Just $ case (year, month, day) of
@@ -62,17 +62,17 @@ c_assignEnd storagePtr noteIdStr year month day = do
             , deleteTags = Set.empty
             }
 
-foreign export ccall c_done :: StablePtr StorageFS.Handle -> CString -> IO ()
-c_done :: StablePtr StorageFS.Handle -> CString -> IO ()
-c_done storagePtr noteIdStr = do
+foreign export ccall hs_done :: StablePtr StorageFS.Handle -> CString -> IO ()
+hs_done :: StablePtr StorageFS.Handle -> CString -> IO ()
+hs_done storagePtr noteIdStr = do
     storageHandle <- deRefStablePtr storagePtr
     noteId <- peekCAString noteIdStr
     void $ runStorage storageHandle $ cmdDone $ DocId noteId
 
-foreign export ccall c_postpone
+foreign export ccall hs_postpone
     :: StablePtr StorageFS.Handle -> CString -> IO ()
-c_postpone :: StablePtr StorageFS.Handle -> CString -> IO ()
-c_postpone storagePtr noteIdStr = do
+hs_postpone :: StablePtr StorageFS.Handle -> CString -> IO ()
+hs_postpone storagePtr noteIdStr = do
     storageHandle <- deRefStablePtr storagePtr
     noteId <- peekCAString noteIdStr
     void $ runStorage storageHandle $ cmdPostpone $ DocId noteId

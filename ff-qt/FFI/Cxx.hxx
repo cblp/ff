@@ -32,29 +32,29 @@ struct Note {
 class MainWindow;
 
 extern "C" {
-    void c_assignStart(
+    void hs_assignStart(
         StorageHandle, const char * noteId, int year, int month, int day
     );
-    void c_assignEnd(
+    void hs_assignEnd(
         StorageHandle, const char * noteId, int year, int month, int day
     );
-    void c_done    (StorageHandle, const char * noteId);
-    void c_postpone(StorageHandle, const char * noteId);
+    void hs_done    (StorageHandle, const char * noteId);
+    void hs_postpone(StorageHandle, const char * noteId);
 }
 
 struct Storage {
     StorageHandle handle;
 
     void assignStart(NoteId id, Date d) const {
-        c_assignStart(handle, id.c_str(), d.year, d.month, d.day);
+        hs_assignStart(handle, id.c_str(), d.year, d.month, d.day);
     }
 
     void assignEnd(NoteId id, Date d) const {
-        c_assignEnd(handle, id.c_str(), d.year, d.month, d.day);
+        hs_assignEnd(handle, id.c_str(), d.year, d.month, d.day);
     }
 
-    void done    (NoteId id) const { c_done    (handle, id.c_str()); }
-    void postpone(NoteId id) const { c_postpone(handle, id.c_str()); }
+    void done    (NoteId id) const { hs_done    (handle, id.c_str()); }
+    void postpone(NoteId id) const { hs_postpone(handle, id.c_str()); }
 };
 
 
