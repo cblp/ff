@@ -143,7 +143,7 @@ import System.Directory
 import System.Environment (getEnv)
 import System.Exit (ExitCode (..))
 import System.FilePath ((</>), normalise, splitDirectories)
-import System.IO (hClose)
+import System.IO (hClose, hPutStrLn, stderr)
 import System.IO.Temp (withSystemTempFile)
 import System.Process.Typed (proc, runProcess)
 import System.Random (StdGen, mkStdGen, randoms, split)
@@ -619,7 +619,11 @@ runExternalEditor textOld = do
     assertExecutable prog = do
       Just _ <- findExecutable prog
       pure prog
-    assertExecutableFromEnv param = assertExecutable =<< getEnv param
+    assertExecutableFromEnv param = do
+      editor <- getEnv param
+      assertExecutable editor <|> do
+        hPutStrLn stderr "ignoring invalid $EDITOR"
+        fail "invalid $EDITOR"
 
 assertStartBeforeEnd :: MonadE m => Day -> Day -> m ()
 assertStartBeforeEnd start end =
