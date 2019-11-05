@@ -42,18 +42,19 @@ module FF
   )
 where
 
-import Control.Applicative ((<|>))
+import Control.Applicative ((<|>), empty)
 import Control.Monad (unless, void, when)
 import Control.Monad.Except (throwError)
 import Control.Monad.IO.Class (MonadIO, liftIO)
 import Control.Monad.State.Strict (MonadState, evalState, state)
 import Data.Foldable (asum, for_, toList)
+import Data.Functor (($>))
 import Data.HashMap.Strict (HashMap)
 import qualified Data.HashMap.Strict as HashMap
 import Data.HashSet (HashSet)
 import qualified Data.HashSet as HashSet
 import Data.List (genericLength, sortOn)
-import Data.List.NonEmpty (NonEmpty ((:|)))
+import Data.List.NonEmpty (NonEmpty ((:|)), nonEmpty)
 import qualified Data.Map.Strict as Map
 import Data.Maybe (catMaybes, fromMaybe, isJust, mapMaybe)
 import qualified Data.Set as Set
@@ -135,6 +136,7 @@ import RON.Storage.Backend
     MonadStorage (getDocuments),
   )
 import RON.Types (ObjectFrame (ObjectFrame, uuid), ObjectRef (ObjectRef))
+import qualified ShellWords
 import System.Directory
   ( doesDirectoryExist,
     findExecutable,
@@ -605,28 +607,32 @@ getUtcToday = liftIO $ utctDay <$> getCurrentTime
 
 runExternalEditor :: Text -> IO Text
 runExternalEditor textOld = do
-  editor <-
+  editor :| editorArgs <-
     asum $
-      assertExecutableFromEnv "EDITOR"
-        : map assertExecutable ["editor", "micro", "nano"]
+      assertExecutableFromEnv "VISUAL"
+        : assertExecutableFromEnv "EDITOR"
+        : map assertExecutable ["editor", "micro", "nano", "vi", "vim"]
   withSystemTempFile "ff.txt" $ \file fileH -> do
     Text.hPutStr fileH textOld
     hClose fileH
     hPutStrLn stderr "waiting for external editor to close"
-    runProcess (proc editor [file]) >>= \case
+    runProcess (proc editor $ editorArgs ++ [file]) >>= \case
       ExitSuccess -> Text.strip <$> Text.readFile file
       ExitFailure {} -> pure textOld
   where
     assertExecutable prog = do
       Just _ <- findExecutable prog
-      pure prog
-    assertExecutableFromEnv param = do
-      editor <- getEnv param
-      findExecutable editor >>= \case
-        Just prog -> pure prog
-        Nothing -> do
-          hPutStrLn stderr $ "invalid $EDITOR variable: " <> editor
-          fail "invalid $EDITOR"
+      pure $ prog :| []
+    assertExecutableFromEnv var = do
+      editorCmd <- getEnv var
+      let eEditor = do
+            editor <- ShellWords.parse editorCmd
+            maybe (Left "empty") Right $ nonEmpty editor
+      case eEditor of
+        Left err -> do
+          hPutStrLn stderr $ "error in $EDITOR environment variable: " <> err
+          empty
+        Right editor@(prog :| _) -> assertExecutable prog $> editor
 
 assertStartBeforeEnd :: MonadE m => Day -> Day -> m ()
 assertStartBeforeEnd start end =

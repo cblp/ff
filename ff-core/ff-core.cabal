@@ -28,6 +28,7 @@ library
         prettyprinter,
         prettyprinter-ansi-terminal,
         random,
+        shellwords,
         temporary,
         terminal-size,
         text,

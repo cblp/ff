@@ -47,6 +47,13 @@ packages:
   original:
     hackage: ron-storage-0.11
 - completed:
+    hackage: shellwords-0.1.2.2@sha256:fbcdec62b665eab3e30eadde91becbeacec735bb3780988eaae52f9b8c91b09b,1412
+    pantry-tree:
+      size: 427
+      sha256: a16bcdbe3cb1cf8b715242c5ab6843950bafc892fe503299ff3bbf46842e9d6e
+  original:
+    hackage: shellwords-0.1.2.2
+- completed:
     hackage: gi-gtk-declarative-0.5.0@sha256:e710da215736dac238513d78726f6cff583a6eb60b0281dc392eec5f15ea5e1b,3908
     pantry-tree:
       size: 1911

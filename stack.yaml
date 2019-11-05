@@ -16,6 +16,7 @@ extra-deps:
   - ron-schema-0.9
   - ron-storage-0.11
   # - {git: https://github.com/ff-notes/ron.git, commit:, subdirs: []}
+  - shellwords-0.1.2.2
 
   # ff-gtk:
   - gi-gtk-declarative-0.5.0
