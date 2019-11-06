@@ -37,6 +37,7 @@ import qualified FF.Types
 import Options.Applicative
   ( (<**>),
     Completer,
+    InfoMod,
     ParseError (ShowHelpText),
     Parser,
     ParserInfo,
@@ -49,6 +50,7 @@ import Options.Applicative
     defaultPrefs,
     flag,
     flag',
+    footer,
     fullDesc,
     help,
     helper,
@@ -214,7 +216,13 @@ parser h =
     iCmdContact = i cmdContact "show contacts"
     iCmdDelete = i cmdDelete "delete a task"
     iCmdDone = i cmdDone "mark a task done (archive)"
-    iCmdEdit = i cmdEdit "edit a task or a note"
+    iCmdEdit =
+      i_
+        cmdEdit
+        "edit a task or a note, using command from environment variable EDITOR\
+        \ or program `editor`"
+        $ footer
+          "Examples for EDITOR: 'code --wait', 'emacs', 'micro', 'nano', 'vim'"
     iCmdNew = i cmdNew "synonym for `add`"
     iCmdPostpone = i cmdPostpone "make a task start later"
     iCmdSearch = i cmdSearch "search for notes with the given text"
@@ -377,7 +385,10 @@ parser h =
     readDocId = DocId <$> str
 
 i :: Parser a -> String -> ParserInfo a
-i prsr desc = info (prsr <**> helper) $ fullDesc <> progDesc desc
+i prsr desc = i_ prsr desc mempty
+
+i_ :: Parser a -> String -> InfoMod a -> ParserInfo a
+i_ prsr desc m = info (prsr <**> helper) $ fullDesc <> progDesc desc <> m
 
 parserInfo :: Maybe StorageFS.Handle -> ParserInfo Options
 parserInfo h = i (parser h) "A note taker and task tracker"
