@@ -9,14 +9,18 @@ module FF.Qt.MainWindow (
 -- global
 import           Control.Monad (void)
 import           Data.ByteString (ByteString)
-import           Data.Foldable (fold)
+import           Data.Foldable (fold, for_)
+import           Data.List (intercalate)
 import           Data.Traversable (for)
 import           Foreign (castPtr)
 import           Foreign.Hoppy.Runtime (CppPtr, nullptr, toPtr, touchCppPtr,
                                         withCppPtr, withScopedPtr)
 import           GHC.Stack (callStack, prettyCallStack)
+import qualified Graphics.UI.Qtah.Core.QMetaClassInfo as QMetaClassInfo
+import qualified Graphics.UI.Qtah.Core.QMetaObject as QMetaObject
 import           Graphics.UI.Qtah.Core.QObject (QObjectConstPtr, QObjectPtr,
                                                 toQObject, toQObjectConst)
+import qualified Graphics.UI.Qtah.Core.QObject as QObject
 import qualified Graphics.UI.Qtah.Core.QSettings as QSettings
 import qualified Graphics.UI.Qtah.Core.QVariant as QVariant
 import           Graphics.UI.Qtah.Event (onEvent)
@@ -174,7 +178,22 @@ setTaskView taskWidget item = do
       noteId <- DocId @Note <$> TaskListWidget.getId item
       TaskWidget.update taskWidget noteId
       QWidget.show taskWidget
+  printChildren taskWidget
 
 showAboutProgram :: QWidgetPtr mainWindow => mainWindow -> String -> IO ()
 showAboutProgram mainWindow progName =
   QMessageBox.about mainWindow progName "A note taker and task tracker"
+
+printChildren :: QObjectPtr object => object -> IO ()
+printChildren = go 0 . toQObject where
+  go level object = do
+    name <- QObject.objectName object
+    meta <- QObject.metaObject object
+    classInfo <- QMetaObject.classInfo meta 0
+    -- classInfoCount <- QMetaObject.classInfoCount meta
+    -- classInfoOffset <- QMetaObject.classInfoOffset meta
+    className <- QMetaClassInfo.name classInfo
+    putStrLn $
+      unwords $ replicate level "| " ++ [show name, ":", show className]
+    children <- QObject.children object
+    for_ children $ go (level + 1)
