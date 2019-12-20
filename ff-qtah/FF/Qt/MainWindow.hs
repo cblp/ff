@@ -3,20 +3,23 @@
 {-# LANGUAGE TypeApplications #-}
 
 module FF.Qt.MainWindow (
-  MainWindow, new, upsertNote
+  MainWindow, new, printChildrenTree, upsertNote
 ) where
 
 -- global
 import           Control.Monad (void)
 import           Data.ByteString (ByteString)
-import           Data.Foldable (fold)
+import           Data.Foldable (fold, for_)
 import           Data.Traversable (for)
 import           Foreign (castPtr)
 import           Foreign.Hoppy.Runtime (CppPtr, nullptr, toPtr, touchCppPtr,
                                         withCppPtr, withScopedPtr)
 import           GHC.Stack (callStack, prettyCallStack)
+import qualified Graphics.UI.Qtah.Core.QMetaClassInfo as QMetaClassInfo
+import qualified Graphics.UI.Qtah.Core.QMetaObject as QMetaObject
 import           Graphics.UI.Qtah.Core.QObject (QObjectConstPtr, QObjectPtr,
                                                 toQObject, toQObjectConst)
+import qualified Graphics.UI.Qtah.Core.QObject as QObject
 import qualified Graphics.UI.Qtah.Core.QSettings as QSettings
 import qualified Graphics.UI.Qtah.Core.QVariant as QVariant
 import           Graphics.UI.Qtah.Event (onEvent)
@@ -178,3 +181,15 @@ setTaskView taskWidget item = do
 showAboutProgram :: QWidgetPtr mainWindow => mainWindow -> String -> IO ()
 showAboutProgram mainWindow progName =
   QMessageBox.about mainWindow progName "A note taker and task tracker"
+
+printChildrenTree :: QObjectPtr object => object -> IO ()
+printChildrenTree = go 0 . toQObject where
+  go level object = do
+    name <- QObject.objectName object
+    meta <- QObject.metaObject object
+    classInfo <- QMetaObject.classInfo meta 0
+    className <- QMetaClassInfo.name classInfo
+    putStrLn $
+      unwords $ replicate level "| " ++ [show name, ":", show className]
+    children <- QObject.children object
+    for_ children $ go (level + 1)
