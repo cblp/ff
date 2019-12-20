@@ -29,6 +29,8 @@ import           Graphics.UI.Qtah.Widgets.QAbstractScrollArea (QAbstractScrollAr
                                                                QAbstractScrollAreaPtr,
                                                                toQAbstractScrollArea,
                                                                toQAbstractScrollAreaConst)
+import           Graphics.UI.Qtah.Widgets.QFrame (QFrameConstPtr, QFramePtr,
+                                                  toQFrame, toQFrameConst)
 import           Graphics.UI.Qtah.Widgets.QTreeView (QTreeViewConstPtr,
                                                      QTreeViewPtr, toQTreeView,
                                                      toQTreeViewConst)
@@ -71,6 +73,12 @@ instance QWidgetConstPtr TaskListWidget where
 
 instance QWidgetPtr TaskListWidget where
   toQWidget = toQWidget . super
+
+instance QFrameConstPtr TaskListWidget where
+  toQFrameConst = toQFrameConst . super
+
+instance QFramePtr TaskListWidget where
+  toQFrame = toQFrame . super
 
 instance QAbstractScrollAreaConstPtr TaskListWidget where
   toQAbstractScrollAreaConst = toQAbstractScrollAreaConst . super

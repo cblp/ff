@@ -12,10 +12,11 @@ import           Graphics.UI.Qtah.Core.QObject (QObjectConstPtr, QObjectPtr,
                                                 toQObject, toQObjectConst)
 import           Graphics.UI.Qtah.Core.Types (QtAlignmentFlag (AlignTop))
 import qualified Graphics.UI.Qtah.Widgets.QBoxLayout as QBoxLayout
-import           Graphics.UI.Qtah.Widgets.QFrame (QFrame)
 import qualified Graphics.UI.Qtah.Widgets.QFrame as QFrame
 import           Graphics.UI.Qtah.Widgets.QLabel (QLabel)
 import qualified Graphics.UI.Qtah.Widgets.QLabel as QLabel
+import           Graphics.UI.Qtah.Widgets.QScrollArea (QScrollArea)
+import qualified Graphics.UI.Qtah.Widgets.QScrollArea as QScrollArea
 import qualified Graphics.UI.Qtah.Widgets.QVBoxLayout as QVBoxLayout
 import           Graphics.UI.Qtah.Widgets.QWidget (QWidgetConstPtr, QWidgetPtr,
                                                    toQWidget, toQWidgetConst)
@@ -31,7 +32,7 @@ import           FF.Types (Entity (..), Note (Note, note_text), NoteId,
 import qualified FF.Qt.DateComponent as DateComponent
 
 data TaskWidget =
-  TaskWidget{super :: QFrame, label :: QLabel, storage :: Storage.Handle}
+  TaskWidget{super :: QScrollArea, label :: QLabel, storage :: Storage.Handle}
 
 instance CppPtr TaskWidget where
   nullptr = TaskWidget{super = nullptr, label = nullptr, storage = undefined}
@@ -53,7 +54,16 @@ instance QWidgetPtr TaskWidget where
 
 new :: Storage.Handle -> IO TaskWidget
 new storage = do
-  super <- QFrame.new
+  super <- QScrollArea.new
+  QFrame.setFrameShadow super QFrame.Sunken
+  QFrame.setFrameShape  super QFrame.Box
+  QFrame.setLineWidth   super 10
+
+  frame <- QFrame.new
+  QFrame.setFrameShadow frame QFrame.Sunken
+  QFrame.setFrameShape  frame QFrame.Box
+  QFrame.setLineWidth   frame 10
+  QScrollArea.setWidget super frame
 
   label <- QLabel.new
   QLabel.setAlignment label AlignTop
@@ -62,7 +72,7 @@ new storage = do
   start <- DateComponent.new "Start:"
   end   <- DateComponent.new "Deadline:"
 
-  box <- QVBoxLayout.newWithParent super
+  box <- QVBoxLayout.newWithParent frame
   QBoxLayout.addWidget box label
   QBoxLayout.addLayout box start
   QBoxLayout.addLayout box end

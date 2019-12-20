@@ -35,9 +35,7 @@ extra-deps:
       # 0.5.1 + Compatibility with GHC 8.6, Cabal 2.4
     subdirs: [generator, runtime, std]
   - git: https://gitlab.com/cblp/qtah.git
-    commit:
-      ea32e8df0bc4e764cb5830702115b0a4d0b46f72
-      # 0.6.0 + master + version constraints fixes
+    commit: 63db0e40c8d1509ac80f82b4bf8860225058a7b6  # 0.6.0 + master + fixes
     subdirs: [qtah, qtah-cpp, qtah-generator]
 
 docker:
