@@ -21,6 +21,7 @@ import qualified Graphics.UI.Qtah.Widgets.QScrollArea as QScrollArea
 import qualified Graphics.UI.Qtah.Widgets.QVBoxLayout as QVBoxLayout
 import           Graphics.UI.Qtah.Widgets.QWidget (QWidgetConstPtr, QWidgetPtr,
                                                    toQWidget, toQWidgetConst)
+import qualified Graphics.UI.Qtah.Widgets.QWidget as QWidget
 -- import qualified Graphics.UI.Qtah.Widgets.QWidget as QWidget
 import           RON.Storage.FS (runStorage)
 import qualified RON.Storage.FS as Storage
@@ -62,29 +63,30 @@ new storage = do
   -- QFrame.setFrameShape  super QFrame.Box
   -- QFrame.setLineWidth   super 10
 
-  frame <- QFrame.new
-  QObject.setObjectName frame "TaskWidget.frame : QFrame"
+  -- frame <- QFrame.new
+  -- QObject.setObjectName frame "TaskWidget.frame : QFrame"
   -- QFrame.setFrameShadow frame QFrame.Sunken
   -- QFrame.setFrameShape  frame QFrame.Box
   -- QFrame.setLineWidth   frame 10
-  QScrollArea.setWidget super frame
+  -- QScrollArea.setWidget super frame
 
   label <- QLabel.new
   QObject.setObjectName label "TaskWidget.label : QLabel"
   QLabel.setAlignment label AlignTop
   QLabel.setWordWrap  label True
+  QScrollArea.setWidget super label
 
-  start <- DateComponent.new "Start:"
-  QObject.setObjectName start "TaskWidget.start : DateComponent"
+  -- start <- DateComponent.new "Start:"
+  -- QObject.setObjectName start "TaskWidget.start : DateComponent"
 
-  end   <- DateComponent.new "Deadline:"
-  QObject.setObjectName end "TaskWidget.end : DateComponent"
+  -- end   <- DateComponent.new "Deadline:"
+  -- QObject.setObjectName end "TaskWidget.end : DateComponent"
 
-  box <- QVBoxLayout.newWithParent frame
-  QObject.setObjectName box "TaskWidget.box : QVBoxLayout"
-  QBoxLayout.addWidget box label
-  QBoxLayout.addLayout box start
-  QBoxLayout.addLayout box end
+  -- box <- QVBoxLayout.newWithParent frame
+  -- QObject.setObjectName box "TaskWidget.box : QVBoxLayout"
+  -- QBoxLayout.addWidget box label
+  -- QBoxLayout.addLayout box start
+  -- QBoxLayout.addLayout box end
 
   pure TaskWidget{super, label, storage}
 
@@ -94,3 +96,4 @@ update TaskWidget{label, storage} noteId = do
   let NoteView{note} = entityVal
   let Note{note_text} = note
   QLabel.setText label $ fromRgaM note_text
+  QWidget.adjustSize label
