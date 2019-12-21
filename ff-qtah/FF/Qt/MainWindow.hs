@@ -10,7 +10,6 @@ module FF.Qt.MainWindow (
 import           Control.Monad (void)
 import           Data.ByteString (ByteString)
 import           Data.Foldable (fold, for_)
-import           Data.List (intercalate)
 import           Data.Traversable (for)
 import           Foreign (castPtr)
 import           Foreign.Hoppy.Runtime (CppPtr, nullptr, toPtr, touchCppPtr,
