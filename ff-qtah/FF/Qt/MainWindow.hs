@@ -3,7 +3,7 @@
 {-# LANGUAGE TypeApplications #-}
 
 module FF.Qt.MainWindow (
-  MainWindow, new, upsertNote
+  MainWindow, new, printChildrenTree, upsertNote
 ) where
 
 -- global
@@ -177,20 +177,17 @@ setTaskView taskWidget item = do
       noteId <- DocId @Note <$> TaskListWidget.getId item
       TaskWidget.update taskWidget noteId
       QWidget.show taskWidget
-  printChildren taskWidget
 
 showAboutProgram :: QWidgetPtr mainWindow => mainWindow -> String -> IO ()
 showAboutProgram mainWindow progName =
   QMessageBox.about mainWindow progName "A note taker and task tracker"
 
-printChildren :: QObjectPtr object => object -> IO ()
-printChildren = go 0 . toQObject where
+printChildrenTree :: QObjectPtr object => object -> IO ()
+printChildrenTree = go 0 . toQObject where
   go level object = do
     name <- QObject.objectName object
     meta <- QObject.metaObject object
     classInfo <- QMetaObject.classInfo meta 0
-    -- classInfoCount <- QMetaObject.classInfoCount meta
-    -- classInfoOffset <- QMetaObject.classInfoOffset meta
     className <- QMetaClassInfo.name classInfo
     putStrLn $
       unwords $ replicate level "| " ++ [show name, ":", show className]
