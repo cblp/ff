@@ -1,11 +1,9 @@
-note:
-  note_start: 2018-07-05
-  note_track: null
-  note_links: []
-  note_text: 'ff serve: run a web server with all features'
-  note_end: null
-  note_status:
-    tag: TaskStatus
-    contents: Archived
-  note_tags: []
-tags: []
+note_start: 2018-07-05
+note_track: null
+note_links: []
+note_text: 'ff serve: run a web server with all features'
+note_end: null
+note_status:
+  tag: TaskStatus
+  contents: Archived
+note_tags: {}

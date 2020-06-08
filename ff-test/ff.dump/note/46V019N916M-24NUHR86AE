@@ -1,19 +1,15 @@
-note:
-  note_start: 2019-02-26
-  note_track:
-    track_url: https://github.com/ff-notes/ff/issues/18
-    track_source: ff-notes/ff
-    track_externalId: '18'
-    track_provider: github
-  note_links: []
-  note_text: Android app
-  note_end: null
-  note_status:
-    tag: TaskStatus
-    contents: Active
-  note_tags:
-  - B/7euI15E31g+00P01fLmVG
-  - B/7euI15E2jb+00P01fLmVG
-tags:
-- level_Research
-- type_Idea
+note_start: 2019-02-26
+note_track:
+  track_url: https://github.com/ff-notes/ff/issues/18
+  track_source: ff-notes/ff
+  track_externalId: '18'
+  track_provider: github
+note_links: []
+note_text: Android app
+note_end: null
+note_status:
+  tag: TaskStatus
+  contents: Active
+note_tags:
+  B/7euI15E2jb+00P01fLmVG: level_Research
+  B/7euI15E31g+00P01fLmVG: type_Idea

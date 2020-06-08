@@ -1,26 +1,22 @@
-note:
-  note_start: 2019-12-18
-  note_track:
-    track_url: https://github.com/ff-notes/ff/pull/220
-    track_source: ff-notes/ff
-    track_externalId: '220'
-    track_provider: github
-  note_links: []
-  note_text: |
-    Remove ff-qt
+note_start: 2019-12-18
+note_track:
+  track_url: https://github.com/ff-notes/ff/pull/220
+  track_source: ff-notes/ff
+  track_externalId: '220'
+  track_provider: github
+note_links: []
+note_text: |
+  Remove ff-qt
 
 
 
-    <!-- Reviewable:start -->
-    This change is [<img src="https://reviewable.io/review_button.svg" height="34" align="absmiddle" alt="Reviewable"/>](https://reviewable.io/reviews/ff-notes/ff/220)
-    <!-- Reviewable:end -->
-  note_end: null
-  note_status:
-    tag: TaskStatus
-    contents: Archived
-  note_tags:
-  - B/7euI15Dna7+00P01fLmVG
-  - B/7f8c6IMneF+00P01fLmVG
-tags:
-- component_ff-qtah
-- type_Task
+  <!-- Reviewable:start -->
+  This change is [<img src="https://reviewable.io/review_button.svg" height="34" align="absmiddle" alt="Reviewable"/>](https://reviewable.io/reviews/ff-notes/ff/220)
+  <!-- Reviewable:end -->
+note_end: null
+note_status:
+  tag: TaskStatus
+  contents: Archived
+note_tags:
+  B/7euI15Dna7+00P01fLmVG: type_Task
+  B/7f8c6IMneF+00P01fLmVG: component_ff-qtah

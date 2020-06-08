@@ -1,18 +1,16 @@
-note:
-  note_start: 2018-06-16
-  note_track:
-    track_url: https://github.com/ff-notes/ff/issues/57
-    track_source: ff-notes/ff
-    track_externalId: '57'
-    track_provider: github
-  note_links: []
-  note_text: |-
-    Show `fetching...` while fetching issues
+note_start: 2018-06-16
+note_track:
+  track_url: https://github.com/ff-notes/ff/issues/57
+  track_source: ff-notes/ff
+  track_externalId: '57'
+  track_provider: github
+note_links: []
+note_text: |-
+  Show `fetching...` while fetching issues
 
-    Dots are adding with an interval.
-  note_end: null
-  note_status:
-    tag: TaskStatus
-    contents: Archived
-  note_tags: []
-tags: []
+  Dots are adding with an interval.
+note_end: null
+note_status:
+  tag: TaskStatus
+  contents: Archived
+note_tags: {}

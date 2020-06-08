@@ -97,9 +97,6 @@ packages:
     hackage: hoppy-std-0.7.0
 - completed:
     subdir: qtah
-    cabal-file:
-      size: 24923
-      sha256: 8a9a536479c13c027f7814f795c7bf474dfb45266421546fa1d920991fd87156
     name: qtah
     version: 0.6.1
     git: https://gitlab.com/khumba/qtah.git
@@ -113,9 +110,6 @@ packages:
     commit: 0b952b894d20e4cf602ad4423f66f8b63f684970
 - completed:
     subdir: qtah-cpp
-    cabal-file:
-      size: 1658
-      sha256: e383a3b81924c78f9a097b7fe2a009c4936d960c5524d4bc4706a105cbf1ecce
     name: qtah-cpp
     version: 0.6.1
     git: https://gitlab.com/khumba/qtah.git
@@ -129,9 +123,6 @@ packages:
     commit: 0b952b894d20e4cf602ad4423f66f8b63f684970
 - completed:
     subdir: qtah-generator
-    cabal-file:
-      size: 15994
-      sha256: 1f1f3eb1f197ea21059e19c12bb5221893214be3057fac218a0810dd9929cadb
     name: qtah-generator
     version: 0.6.1
     git: https://gitlab.com/khumba/qtah.git

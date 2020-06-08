@@ -274,7 +274,7 @@ prop_repo =
                             },
                           note_links = []
                         },
-                      tags = Set.fromList ["level_Research", "type_Enhancement"]
+                      tags = ["level_Research", "type_Enhancement"]
                     }
               ],
             total = 1

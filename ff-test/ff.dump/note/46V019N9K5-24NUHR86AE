@@ -1,23 +1,18 @@
-note:
-  note_start: 2018-07-31
-  note_track:
-    track_url: https://github.com/ff-notes/ff/issues/20
-    track_source: ff-notes/ff
-    track_externalId: '20'
-    track_provider: github
-  note_links: []
-  note_text: "Tags\n\nA tag is a document in the _ff_ database.\r\n\r\nIt must contain
-    one text field (RgaText).\r\n\r\nA note must have a field \"tags\" of type OR-Set,
-    containing references (ids) to tag objects."
-  note_end: null
-  note_status:
-    tag: TaskStatus
-    contents: Archived
-  note_tags:
-  - B/7euI15DBES+00P01fLmVG
-  - B/7euI15DAJq+00P01fLmVG
-  - B/7euI15E2jb+00P01fLmVG
-tags:
-- component_Core
-- level_Research
-- type_Enhancement
+note_start: 2018-07-31
+note_track:
+  track_url: https://github.com/ff-notes/ff/issues/20
+  track_source: ff-notes/ff
+  track_externalId: '20'
+  track_provider: github
+note_links: []
+note_text: "Tags\n\nA tag is a document in the _ff_ database.\r\n\r\nIt must contain
+  one text field (RgaText).\r\n\r\nA note must have a field \"tags\" of type OR-Set,
+  containing references (ids) to tag objects."
+note_end: null
+note_status:
+  tag: TaskStatus
+  contents: Archived
+note_tags:
+  B/7euI15E2jb+00P01fLmVG: level_Research
+  B/7euI15DAJq+00P01fLmVG: component_Core
+  B/7euI15DBES+00P01fLmVG: type_Enhancement

@@ -1,11 +1,9 @@
-note:
-  note_start: 2018-06-28
-  note_track: null
-  note_links: []
-  note_text: 'idea: collect multiple repositories in one interface'
-  note_end: null
-  note_status:
-    tag: TaskStatus
-    contents: Archived
-  note_tags: []
-tags: []
+note_start: 2018-06-28
+note_track: null
+note_links: []
+note_text: 'idea: collect multiple repositories in one interface'
+note_end: null
+note_status:
+  tag: TaskStatus
+  contents: Archived
+note_tags: {}

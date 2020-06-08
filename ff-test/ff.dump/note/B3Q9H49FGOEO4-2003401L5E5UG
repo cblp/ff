@@ -1,21 +1,16 @@
-note:
-  note_start: 2019-02-05
-  note_track:
-    track_url: https://github.com/ff-notes/ff/issues/117
-    track_source: ff-notes/ff
-    track_externalId: '117'
-    track_provider: github
-  note_links: []
-  note_text: Remove JSON support after 2019-11-03
-  note_end: null
-  note_status:
-    tag: TaskStatus
-    contents: Active
-  note_tags:
-  - B/7euI15DBES+00P01fLmVG
-  - B/7euI15DAJq+00P01fLmVG
-  - B/7euI15DAyL+00P01fLmVG
-tags:
-- component_Core
-- level_Beginner
-- type_Enhancement
+note_start: 2019-02-05
+note_track:
+  track_url: https://github.com/ff-notes/ff/issues/117
+  track_source: ff-notes/ff
+  track_externalId: '117'
+  track_provider: github
+note_links: []
+note_text: Remove JSON support after 2019-11-03
+note_end: null
+note_status:
+  tag: TaskStatus
+  contents: Active
+note_tags:
+  B/7euI15DAJq+00P01fLmVG: component_Core
+  B/7euI15DAyL+00P01fLmVG: level_Beginner
+  B/7euI15DBES+00P01fLmVG: type_Enhancement

@@ -1,24 +1,19 @@
-note:
-  note_start: 2019-09-11
-  note_track:
-    track_url: https://github.com/ff-notes/ff/issues/169
-    track_source: ff-notes/ff
-    track_externalId: '169'
-    track_provider: github
-  note_links: []
-  note_text: |-
-    Search tasks and wikis in one step
+note_start: 2019-09-11
+note_track:
+  track_url: https://github.com/ff-notes/ff/issues/169
+  track_source: ff-notes/ff
+  track_externalId: '169'
+  track_provider: github
+note_links: []
+note_text: |-
+  Search tasks and wikis in one step
 
-    Becase they all are notes.
-  note_end: null
-  note_status:
-    tag: TaskStatus
-    contents: Archived
-  note_tags:
-  - B/7euI15DXH1+00P01fLmVG
-  - B/7euI15DAJq+00P01fLmVG
-  - B/7euI15DAyL+00P01fLmVG
-tags:
-- component_Core
-- level_Beginner
-- type_Bug
+  Becase they all are notes.
+note_end: null
+note_status:
+  tag: TaskStatus
+  contents: Archived
+note_tags:
+  B/7euI15DAJq+00P01fLmVG: component_Core
+  B/7euI15DAyL+00P01fLmVG: level_Beginner
+  B/7euI15DXH1+00P01fLmVG: type_Bug

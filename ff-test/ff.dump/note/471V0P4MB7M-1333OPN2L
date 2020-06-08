@@ -1,18 +1,16 @@
-note:
-  note_start: 2018-05-17
-  note_track:
-    track_url: https://github.com/ff-notes/ff/pull/48
-    track_source: ff-notes/ff
-    track_externalId: '48'
-    track_provider: github
-  note_links: []
-  note_text: "Version Upgrade\n\n-V,--version \r\nfrom [Issue 24](https://github.com/ff-notes/ff/issues/24)\n\n<!--
-    Reviewable:start -->\n---\nThis change is [<img src=\"https://reviewable.io/review_button.svg\"
-    height=\"34\" align=\"absmiddle\" alt=\"Reviewable\"/>](https://reviewable.io/reviews/ff-notes/ff/48)\n<!--
-    Reviewable:end -->\n"
-  note_end: null
-  note_status:
-    tag: TaskStatus
-    contents: Archived
-  note_tags: []
-tags: []
+note_start: 2018-05-17
+note_track:
+  track_url: https://github.com/ff-notes/ff/pull/48
+  track_source: ff-notes/ff
+  track_externalId: '48'
+  track_provider: github
+note_links: []
+note_text: "Version Upgrade\n\n-V,--version \r\nfrom [Issue 24](https://github.com/ff-notes/ff/issues/24)\n\n<!--
+  Reviewable:start -->\n---\nThis change is [<img src=\"https://reviewable.io/review_button.svg\"
+  height=\"34\" align=\"absmiddle\" alt=\"Reviewable\"/>](https://reviewable.io/reviews/ff-notes/ff/48)\n<!--
+  Reviewable:end -->\n"
+note_end: null
+note_status:
+  tag: TaskStatus
+  contents: Archived
+note_tags: {}

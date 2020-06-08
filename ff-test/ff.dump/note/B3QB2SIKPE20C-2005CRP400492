@@ -1,25 +1,19 @@
-note:
-  note_start: 2019-04-03
-  note_track:
-    track_url: https://github.com/ff-notes/ff/issues/151
-    track_source: ff-notes/ff
-    track_externalId: '151'
-    track_provider: github
-  note_links: []
-  note_text: "Track: ParseError \"Error in $: expected Vector a, encountered Object\"\n\n```\r\nff
-    track -r ffnotes/ff -d\r\nfetching...\r\nParseError \"Error in $: expected Vector
-    a, encountered Object\"\r\n```"
-  note_end: null
-  note_status:
-    tag: TaskStatus
-    contents: Archived
-  note_tags:
-  - B/7euI15DXH1+00P01fLmVG
-  - B/7euI15DGwV+00P01fLmVG
-  - B/7euI15DAyL+00P01fLmVG
-  - B/7euI15EbNZ+00P01fLmVG
-tags:
-- component_CLI
-- level_Beginner
-- resolution_Wontfix
-- type_Bug
+note_start: 2019-04-03
+note_track:
+  track_url: https://github.com/ff-notes/ff/issues/151
+  track_source: ff-notes/ff
+  track_externalId: '151'
+  track_provider: github
+note_links: []
+note_text: "Track: ParseError \"Error in $: expected Vector a, encountered Object\"\n\n```\r\nff
+  track -r ffnotes/ff -d\r\nfetching...\r\nParseError \"Error in $: expected Vector
+  a, encountered Object\"\r\n```"
+note_end: null
+note_status:
+  tag: TaskStatus
+  contents: Archived
+note_tags:
+  B/7euI15EbNZ+00P01fLmVG: resolution_Wontfix
+  B/7euI15DAyL+00P01fLmVG: level_Beginner
+  B/7euI15DXH1+00P01fLmVG: type_Bug
+  B/7euI15DGwV+00P01fLmVG: component_CLI

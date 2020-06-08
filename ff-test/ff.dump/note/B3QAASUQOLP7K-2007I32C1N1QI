@@ -1,21 +1,16 @@
-note:
-  note_start: 2019-03-19
-  note_track:
-    track_url: https://github.com/ff-notes/ff/issues/141
-    track_source: ff-notes/ff
-    track_externalId: '141'
-    track_provider: github
-  note_links: []
-  note_text: ff search --archive
-  note_end: null
-  note_status:
-    tag: TaskStatus
-    contents: Archived
-  note_tags:
-  - B/7euI15DBES+00P01fLmVG
-  - B/7euI15DGwV+00P01fLmVG
-  - B/7euI15DAyL+00P01fLmVG
-tags:
-- component_CLI
-- level_Beginner
-- type_Enhancement
+note_start: 2019-03-19
+note_track:
+  track_url: https://github.com/ff-notes/ff/issues/141
+  track_source: ff-notes/ff
+  track_externalId: '141'
+  track_provider: github
+note_links: []
+note_text: ff search --archive
+note_end: null
+note_status:
+  tag: TaskStatus
+  contents: Archived
+note_tags:
+  B/7euI15DAyL+00P01fLmVG: level_Beginner
+  B/7euI15DBES+00P01fLmVG: type_Enhancement
+  B/7euI15DGwV+00P01fLmVG: component_CLI

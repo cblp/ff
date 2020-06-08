@@ -1,20 +1,18 @@
-note:
-  note_start: 2018-07-05
-  note_track:
-    track_url: https://github.com/ff-notes/ff/pull/66
-    track_source: ff-notes/ff
-    track_externalId: '66'
-    track_provider: github
-  note_links: []
-  note_text: "Add dotting while fetching \n\nТакая конструкция отдельно делает все
-    как надо, но в проекте во время загрузки данных с гитхаба, ничего не отображается,
-    только потом после вывода виден _fetching..._.\n\n<!-- Reviewable:start -->\n---\nThis
-    change is [<img src=\"https://reviewable.io/review_button.svg\" height=\"34\"
-    align=\"absmiddle\" alt=\"Reviewable\"/>](https://reviewable.io/reviews/ff-notes/ff/66)\n<!--
-    Reviewable:end -->\n"
-  note_end: null
-  note_status:
-    tag: TaskStatus
-    contents: Archived
-  note_tags: []
-tags: []
+note_start: 2018-07-05
+note_track:
+  track_url: https://github.com/ff-notes/ff/pull/66
+  track_source: ff-notes/ff
+  track_externalId: '66'
+  track_provider: github
+note_links: []
+note_text: "Add dotting while fetching \n\nТакая конструкция отдельно делает все как
+  надо, но в проекте во время загрузки данных с гитхаба, ничего не отображается, только
+  потом после вывода виден _fetching..._.\n\n<!-- Reviewable:start -->\n---\nThis
+  change is [<img src=\"https://reviewable.io/review_button.svg\" height=\"34\" align=\"absmiddle\"
+  alt=\"Reviewable\"/>](https://reviewable.io/reviews/ff-notes/ff/66)\n<!-- Reviewable:end
+  -->\n"
+note_end: null
+note_status:
+  tag: TaskStatus
+  contents: Archived
+note_tags: {}

@@ -1,27 +1,20 @@
-note:
-  note_start: 2018-08-10
-  note_track:
-    track_url: https://github.com/ff-notes/ff/issues/85
-    track_source: ff-notes/ff
-    track_externalId: '85'
-    track_provider: github
-  note_links: []
-  note_text: "Add timezone to timestamps\n\n> use a string. Specifically, use the
-    full qualified name in the Olson database, so something like Australia/Adelaide
-    or America/Los_Angeles. These are standardized descriptors of the timezones used
-    in the world, and you can use these in pretty much every programming language
-    ever used in the last few decades.\r\n\r\nhttps://en.wikipedia.org/wiki/List_of_tz_database_time_zones\r\n\r\nhttps://zachholman.com/talk/utc-is-enough-for-everyone-right"
-  note_end: null
-  note_status:
-    tag: TaskStatus
-    contents: Archived
-  note_tags:
-  - B/7euI15DBES+00P01fLmVG
-  - B/7euI15F4CR+00P01fLmVG
-  - B/7euI15DnJz+00P01fLmVG
-  - B/7euI15DAJq+00P01fLmVG
-tags:
-- component_Core
-- level_Intermediate
-- resolution_Duplicate
-- type_Enhancement
+note_start: 2018-08-10
+note_track:
+  track_url: https://github.com/ff-notes/ff/issues/85
+  track_source: ff-notes/ff
+  track_externalId: '85'
+  track_provider: github
+note_links: []
+note_text: "Add timezone to timestamps\n\n> use a string. Specifically, use the full
+  qualified name in the Olson database, so something like Australia/Adelaide or America/Los_Angeles.
+  These are standardized descriptors of the timezones used in the world, and you can
+  use these in pretty much every programming language ever used in the last few decades.\r\n\r\nhttps://en.wikipedia.org/wiki/List_of_tz_database_time_zones\r\n\r\nhttps://zachholman.com/talk/utc-is-enough-for-everyone-right"
+note_end: null
+note_status:
+  tag: TaskStatus
+  contents: Archived
+note_tags:
+  B/7euI15DAJq+00P01fLmVG: component_Core
+  B/7euI15F4CR+00P01fLmVG: resolution_Duplicate
+  B/7euI15DBES+00P01fLmVG: type_Enhancement
+  B/7euI15DnJz+00P01fLmVG: level_Intermediate

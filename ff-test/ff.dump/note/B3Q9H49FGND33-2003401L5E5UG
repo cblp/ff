@@ -1,22 +1,20 @@
-note:
-  note_start: 2019-02-12
-  note_track:
-    track_url: https://github.com/ff-notes/ff/pull/121
-    track_source: ff-notes/ff
-    track_externalId: '121'
-    track_provider: github
-  note_links: []
-  note_text: |
-    Rewrite ff-qt UI in real C++
+note_start: 2019-02-12
+note_track:
+  track_url: https://github.com/ff-notes/ff/pull/121
+  track_source: ff-notes/ff
+  track_externalId: '121'
+  track_provider: github
+note_links: []
+note_text: |
+  Rewrite ff-qt UI in real C++
 
 
 
-    <!-- Reviewable:start -->
-    This change is [<img src="https://reviewable.io/review_button.svg" height="34" align="absmiddle" alt="Reviewable"/>](https://reviewable.io/reviews/ff-notes/ff/121)
-    <!-- Reviewable:end -->
-  note_end: null
-  note_status:
-    tag: TaskStatus
-    contents: Archived
-  note_tags: []
-tags: []
+  <!-- Reviewable:start -->
+  This change is [<img src="https://reviewable.io/review_button.svg" height="34" align="absmiddle" alt="Reviewable"/>](https://reviewable.io/reviews/ff-notes/ff/121)
+  <!-- Reviewable:end -->
+note_end: null
+note_status:
+  tag: TaskStatus
+  contents: Archived
+note_tags: {}

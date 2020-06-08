@@ -1,20 +1,16 @@
-note:
-  note_start: 2019-04-01
-  note_track:
-    track_url: https://github.com/ff-notes/ff/issues/149
-    track_source: ff-notes/ff
-    track_externalId: '149'
-    track_provider: github
-  note_links: []
-  note_text: "Add useful commands to .vscode/tasks.json\n\nstylish-haskell\r\nstack
-    repl\r\nstack test"
-  note_end: null
-  note_status:
-    tag: TaskStatus
-    contents: Archived
-  note_tags:
-  - B/7euI15E31g+00P01fLmVG
-  - B/7euI15DAyL+00P01fLmVG
-tags:
-- level_Beginner
-- type_Idea
+note_start: 2019-04-01
+note_track:
+  track_url: https://github.com/ff-notes/ff/issues/149
+  track_source: ff-notes/ff
+  track_externalId: '149'
+  track_provider: github
+note_links: []
+note_text: "Add useful commands to .vscode/tasks.json\n\nstylish-haskell\r\nstack
+  repl\r\nstack test"
+note_end: null
+note_status:
+  tag: TaskStatus
+  contents: Archived
+note_tags:
+  B/7euI15DAyL+00P01fLmVG: level_Beginner
+  B/7euI15E31g+00P01fLmVG: type_Idea

@@ -1,24 +1,19 @@
-note:
-  note_start: 2018-11-05
-  note_track:
-    track_url: https://github.com/ff-notes/ff/issues/19
-    track_source: ff-notes/ff
-    track_externalId: '19'
-    track_provider: github
-  note_links: []
-  note_text: "Links between notes\n\nUse for:\r\n- dependencies\r\n- tags (#20)\r\n-
-    contexts (#21)\r\n- contact contexts (#22)\r\n\r\nImplementation variants:\r\n1.
-    A field in Note with a set of links (incoming, outgoing).\r\n2. A separate type
-    Link{from, to :: DocId Note}\r\n3. Something else?"
-  note_end: null
-  note_status:
-    tag: TaskStatus
-    contents: Active
-  note_tags:
-  - B/7euI15DBES+00P01fLmVG
-  - B/7euI15DAJq+00P01fLmVG
-  - B/7euI15E2jb+00P01fLmVG
-tags:
-- component_Core
-- level_Research
-- type_Enhancement
+note_start: 2018-11-05
+note_track:
+  track_url: https://github.com/ff-notes/ff/issues/19
+  track_source: ff-notes/ff
+  track_externalId: '19'
+  track_provider: github
+note_links: []
+note_text: "Links between notes\n\nUse for:\r\n- dependencies\r\n- tags (#20)\r\n-
+  contexts (#21)\r\n- contact contexts (#22)\r\n\r\nImplementation variants:\r\n1.
+  A field in Note with a set of links (incoming, outgoing).\r\n2. A separate type
+  Link{from, to :: DocId Note}\r\n3. Something else?"
+note_end: null
+note_status:
+  tag: TaskStatus
+  contents: Active
+note_tags:
+  B/7euI15E2jb+00P01fLmVG: level_Research
+  B/7euI15DAJq+00P01fLmVG: component_Core
+  B/7euI15DBES+00P01fLmVG: type_Enhancement

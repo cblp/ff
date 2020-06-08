@@ -1,24 +1,19 @@
-note:
-  note_start: 2019-02-25
-  note_track:
-    track_url: https://github.com/ff-notes/ff/issues/127
-    track_source: ff-notes/ff
-    track_externalId: '127'
-    track_provider: github
-  note_links: []
-  note_text: |-
-    git: store data in a separate branch and/or remote
+note_start: 2019-02-25
+note_track:
+  track_url: https://github.com/ff-notes/ff/issues/127
+  track_source: ff-notes/ff
+  track_externalId: '127'
+  track_provider: github
+note_links: []
+note_text: |-
+  git: store data in a separate branch and/or remote
 
-    Add the capability to store ff database not in the current commit, but in a separate branch, and commit and sync the data right after data change.
-  note_end: null
-  note_status:
-    tag: TaskStatus
-    contents: Active
-  note_tags:
-  - B/7euI15E31g+00P01fLmVG
-  - B/7euI15DAJq+00P01fLmVG
-  - B/7euI15E2jb+00P01fLmVG
-tags:
-- component_Core
-- level_Research
-- type_Idea
+  Add the capability to store ff database not in the current commit, but in a separate branch, and commit and sync the data right after data change.
+note_end: null
+note_status:
+  tag: TaskStatus
+  contents: Active
+note_tags:
+  B/7euI15E2jb+00P01fLmVG: level_Research
+  B/7euI15DAJq+00P01fLmVG: component_Core
+  B/7euI15E31g+00P01fLmVG: type_Idea

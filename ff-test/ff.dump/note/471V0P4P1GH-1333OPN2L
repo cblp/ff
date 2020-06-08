@@ -1,18 +1,16 @@
-note:
-  note_start: 2018-01-08
-  note_track:
-    track_url: https://github.com/ff-notes/ff/issues/13
-    track_source: ff-notes/ff
-    track_externalId: '13'
-    track_provider: github
-  note_links: []
-  note_text: |-
-    Delete merged version files
+note_start: 2018-01-08
+note_track:
+  track_url: https://github.com/ff-notes/ff/issues/13
+  track_source: ff-notes/ff
+  track_externalId: '13'
+  track_provider: github
+note_links: []
+note_text: |-
+  Delete merged version files
 
-    Handle parallel execution effects, like unexpected version file disappearance.
-  note_end: null
-  note_status:
-    tag: TaskStatus
-    contents: Archived
-  note_tags: []
-tags: []
+  Handle parallel execution effects, like unexpected version file disappearance.
+note_end: null
+note_status:
+  tag: TaskStatus
+  contents: Archived
+note_tags: {}

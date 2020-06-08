@@ -1,18 +1,16 @@
-note:
-  note_start: 2018-08-15
-  note_track:
-    track_url: https://github.com/ff-notes/ff/issues/86
-    track_source: ff-notes/ff
-    track_externalId: '86'
-    track_provider: github
-  note_links: []
-  note_text: |-
-    Use modern prettyprinter
+note_start: 2018-08-15
+note_track:
+  track_url: https://github.com/ff-notes/ff/issues/86
+  track_source: ff-notes/ff
+  track_externalId: '86'
+  track_provider: github
+note_links: []
+note_text: |-
+  Use modern prettyprinter
 
-    https://hackage.haskell.org/package/prettyprinter
-  note_end: null
-  note_status:
-    tag: TaskStatus
-    contents: Archived
-  note_tags: []
-tags: []
+  https://hackage.haskell.org/package/prettyprinter
+note_end: null
+note_status:
+  tag: TaskStatus
+  contents: Archived
+note_tags: {}

@@ -1,18 +1,16 @@
-note:
-  note_start: 2018-07-21
-  note_track:
-    track_url: https://github.com/ff-notes/ff/issues/71
-    track_source: ff-notes/ff
-    track_externalId: '71'
-    track_provider: github
-  note_links: []
-  note_text: |-
-    Get note by id
+note_start: 2018-07-21
+note_track:
+  track_url: https://github.com/ff-notes/ff/issues/71
+  track_source: ff-notes/ff
+  track_externalId: '71'
+  track_provider: github
+note_links: []
+note_text: |-
+  Get note by id
 
-    Command `ff show` to show note by id.
-  note_end: null
-  note_status:
-    tag: TaskStatus
-    contents: Archived
-  note_tags: []
-tags: []
+  Command `ff show` to show note by id.
+note_end: null
+note_status:
+  tag: TaskStatus
+  contents: Archived
+note_tags: {}

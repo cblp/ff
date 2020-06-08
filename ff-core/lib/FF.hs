@@ -162,25 +162,22 @@ getOrCreateTags :: MonadStorage m => Set Text -> m (HashSet (ObjectRef Tag))
 getOrCreateTags tags
   | null tags = pure HashSet.empty
   | otherwise = do
-    allTags <- loadAllTagTexts
-    existentTagRefs <- loadTagRefsByText tags
-    let newTags = tags \\ allTags
-    createdTagRefs <- createTags newTags
-    pure $ existentTagRefs <> createdTagRefs
+      allTags <- loadAllTagTexts
+      existentTagRefs <- loadTagRefsByText tags
+      let newTags = tags \\ allTags
+      createdTagRefs <- createTags newTags
+      pure $ existentTagRefs <> createdTagRefs
 
 viewNote :: MonadStorage m => EntityDoc Note -> m (EntityView Note)
 viewNote Entity {entityId, entityVal} = do
   tags <- loadTagsByRefs tagRefs
-  pure Entity
-    { entityId,
-      entityVal = NoteView {note = entityVal, tags = Set.fromList tags}
-    }
+  pure Entity{entityId, entityVal = NoteView{note = entityVal, tags}}
   where
     tagRefs = HashSet.fromList note_tags
     Note {note_tags} = entityVal
 
 viewNoteSample :: MonadStorage m => Sample (EntityDoc Note) -> m NoteSample
-viewNoteSample Sample {items, total} = do
+viewNoteSample Sample{items, total} = do
   noteviews <- mapM viewNote items
   pure $ Sample noteviews total
 
@@ -246,24 +243,27 @@ viewTaskSamplesWith ::
   [EntityDoc Note] ->
   m (ModeMap NoteSample)
 viewTaskSamplesWith
-  textPredicate
-  status
-  ConfigUI {shuffle}
-  limit
-  today
-  tagsRequested
-  withoutTags
-  notes = do
-    -- filter unrefined tasks
-    let notes' = filter notePredicate $ filterTasksByStatus status notes
-    -- refine tasks
-    tasks <- traverse viewNote notes'
-    -- filter refined tasks
-    let tasks' = filter noteViewPredicate tasks
-    -- prepare result
-    pure . takeSamples limit . shuffleOrSort $ splitModes today tasks'
+    textPredicate
+    status
+    ConfigUI{shuffle}
+    limit
+    today
+    tagsRequested
+    withoutTags
+    notes
+  =
+    do
+      -- filter unrefined tasks
+      let notes' = filter notePredicate $ filterTasksByStatus status notes
+      -- refine tasks
+      tasks <- traverse viewNote notes'
+      -- filter refined tasks
+      let tasks' = filter noteViewPredicate tasks
+      -- prepare result
+      pure . takeSamples limit . shuffleOrSort $ splitModes today tasks'
     where
       gen = mkStdGen . fromIntegral $ toModifiedJulianDay today
+
       shuffleOrSort
         | shuffle = shuffleTraverseItems gen
         | otherwise =
@@ -277,13 +277,17 @@ viewTaskSamplesWith
                    } ->
                     (note_start, entityId)
               )
+
       notePredicate Entity {entityVal = Note {note_text}} =
         textPredicate (Text.pack $ fromRgaM note_text)
+
       tagPredicate tags = case tagsRequested of
         Tags tagsRequested' ->
           tagsRequested' `isSubsetOf` tags && withoutTags `disjoint` tags
         NoTags -> null tags
-      noteViewPredicate Entity {entityVal = NoteView {tags}} = tagPredicate tags
+
+      noteViewPredicate Entity{entityVal = NoteView{tags}} =
+        tagPredicate $ Set.fromList tags
 
 viewWikiSamples ::
   MonadStorage m =>
@@ -363,9 +367,9 @@ updateTrackedNote ::
   -- | external note (with tags) to insert
   View Note ->
   m ()
-updateTrackedNote oldNotes NoteView {note, tags} = case note of
+updateTrackedNote oldNotes NoteView{note, tags} = case note of
   Note {note_track = Just track} -> do
-    newRefs <- getOrCreateTags tags
+    newRefs <- getOrCreateTags $ Set.fromList tags
     case HashMap.lookup track oldNotes of
       Nothing -> do
         obj <- newObjectFrame note {note_tags = toList newRefs}

@@ -1,23 +1,21 @@
-note:
-  note_start: 2019-10-03
-  note_track:
-    track_url: https://github.com/ff-notes/ff/pull/185
-    track_source: ff-notes/ff
-    track_externalId: '185'
-    track_provider: github
-  note_links: []
-  note_text: |
-    Bump up githab dependency to 0.23
+note_start: 2019-10-03
+note_track:
+  track_url: https://github.com/ff-notes/ff/pull/185
+  track_source: ff-notes/ff
+  track_externalId: '185'
+  track_provider: github
+note_links: []
+note_text: |
+  Bump up githab dependency to 0.23
 
-    Resolves #182
+  Resolves #182
 
-    <!-- Reviewable:start -->
-    ---
-    This change is [<img src="https://reviewable.io/review_button.svg" height="34" align="absmiddle" alt="Reviewable"/>](https://reviewable.io/reviews/ff-notes/ff/185)
-    <!-- Reviewable:end -->
-  note_end: null
-  note_status:
-    tag: TaskStatus
-    contents: Archived
-  note_tags: []
-tags: []
+  <!-- Reviewable:start -->
+  ---
+  This change is [<img src="https://reviewable.io/review_button.svg" height="34" align="absmiddle" alt="Reviewable"/>](https://reviewable.io/reviews/ff-notes/ff/185)
+  <!-- Reviewable:end -->
+note_end: null
+note_status:
+  tag: TaskStatus
+  contents: Archived
+note_tags: {}

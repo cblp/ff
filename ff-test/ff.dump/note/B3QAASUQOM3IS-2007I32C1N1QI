@@ -1,26 +1,20 @@
-note:
-  note_start: 2019-03-19
-  note_track:
-    track_url: https://github.com/ff-notes/ff/issues/139
-    track_source: ff-notes/ff
-    track_externalId: '139'
-    track_provider: github
-  note_links: []
-  note_text: "Comprehensible tracked task error message\n\nThis error message is not
-    comprehensible:\r\n\r\n```\r\n$ ff done 4710P17JRPQ-1333OPN2L\r\nff: Error \"A
-    tracked note must be modified in its source.\" []\r\n```\r\n\r\nShould be something
-    like\r\n```\r\nff: error: A tracked note must be edited in its source: https://github.com/ff-notes/ff/issues/83\r\n```"
-  note_end: null
-  note_status:
-    tag: TaskStatus
-    contents: Archived
-  note_tags:
-  - B/7euI15DXH1+00P01fLmVG
-  - B/7euI15EqMH+00P01fLmVG
-  - B/7euI15DGwV+00P01fLmVG
-  - B/7euI15E2jb+00P01fLmVG
-tags:
-- component_CLI
-- level_Research
-- priority_High
-- type_Bug
+note_start: 2019-03-19
+note_track:
+  track_url: https://github.com/ff-notes/ff/issues/139
+  track_source: ff-notes/ff
+  track_externalId: '139'
+  track_provider: github
+note_links: []
+note_text: "Comprehensible tracked task error message\n\nThis error message is not
+  comprehensible:\r\n\r\n```\r\n$ ff done 4710P17JRPQ-1333OPN2L\r\nff: Error \"A tracked
+  note must be modified in its source.\" []\r\n```\r\n\r\nShould be something like\r\n```\r\nff:
+  error: A tracked note must be edited in its source: https://github.com/ff-notes/ff/issues/83\r\n```"
+note_end: null
+note_status:
+  tag: TaskStatus
+  contents: Archived
+note_tags:
+  B/7euI15E2jb+00P01fLmVG: level_Research
+  B/7euI15EqMH+00P01fLmVG: priority_High
+  B/7euI15DXH1+00P01fLmVG: type_Bug
+  B/7euI15DGwV+00P01fLmVG: component_CLI

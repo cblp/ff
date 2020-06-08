@@ -1,18 +1,16 @@
-note:
-  note_start: 2018-09-05
-  note_track:
-    track_url: https://github.com/ff-notes/ff/issues/95
-    track_source: ff-notes/ff
-    track_externalId: '95'
-    track_provider: github
-  note_links: []
-  note_text: "Colorized output\n\n`printOrPage` from [pager](https://github.com/pharpend/pager/blob/master/System/Pager.hs)
-    shows colors when env Pager = `more`. For `less` it does not. `less` required
-    flag `-r` to show colors.\r\n\r\nWe wait until end of 01.19 for [PR](https://github.com/pharpend/pager/pull/1)
-    approving. "
-  note_end: null
-  note_status:
-    tag: TaskStatus
-    contents: Archived
-  note_tags: []
-tags: []
+note_start: 2018-09-05
+note_track:
+  track_url: https://github.com/ff-notes/ff/issues/95
+  track_source: ff-notes/ff
+  track_externalId: '95'
+  track_provider: github
+note_links: []
+note_text: "Colorized output\n\n`printOrPage` from [pager](https://github.com/pharpend/pager/blob/master/System/Pager.hs)
+  shows colors when env Pager = `more`. For `less` it does not. `less` required flag
+  `-r` to show colors.\r\n\r\nWe wait until end of 01.19 for [PR](https://github.com/pharpend/pager/pull/1)
+  approving. "
+note_end: null
+note_status:
+  tag: TaskStatus
+  contents: Archived
+note_tags: {}

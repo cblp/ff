@@ -1,15 +1,13 @@
-note:
-  note_start: 2018-06-16
-  note_track:
-    track_url: https://github.com/ff-notes/ff/issues/58
-    track_source: ff-notes/ff
-    track_externalId: '58'
-    track_provider: github
-  note_links: []
-  note_text: 'Github sync: extract repository address from git remote "origin"'
-  note_end: null
-  note_status:
-    tag: TaskStatus
-    contents: Archived
-  note_tags: []
-tags: []
+note_start: 2018-06-16
+note_track:
+  track_url: https://github.com/ff-notes/ff/issues/58
+  track_source: ff-notes/ff
+  track_externalId: '58'
+  track_provider: github
+note_links: []
+note_text: 'Github sync: extract repository address from git remote "origin"'
+note_end: null
+note_status:
+  tag: TaskStatus
+  contents: Archived
+note_tags: {}

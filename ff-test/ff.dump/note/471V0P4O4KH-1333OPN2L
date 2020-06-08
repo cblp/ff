@@ -1,16 +1,14 @@
-note:
-  note_start: 2018-01-09
-  note_track:
-    track_url: https://github.com/ff-notes/ff/issues/26
-    track_source: ff-notes/ff
-    track_externalId: '26'
-    track_provider: github
-  note_links: []
-  note_text: "Subcommand to delete notes\n\nstatus = Deleted\r\nset some empty or
-    nonsense values to other fields  "
-  note_end: null
-  note_status:
-    tag: TaskStatus
-    contents: Archived
-  note_tags: []
-tags: []
+note_start: 2018-01-09
+note_track:
+  track_url: https://github.com/ff-notes/ff/issues/26
+  track_source: ff-notes/ff
+  track_externalId: '26'
+  track_provider: github
+note_links: []
+note_text: "Subcommand to delete notes\n\nstatus = Deleted\r\nset some empty or nonsense
+  values to other fields  "
+note_end: null
+note_status:
+  tag: TaskStatus
+  contents: Archived
+note_tags: {}

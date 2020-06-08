@@ -1,22 +1,20 @@
-note:
-  note_start: 2019-12-18
-  note_track:
-    track_url: https://github.com/ff-notes/ff/issues/219
-    track_source: ff-notes/ff
-    track_externalId: '219'
-    track_provider: github
-  note_links: []
-  note_text: |+
-    connect_ editor QTextEdit.textChangedSignal $ saveTheText storage editor
+note_start: 2019-12-18
+note_track:
+  track_url: https://github.com/ff-notes/ff/issues/219
+  track_source: ff-notes/ff
+  track_externalId: '219'
+  track_provider: github
+note_links: []
+note_text: |+
+  connect_ editor QTextEdit.textChangedSignal $ saveTheText storage editor
 
 
-    https://github.com/ff-notes/ff/blob/90c02766fd7bfaa4e87ab6bcbbb4b849221c35a0/ff-qtah/FF/Qt/MainWindow.hs#L123-L126
+  https://github.com/ff-notes/ff/blob/90c02766fd7bfaa4e87ab6bcbbb4b849221c35a0/ff-qtah/FF/Qt/MainWindow.hs#L123-L126
 
-    * Found on master
+  * Found on master
 
-  note_end: null
-  note_status:
-    tag: TaskStatus
-    contents: Active
-  note_tags: []
-tags: []
+note_end: null
+note_status:
+  tag: TaskStatus
+  contents: Active
+note_tags: {}

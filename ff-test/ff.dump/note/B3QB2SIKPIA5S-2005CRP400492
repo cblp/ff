@@ -1,25 +1,19 @@
-note:
-  note_start: 2019-03-21
-  note_track:
-    track_url: https://github.com/ff-notes/ff/issues/143
-    track_source: ff-notes/ff
-    track_externalId: '143'
-    track_provider: github
-  note_links: []
-  note_text: "`ff --help` without dataDir is broken\n\nReproduce:\r\n```\r\nHOME=/a
-    ff --help\r\n```\r\nExpected: help\r\n\r\nGot:\r\n```\r\nff: user error (Data
-    directory isn't set, run ff config dataDir --help)\r\n```"
-  note_end: null
-  note_status:
-    tag: TaskStatus
-    contents: Archived
-  note_tags:
-  - B/7euI15DnJz+00P01fLmVG
-  - B/7euI15DXH1+00P01fLmVG
-  - B/7euI15DGwV+00P01fLmVG
-  - B/7f8c6IMneF+00P01fLmVG
-tags:
-- component_CLI
-- component_ff-qtah
-- level_Intermediate
-- type_Bug
+note_start: 2019-03-21
+note_track:
+  track_url: https://github.com/ff-notes/ff/issues/143
+  track_source: ff-notes/ff
+  track_externalId: '143'
+  track_provider: github
+note_links: []
+note_text: "`ff --help` without dataDir is broken\n\nReproduce:\r\n```\r\nHOME=/a
+  ff --help\r\n```\r\nExpected: help\r\n\r\nGot:\r\n```\r\nff: user error (Data directory
+  isn't set, run ff config dataDir --help)\r\n```"
+note_end: null
+note_status:
+  tag: TaskStatus
+  contents: Archived
+note_tags:
+  B/7euI15DXH1+00P01fLmVG: type_Bug
+  B/7f8c6IMneF+00P01fLmVG: component_CLI
+  B/7euI15DnJz+00P01fLmVG: level_Intermediate
+  B/7euI15DGwV+00P01fLmVG: component_ff-qtah

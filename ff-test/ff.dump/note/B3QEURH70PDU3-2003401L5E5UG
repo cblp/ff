@@ -1,22 +1,20 @@
-note:
-  note_start: 2019-09-24
-  note_track:
-    track_url: https://github.com/ff-notes/ff/pull/176
-    track_source: ff-notes/ff
-    track_externalId: '176'
-    track_provider: github
-  note_links: []
-  note_text: |
-    Add option to remove tag from note
+note_start: 2019-09-24
+note_track:
+  track_url: https://github.com/ff-notes/ff/pull/176
+  track_source: ff-notes/ff
+  track_externalId: '176'
+  track_provider: github
+note_links: []
+note_text: |
+  Add option to remove tag from note
 
 
 
-    <!-- Reviewable:start -->
-    This change is [<img src="https://reviewable.io/review_button.svg" height="34" align="absmiddle" alt="Reviewable"/>](https://reviewable.io/reviews/ff-notes/ff/176)
-    <!-- Reviewable:end -->
-  note_end: null
-  note_status:
-    tag: TaskStatus
-    contents: Archived
-  note_tags: []
-tags: []
+  <!-- Reviewable:start -->
+  This change is [<img src="https://reviewable.io/review_button.svg" height="34" align="absmiddle" alt="Reviewable"/>](https://reviewable.io/reviews/ff-notes/ff/176)
+  <!-- Reviewable:end -->
+note_end: null
+note_status:
+  tag: TaskStatus
+  contents: Archived
+note_tags: {}

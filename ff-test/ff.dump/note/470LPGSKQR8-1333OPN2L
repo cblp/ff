@@ -1,18 +1,16 @@
-note:
-  note_start: 2018-07-26
-  note_track:
-    track_url: https://github.com/ff-notes/ff/issues/77
-    track_source: ff-notes/ff
-    track_externalId: '77'
-    track_provider: github
-  note_links: []
-  note_text: |-
-    ff serve: open browser
+note_start: 2018-07-26
+note_track:
+  track_url: https://github.com/ff-notes/ff/issues/77
+  track_source: ff-notes/ff
+  track_externalId: '77'
+  track_provider: github
+note_links: []
+note_text: |-
+  ff serve: open browser
 
-    not default; with option `-o` | `--open`
-  note_end: null
-  note_status:
-    tag: TaskStatus
-    contents: Archived
-  note_tags: []
-tags: []
+  not default; with option `-o` | `--open`
+note_end: null
+note_status:
+  tag: TaskStatus
+  contents: Archived
+note_tags: {}

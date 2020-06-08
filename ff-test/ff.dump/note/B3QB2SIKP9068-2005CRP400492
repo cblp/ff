@@ -1,23 +1,21 @@
-note:
-  note_start: 2019-04-19
-  note_track:
-    track_url: https://github.com/ff-notes/ff/pull/156
-    track_source: ff-notes/ff
-    track_externalId: '156'
-    track_provider: github
-  note_links: []
-  note_text: |
-    Make error comprehensible
+note_start: 2019-04-19
+note_track:
+  track_url: https://github.com/ff-notes/ff/pull/156
+  track_source: ff-notes/ff
+  track_externalId: '156'
+  track_provider: github
+note_links: []
+note_text: |
+  Make error comprehensible
 
-    Resolves #139
+  Resolves #139
 
-    <!-- Reviewable:start -->
-    ---
-    This change is [<img src="https://reviewable.io/review_button.svg" height="34" align="absmiddle" alt="Reviewable"/>](https://reviewable.io/reviews/ff-notes/ff/156)
-    <!-- Reviewable:end -->
-  note_end: null
-  note_status:
-    tag: TaskStatus
-    contents: Archived
-  note_tags: []
-tags: []
+  <!-- Reviewable:start -->
+  ---
+  This change is [<img src="https://reviewable.io/review_button.svg" height="34" align="absmiddle" alt="Reviewable"/>](https://reviewable.io/reviews/ff-notes/ff/156)
+  <!-- Reviewable:end -->
+note_end: null
+note_status:
+  tag: TaskStatus
+  contents: Archived
+note_tags: {}

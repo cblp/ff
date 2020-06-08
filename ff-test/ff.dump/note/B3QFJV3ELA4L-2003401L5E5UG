@@ -1,15 +1,13 @@
-note:
-  note_start: 2019-10-21
-  note_track:
-    track_url: https://github.com/ff-notes/ff/issues/201
-    track_source: ff-notes/ff
-    track_externalId: '201'
-    track_provider: github
-  note_links: []
-  note_text: Add option for creating contacts
-  note_end: null
-  note_status:
-    tag: TaskStatus
-    contents: Archived
-  note_tags: []
-tags: []
+note_start: 2019-10-21
+note_track:
+  track_url: https://github.com/ff-notes/ff/issues/201
+  track_source: ff-notes/ff
+  track_externalId: '201'
+  track_provider: github
+note_links: []
+note_text: Add option for creating contacts
+note_end: null
+note_status:
+  tag: TaskStatus
+  contents: Archived
+note_tags: {}

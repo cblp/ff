@@ -1,26 +1,19 @@
-note:
-  note_start: 2019-04-09
-  note_track:
-    track_url: https://github.com/ff-notes/ff/issues/153
-    track_source: ff-notes/ff
-    track_externalId: '153'
-    track_provider: github
-  note_links: []
-  note_text: "Add Config tests\n\nProblem: When `ff config directory` set to proper
-    directory, `ff` fails with noDataDirectoryMessage\r\n\r\nExpected: when can't
-    determine data directory, show error; when data directory can be determined, show
-    data."
-  note_end: null
-  note_status:
-    tag: TaskStatus
-    contents: Archived
-  note_tags:
-  - B/7euI15Dna7+00P01fLmVG
-  - B/7euI15DnJz+00P01fLmVG
-  - B/7euI15DXH1+00P01fLmVG
-  - B/7euI15DGwV+00P01fLmVG
-tags:
-- component_CLI
-- level_Intermediate
-- type_Bug
-- type_Task
+note_start: 2019-04-09
+note_track:
+  track_url: https://github.com/ff-notes/ff/issues/153
+  track_source: ff-notes/ff
+  track_externalId: '153'
+  track_provider: github
+note_links: []
+note_text: "Add Config tests\n\nProblem: When `ff config directory` set to proper
+  directory, `ff` fails with noDataDirectoryMessage\r\n\r\nExpected: when can't determine
+  data directory, show error; when data directory can be determined, show data."
+note_end: null
+note_status:
+  tag: TaskStatus
+  contents: Archived
+note_tags:
+  B/7euI15Dna7+00P01fLmVG: type_Task
+  B/7euI15DXH1+00P01fLmVG: type_Bug
+  B/7euI15DnJz+00P01fLmVG: level_Intermediate
+  B/7euI15DGwV+00P01fLmVG: component_CLI

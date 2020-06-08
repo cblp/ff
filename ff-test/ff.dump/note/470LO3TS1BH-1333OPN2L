@@ -1,15 +1,13 @@
-note:
-  note_start: 2018-07-26
-  note_track:
-    track_url: https://github.com/ff-notes/ff/issues/75
-    track_source: ff-notes/ff
-    track_externalId: '75'
-    track_provider: github
-  note_links: []
-  note_text: Close issue in ff after closing on github
-  note_end: null
-  note_status:
-    tag: TaskStatus
-    contents: Archived
-  note_tags: []
-tags: []
+note_start: 2018-07-26
+note_track:
+  track_url: https://github.com/ff-notes/ff/issues/75
+  track_source: ff-notes/ff
+  track_externalId: '75'
+  track_provider: github
+note_links: []
+note_text: Close issue in ff after closing on github
+note_end: null
+note_status:
+  tag: TaskStatus
+  contents: Archived
+note_tags: {}

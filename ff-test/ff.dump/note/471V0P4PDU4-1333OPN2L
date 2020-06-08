@@ -1,17 +1,15 @@
-note:
-  note_start: 2018-01-08
-  note_track:
-    track_url: https://github.com/ff-notes/ff/issues/7
-    track_source: ff-notes/ff
-    track_externalId: '7'
-    track_provider: github
-  note_links: []
-  note_text: "Setting dataDir should prompt to create it\n\nOtherwise, until a first
-    note recorded:\r\n```\r\n$ ff\r\nff: /home/user/.local/share/ff/note: getDirectoryContents:openDirStream:
-    does not exist (No such file or directory)\r\n```"
-  note_end: null
-  note_status:
-    tag: TaskStatus
-    contents: Archived
-  note_tags: []
-tags: []
+note_start: 2018-01-08
+note_track:
+  track_url: https://github.com/ff-notes/ff/issues/7
+  track_source: ff-notes/ff
+  track_externalId: '7'
+  track_provider: github
+note_links: []
+note_text: "Setting dataDir should prompt to create it\n\nOtherwise, until a first
+  note recorded:\r\n```\r\n$ ff\r\nff: /home/user/.local/share/ff/note: getDirectoryContents:openDirStream:
+  does not exist (No such file or directory)\r\n```"
+note_end: null
+note_status:
+  tag: TaskStatus
+  contents: Archived
+note_tags: {}

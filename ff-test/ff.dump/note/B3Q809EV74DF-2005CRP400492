@@ -1,15 +1,13 @@
-note:
-  note_start: 2018-12-15
-  note_track:
-    track_url: https://github.com/ff-notes/ff/issues/111
-    track_source: ff-notes/ff
-    track_externalId: '111'
-    track_provider: github
-  note_links: []
-  note_text: 'Desktop app: try gi-gtk-declarative'
-  note_end: null
-  note_status:
-    tag: TaskStatus
-    contents: Archived
-  note_tags: []
-tags: []
+note_start: 2018-12-15
+note_track:
+  track_url: https://github.com/ff-notes/ff/issues/111
+  track_source: ff-notes/ff
+  track_externalId: '111'
+  track_provider: github
+note_links: []
+note_text: 'Desktop app: try gi-gtk-declarative'
+note_end: null
+note_status:
+  tag: TaskStatus
+  contents: Archived
+note_tags: {}

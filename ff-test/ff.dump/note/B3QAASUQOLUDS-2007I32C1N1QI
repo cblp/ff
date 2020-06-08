@@ -1,23 +1,18 @@
-note:
-  note_start: 2019-03-19
-  note_track:
-    track_url: https://github.com/ff-notes/ff/issues/140
-    track_source: ff-notes/ff
-    track_externalId: '140'
-    track_provider: github
-  note_links: []
-  note_text: "Show history/log of document changes\n\nSketch:\r\n```\r\n$ ff history
-    1234-ABCD\r\n* 2019-11-11\r\n  Text:\r\n     alfa\r\n    -bravo\r\n    +charlie\r\n*
-    2019-11-12\r\n  Added tag delta\r\n* 2019-11-13\r\n  Removed tags: echo, foxtrot\r\n```"
-  note_end: null
-  note_status:
-    tag: TaskStatus
-    contents: Active
-  note_tags:
-  - B/7euI15DBES+00P01fLmVG
-  - B/7euI15DAJq+00P01fLmVG
-  - B/7euI15E2jb+00P01fLmVG
-tags:
-- component_Core
-- level_Research
-- type_Enhancement
+note_start: 2019-03-19
+note_track:
+  track_url: https://github.com/ff-notes/ff/issues/140
+  track_source: ff-notes/ff
+  track_externalId: '140'
+  track_provider: github
+note_links: []
+note_text: "Show history/log of document changes\n\nSketch:\r\n```\r\n$ ff history
+  1234-ABCD\r\n* 2019-11-11\r\n  Text:\r\n     alfa\r\n    -bravo\r\n    +charlie\r\n*
+  2019-11-12\r\n  Added tag delta\r\n* 2019-11-13\r\n  Removed tags: echo, foxtrot\r\n```"
+note_end: null
+note_status:
+  tag: TaskStatus
+  contents: Active
+note_tags:
+  B/7euI15E2jb+00P01fLmVG: level_Research
+  B/7euI15DAJq+00P01fLmVG: component_Core
+  B/7euI15DBES+00P01fLmVG: type_Enhancement

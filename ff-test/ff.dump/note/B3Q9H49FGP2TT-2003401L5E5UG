@@ -1,22 +1,18 @@
-note:
-  note_start: 2019-01-07
-  note_track:
-    track_url: https://github.com/ff-notes/ff/issues/115
-    track_source: ff-notes/ff
-    track_externalId: '115'
-    track_provider: github
-  note_links: []
-  note_text: |-
-    Pack Ubuntu packages
+note_start: 2019-01-07
+note_track:
+  track_url: https://github.com/ff-notes/ff/issues/115
+  track_source: ff-notes/ff
+  track_externalId: '115'
+  track_provider: github
+note_links: []
+note_text: |-
+  Pack Ubuntu packages
 
-    deb/snap
-  note_end: null
-  note_status:
-    tag: TaskStatus
-    contents: Active
-  note_tags:
-  - B/7euI15DBES+00P01fLmVG
-  - B/7euI15DnJz+00P01fLmVG
-tags:
-- level_Intermediate
-- type_Enhancement
+  deb/snap
+note_end: null
+note_status:
+  tag: TaskStatus
+  contents: Active
+note_tags:
+  B/7euI15DBES+00P01fLmVG: type_Enhancement
+  B/7euI15DnJz+00P01fLmVG: level_Intermediate

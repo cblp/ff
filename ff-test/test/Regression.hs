@@ -1,3 +1,5 @@
+{-# OPTIONS_GHC -Wno-orphans #-}
+
 {-# LANGUAGE AllowAmbiguousTypes #-}
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE NamedFieldPuns #-}
@@ -5,68 +7,28 @@
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE TypeApplications #-}
-{-# OPTIONS_GHC -Wno-orphans #-}
 
 module Regression
   ( mkRegressionTest,
   )
 where
 
-import Data.Aeson (ToJSON (toJSON), Value (String))
-import Data.Aeson.TH (defaultOptions, deriveToJSON)
-import qualified Data.Text as Text
-import Data.Traversable (for)
-import Data.Yaml (encodeFile)
-import FF (load, viewNote)
-import FF.Types
-  ( Entity (Entity, entityVal),
-    Link,
-    LinkType,
-    Note,
-    NoteId,
-    NoteStatus,
-    Status,
-    Tag,
-    TagId,
-    Track,
-    View (NoteView),
-    loadNote,
-  )
-import RON.Data.ORSet (ORSet)
-import RON.Data.RGA (RGA)
-import RON.Storage (CollectionName)
-import RON.Storage.Backend (getCollections, getDocuments)
-import RON.Storage.FS (Handle, newHandle, runStorage)
-import RON.Types (ObjectRef, UUID)
-import System.Directory (createDirectoryIfMissing)
-import System.FilePath ((</>), takeDirectory)
-import Test.Tasty (TestTree, testGroup)
-import Test.Tasty.Golden (goldenVsFileDiff)
-
-deriveToJSON defaultOptions ''Link
-
-deriveToJSON defaultOptions ''LinkType
-
-deriveToJSON defaultOptions ''Note
-
-deriveToJSON defaultOptions ''NoteStatus
-
-deriveToJSON defaultOptions ''ObjectRef
+import           Data.Aeson.TH (defaultOptions, deriveToJSON)
+import           Data.Traversable (for)
+import           Data.Yaml (encodeFile)
+import           FF (load, viewNote)
+import           FF.Types (Entity (Entity, entityVal), Note, NoteId, Tag, TagId,
+                           loadNote)
+import           RON.Data.ORSet (ORSet)
+import           RON.Storage (CollectionName)
+import           RON.Storage.Backend (getCollections, getDocuments)
+import           RON.Storage.FS (Handle, newHandle, runStorage)
+import           System.Directory (createDirectoryIfMissing)
+import           System.FilePath (takeDirectory, (</>))
+import           Test.Tasty (TestTree, testGroup)
+import           Test.Tasty.Golden (goldenVsFileDiff)
 
 deriveToJSON defaultOptions ''ORSet
-
-deriveToJSON defaultOptions ''RGA
-
-deriveToJSON defaultOptions ''Status
-
-deriveToJSON defaultOptions ''Tag
-
-deriveToJSON defaultOptions ''Track
-
-deriveToJSON defaultOptions 'NoteView
-
-instance ToJSON UUID where
-  toJSON = String . Text.dropAround (== '"') . Text.pack . show
 
 mkRegressionTest :: IO (FilePath -> TestTree)
 mkRegressionTest = do

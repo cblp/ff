@@ -1,20 +1,18 @@
-note:
-  note_start: 2018-01-28
-  note_track:
-    track_url: https://github.com/ff-notes/ff/issues/32
-    track_source: ff-notes/ff
-    track_externalId: '32'
-    track_provider: github
-  note_links: []
-  note_text: "Re-write agenda sections\n\n```haskell\r\n-- | haskellish pseudocode
-    for agenda sections logic\r\nagendaSection start end\r\n    | end == Nothing    =
-    if\r\n        | start <= today -> Actual\r\n        | start >  today -> StartingSoon\r\n
-    \   | end <  Just today =   Overdue\r\n    | end == Just today =   DueToday\r\n
-    \   | end >  Just today = if\r\n        | start <= today -> EndingSoon\r\n        |
-    start >  today -> StartingSoon\r\n```"
-  note_end: null
-  note_status:
-    tag: TaskStatus
-    contents: Archived
-  note_tags: []
-tags: []
+note_start: 2018-01-28
+note_track:
+  track_url: https://github.com/ff-notes/ff/issues/32
+  track_source: ff-notes/ff
+  track_externalId: '32'
+  track_provider: github
+note_links: []
+note_text: "Re-write agenda sections\n\n```haskell\r\n-- | haskellish pseudocode for
+  agenda sections logic\r\nagendaSection start end\r\n    | end == Nothing    = if\r\n
+  \       | start <= today -> Actual\r\n        | start >  today -> StartingSoon\r\n
+  \   | end <  Just today =   Overdue\r\n    | end == Just today =   DueToday\r\n
+  \   | end >  Just today = if\r\n        | start <= today -> EndingSoon\r\n        |
+  start >  today -> StartingSoon\r\n```"
+note_end: null
+note_status:
+  tag: TaskStatus
+  contents: Archived
+note_tags: {}

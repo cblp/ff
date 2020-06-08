@@ -16,7 +16,6 @@ import           Control.Monad.Except (ExceptT (..), liftIO, throwError,
                                        withExceptT)
 import           Data.Foldable (toList)
 import           Data.Semigroup ((<>))
-import qualified Data.Set as Set
 import           Data.Text (Text)
 import qualified Data.Text as Text
 import qualified Data.Text.Lazy as TextL
@@ -148,7 +147,7 @@ issueToNote address Issue{..} = NoteView
     body = case issueBody of
         Nothing -> ""
         Just b  -> if Text.null b then "" else "\n\n" <> b
-    labels = Set.fromList $ map (untagName . labelName) $ toList issueLabels
+    labels = map (untagName . labelName) $ toList issueLabels
 
 toStatus :: IssueState -> NoteStatus
 toStatus = \case

@@ -1,13 +1,11 @@
-note:
-  note_start: 2018-07-06
-  note_track: null
-  note_links: []
-  note_text: track issues from external sources by (1) copying them into ff with special
-    label "tracking" and link to their source, (2) updating their content regularly,
-    (3) disabling editing in ff
-  note_end: null
-  note_status:
-    tag: TaskStatus
-    contents: Archived
-  note_tags: []
-tags: []
+note_start: 2018-07-06
+note_track: null
+note_links: []
+note_text: track issues from external sources by (1) copying them into ff with special
+  label "tracking" and link to their source, (2) updating their content regularly,
+  (3) disabling editing in ff
+note_end: null
+note_status:
+  tag: TaskStatus
+  contents: Archived
+note_tags: {}

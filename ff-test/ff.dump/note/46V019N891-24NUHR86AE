@@ -1,18 +1,16 @@
-note:
-  note_start: 2018-06-16
-  note_track:
-    track_url: https://github.com/ff-notes/ff/issues/59
-    track_source: ff-notes/ff
-    track_externalId: '59'
-    track_provider: github
-  note_links: []
-  note_text: |-
-    export issue status (ff -> GitHub)
+note_start: 2018-06-16
+note_track:
+  track_url: https://github.com/ff-notes/ff/issues/59
+  track_source: ff-notes/ff
+  track_externalId: '59'
+  track_provider: github
+note_links: []
+note_text: |-
+  export issue status (ff -> GitHub)
 
-    close GitHub issue and sync it with ff when a user tries to complete the task in ff
-  note_end: null
-  note_status:
-    tag: TaskStatus
-    contents: Active
-  note_tags: []
-tags: []
+  close GitHub issue and sync it with ff when a user tries to complete the task in ff
+note_end: null
+note_status:
+  tag: TaskStatus
+  contents: Active
+note_tags: {}

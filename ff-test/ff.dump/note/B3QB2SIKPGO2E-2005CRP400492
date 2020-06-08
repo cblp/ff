@@ -1,26 +1,20 @@
-note:
-  note_start: 2019-03-31
-  note_track:
-    track_url: https://github.com/ff-notes/ff/issues/147
-    track_source: ff-notes/ff
-    track_externalId: '147'
-    track_provider: github
-  note_links: []
-  note_text: |-
-    Archived & Deleted for Wiki & Contact
+note_start: 2019-03-31
+note_track:
+  track_url: https://github.com/ff-notes/ff/issues/147
+  track_source: ff-notes/ff
+  track_externalId: '147'
+  track_provider: github
+note_links: []
+note_text: |-
+  Archived & Deleted for Wiki & Contact
 
-    Do all status-type combinations have meaning?
-  note_end: null
-  note_status:
-    tag: TaskStatus
-    contents: Archived
-  note_tags:
-  - B/7euI15DXH1+00P01fLmVG
-  - B/7euI15EqMH+00P01fLmVG
-  - B/7euI15DAJq+00P01fLmVG
-  - B/7euI15E2jb+00P01fLmVG
-tags:
-- component_Core
-- level_Research
-- priority_High
-- type_Bug
+  Do all status-type combinations have meaning?
+note_end: null
+note_status:
+  tag: TaskStatus
+  contents: Archived
+note_tags:
+  B/7euI15E2jb+00P01fLmVG: level_Research
+  B/7euI15EqMH+00P01fLmVG: priority_High
+  B/7euI15DAJq+00P01fLmVG: component_Core
+  B/7euI15DXH1+00P01fLmVG: type_Bug

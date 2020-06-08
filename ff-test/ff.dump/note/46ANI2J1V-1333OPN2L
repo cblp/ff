@@ -1,11 +1,9 @@
-note:
-  note_start: 2018-05-15
-  note_track: null
-  note_links: []
-  note_text: раскрашивать разными цветами текст от разных пользователей
-  note_end: null
-  note_status:
-    tag: TaskStatus
-    contents: Archived
-  note_tags: []
-tags: []
+note_start: 2018-05-15
+note_track: null
+note_links: []
+note_text: раскрашивать разными цветами текст от разных пользователей
+note_end: null
+note_status:
+  tag: TaskStatus
+  contents: Archived
+note_tags: {}
