@@ -1,22 +1,17 @@
-note:
-  note_start: 2019-02-14
-  note_track:
-    track_url: https://github.com/ff-notes/ff/issues/122
-    track_source: ff-notes/ff
-    track_externalId: '122'
-    track_provider: github
-  note_links: []
-  note_text: "Decrease dependencies\n\n- https://gitlab.com/dpwiz/hedn/issues/28\r\n-
-    https://github.com/fpco/inline-c/pull/85"
-  note_end: null
-  note_status:
-    tag: TaskStatus
-    contents: Active
-  note_tags:
-  - B/7euI15DBES+00P01fLmVG
-  - B/7euI15DnJz+00P01fLmVG
-  - B/7euI15DAJq+00P01fLmVG
-tags:
+note_start: 2019-02-14
+note_track:
+  track_url: https://github.com/ff-notes/ff/issues/122
+  track_source: ff-notes/ff
+  track_externalId: '122'
+  track_provider: github
+note_links: []
+note_text: "Decrease dependencies\n\n- https://gitlab.com/dpwiz/hedn/issues/28\r\n-
+  https://github.com/fpco/inline-c/pull/85"
+note_end: null
+note_status:
+  tag: TaskStatus
+  contents: Active
+note_tags:
   B/7euI15DAJq+00P01fLmVG: component_Core
   B/7euI15DBES+00P01fLmVG: type_Enhancement
   B/7euI15DnJz+00P01fLmVG: level_Intermediate

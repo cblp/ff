@@ -1,22 +1,20 @@
-note:
-  note_start: 2018-01-08
-  note_track:
-    track_url: https://github.com/ff-notes/ff/issues/10
-    track_source: ff-notes/ff
-    track_externalId: '10'
-    track_provider: github
-  note_links: []
-  note_text: "List issues from Github\n\n- [x] fetch issues from GitHub with `ff github
-    --list`\r\n- [x] allow a user to specify repository to operate\r\n- [x] change
-    option `ff github --list` to subcommand `ff github list`\r\n- [x] render github
-    issues with ff output mechanism (NoteView)\r\n- [x] use `taskMode` to get proper
-    state in `ff github llist`\r\n- [x] replace `groupSort` with sorted Map construction\r\n-
-    [x] merge `FF.takeSamples` with `Github.sampleMaps.takeFromMany`\n- [x] limit
-    via [pagination](https://developer.github.com/v3/#pagination)\r\n- [x] add test
-    with reference GitHub response and golden NoteView output\r\n"
-  note_end: null
-  note_status:
-    tag: TaskStatus
-    contents: Archived
-  note_tags: []
-tags: {}
+note_start: 2018-01-08
+note_track:
+  track_url: https://github.com/ff-notes/ff/issues/10
+  track_source: ff-notes/ff
+  track_externalId: '10'
+  track_provider: github
+note_links: []
+note_text: "List issues from Github\n\n- [x] fetch issues from GitHub with `ff github
+  --list`\r\n- [x] allow a user to specify repository to operate\r\n- [x] change option
+  `ff github --list` to subcommand `ff github list`\r\n- [x] render github issues
+  with ff output mechanism (NoteView)\r\n- [x] use `taskMode` to get proper state
+  in `ff github llist`\r\n- [x] replace `groupSort` with sorted Map construction\r\n-
+  [x] merge `FF.takeSamples` with `Github.sampleMaps.takeFromMany`\n- [x] limit via
+  [pagination](https://developer.github.com/v3/#pagination)\r\n- [x] add test with
+  reference GitHub response and golden NoteView output\r\n"
+note_end: null
+note_status:
+  tag: TaskStatus
+  contents: Archived
+note_tags: {}

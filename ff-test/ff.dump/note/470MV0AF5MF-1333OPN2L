@@ -1,18 +1,16 @@
-note:
-  note_start: 2018-07-26
-  note_track:
-    track_url: https://github.com/ff-notes/ff/issues/78
-    track_source: ff-notes/ff
-    track_externalId: '78'
-    track_provider: github
-  note_links: []
-  note_text: |-
-    Track issue content
+note_start: 2018-07-26
+note_track:
+  track_url: https://github.com/ff-notes/ff/issues/78
+  track_source: ff-notes/ff
+  track_externalId: '78'
+  track_provider: github
+note_links: []
+note_text: |-
+  Track issue content
 
-    along with title
-  note_end: null
-  note_status:
-    tag: TaskStatus
-    contents: Archived
-  note_tags: []
-tags: {}
+  along with title
+note_end: null
+note_status:
+  tag: TaskStatus
+  contents: Archived
+note_tags: {}

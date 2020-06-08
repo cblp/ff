@@ -1,24 +1,18 @@
-note:
-  note_start: 2018-07-31
-  note_track:
-    track_url: https://github.com/ff-notes/ff/issues/21
-    track_source: ff-notes/ff
-    track_externalId: '21'
-    track_provider: github
-  note_links: []
-  note_text: "Contexts\n\nImplement type (or types?) for different contexts (as in
-    GTD)\r\n- location:\r\n  - predefined: Moscow, London\r\n  - user-defined: work,
-    home\r\n- time: Monday, weekend, morning\r\n- user state: on the internet, on
-    phone"
-  note_end: null
-  note_status:
-    tag: TaskStatus
-    contents: Active
-  note_tags:
-  - B/7euI15DBES+00P01fLmVG
-  - B/7euI15DAJq+00P01fLmVG
-  - B/7euI15E2jb+00P01fLmVG
-tags:
+note_start: 2018-07-31
+note_track:
+  track_url: https://github.com/ff-notes/ff/issues/21
+  track_source: ff-notes/ff
+  track_externalId: '21'
+  track_provider: github
+note_links: []
+note_text: "Contexts\n\nImplement type (or types?) for different contexts (as in GTD)\r\n-
+  location:\r\n  - predefined: Moscow, London\r\n  - user-defined: work, home\r\n-
+  time: Monday, weekend, morning\r\n- user state: on the internet, on phone"
+note_end: null
+note_status:
+  tag: TaskStatus
+  contents: Active
+note_tags:
   B/7euI15E2jb+00P01fLmVG: level_Research
   B/7euI15DAJq+00P01fLmVG: component_Core
   B/7euI15DBES+00P01fLmVG: type_Enhancement

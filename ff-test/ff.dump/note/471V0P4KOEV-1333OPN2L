@@ -1,24 +1,22 @@
-note:
-  note_start: 2018-07-07
-  note_track:
-    track_url: https://github.com/ff-notes/ff/pull/67
-    track_source: ff-notes/ff
-    track_externalId: '67'
-    track_provider: github
-  note_links: []
-  note_text: "Add tracking\n\nПока частичная реализация. Функция записи в базу не
-    доведена до конца. \r\nСтопор возникает с тем, что _agenda_ ломается. Сначала
-    изменение типов помогло\r\n```haskell\r\n...\r\n    , noteTrack  :: LWW (Maybe
-    Tracked)\r\n    }\r\n    deriving (Eq, Show)\r\n\r\ndata Tracked = Tracked\r\n
-    \   { noteExtId  :: Text\r\n    , noteSource :: Text\r\n    }\r\n    deriving
-    (Eq, Show)\r\n```\r\nТак _agenda_ начала работать, но сейчас снова не работает.
-    Уже не помню после каких изменений.\r\nВроде делал _newTrack_ and _cmdTrack_ в
-    _FF.hs_.\r\n\r\n<!-- Reviewable:start -->\r\n---\r\nThis change is [<img src=\"https://reviewable.io/review_button.svg\"
-    height=\"34\" align=\"absmiddle\" alt=\"Reviewable\"/>](https://reviewable.io/reviews/ff-notes/ff/67)\r\n<!--
-    Reviewable:end -->\r\n"
-  note_end: null
-  note_status:
-    tag: TaskStatus
-    contents: Archived
-  note_tags: []
-tags: {}
+note_start: 2018-07-07
+note_track:
+  track_url: https://github.com/ff-notes/ff/pull/67
+  track_source: ff-notes/ff
+  track_externalId: '67'
+  track_provider: github
+note_links: []
+note_text: "Add tracking\n\nПока частичная реализация. Функция записи в базу не доведена
+  до конца. \r\nСтопор возникает с тем, что _agenda_ ломается. Сначала изменение типов
+  помогло\r\n```haskell\r\n...\r\n    , noteTrack  :: LWW (Maybe Tracked)\r\n    }\r\n
+  \   deriving (Eq, Show)\r\n\r\ndata Tracked = Tracked\r\n    { noteExtId  :: Text\r\n
+  \   , noteSource :: Text\r\n    }\r\n    deriving (Eq, Show)\r\n```\r\nТак _agenda_
+  начала работать, но сейчас снова не работает. Уже не помню после каких изменений.\r\nВроде
+  делал _newTrack_ and _cmdTrack_ в _FF.hs_.\r\n\r\n<!-- Reviewable:start -->\r\n---\r\nThis
+  change is [<img src=\"https://reviewable.io/review_button.svg\" height=\"34\" align=\"absmiddle\"
+  alt=\"Reviewable\"/>](https://reviewable.io/reviews/ff-notes/ff/67)\r\n<!-- Reviewable:end
+  -->\r\n"
+note_end: null
+note_status:
+  tag: TaskStatus
+  contents: Archived
+note_tags: {}

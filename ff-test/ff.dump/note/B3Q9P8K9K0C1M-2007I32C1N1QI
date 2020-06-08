@@ -1,41 +1,35 @@
-note:
-  note_start: 2019-02-25
-  note_track:
-    track_url: https://github.com/ff-notes/ff/issues/126
-    track_source: ff-notes/ff
-    track_externalId: '126'
-    track_provider: github
-  note_links: []
-  note_text: "repeating tasks\n\n`done` moves to future in fixed period; may be useful
-    for utility payments, or for other regular routines.\r\n\r\nThis is how org-mode
-    handles repeated tasks:\r\n\r\n> With the ‘+1m’ cookie, the date shift is always
-    exactly one month. So if you have not paid the rent for three months, marking
-    this entry DONE still keeps it as an overdue deadline. Depending on the task,
-    this may not be the best way to handle it. For example, if you forgot to call
-    your father for 3 weeks, it does not make sense to call him 3 times in a single
-    day to make up for it. Finally, there are tasks like changing batteries which
-    should always repeat a certain time after the last time you did it. For these
-    tasks, Org mode has special repeaters ‘++’ and ‘.+’. For example:\r\n\r\n```\r\n**
-    TODO Call Father\r\n   DEADLINE: <2008-02-10 Sun ++1w>\r\n   Marking this DONE
-    shifts the date by at least one week, but also\r\n   by as many weeks as it takes
-    to get this date into the future.\r\n   However, it stays on a Sunday, even if
-    you called and marked it\r\n   done on Saturday.\r\n\r\n** TODO Empty kitchen
-    trash\r\n   DEADLINE: <2008-02-08 Fri 20:00 ++1d>\r\n   Marking this DONE shifts
-    the date by at least one day, and also\r\n   by as many days as it takes to get
-    the timestamp into the future.\r\n   Since there is a time in the timestamp, the
-    next deadline in the\r\n   future will be on today's date if you complete the
-    task before\r\n   20:00.\r\n\r\n** TODO Check the batteries in the smoke detectors\r\n
-    \  DEADLINE: <2005-11-01 Tue .+1m>\r\n   Marking this DONE will shift the date
-    to one month after today.\r\n```"
-  note_end: null
-  note_status:
-    tag: TaskStatus
-    contents: Active
-  note_tags:
-  - B/7euI15E31g+00P01fLmVG
-  - B/7euI15DAJq+00P01fLmVG
-  - B/7euI15E2jb+00P01fLmVG
-tags:
+note_start: 2019-02-25
+note_track:
+  track_url: https://github.com/ff-notes/ff/issues/126
+  track_source: ff-notes/ff
+  track_externalId: '126'
+  track_provider: github
+note_links: []
+note_text: "repeating tasks\n\n`done` moves to future in fixed period; may be useful
+  for utility payments, or for other regular routines.\r\n\r\nThis is how org-mode
+  handles repeated tasks:\r\n\r\n> With the ‘+1m’ cookie, the date shift is always
+  exactly one month. So if you have not paid the rent for three months, marking this
+  entry DONE still keeps it as an overdue deadline. Depending on the task, this may
+  not be the best way to handle it. For example, if you forgot to call your father
+  for 3 weeks, it does not make sense to call him 3 times in a single day to make
+  up for it. Finally, there are tasks like changing batteries which should always
+  repeat a certain time after the last time you did it. For these tasks, Org mode
+  has special repeaters ‘++’ and ‘.+’. For example:\r\n\r\n```\r\n** TODO Call Father\r\n
+  \  DEADLINE: <2008-02-10 Sun ++1w>\r\n   Marking this DONE shifts the date by at
+  least one week, but also\r\n   by as many weeks as it takes to get this date into
+  the future.\r\n   However, it stays on a Sunday, even if you called and marked it\r\n
+  \  done on Saturday.\r\n\r\n** TODO Empty kitchen trash\r\n   DEADLINE: <2008-02-08
+  Fri 20:00 ++1d>\r\n   Marking this DONE shifts the date by at least one day, and
+  also\r\n   by as many days as it takes to get the timestamp into the future.\r\n
+  \  Since there is a time in the timestamp, the next deadline in the\r\n   future
+  will be on today's date if you complete the task before\r\n   20:00.\r\n\r\n** TODO
+  Check the batteries in the smoke detectors\r\n   DEADLINE: <2005-11-01 Tue .+1m>\r\n
+  \  Marking this DONE will shift the date to one month after today.\r\n```"
+note_end: null
+note_status:
+  tag: TaskStatus
+  contents: Active
+note_tags:
   B/7euI15E2jb+00P01fLmVG: level_Research
   B/7euI15DAJq+00P01fLmVG: component_Core
   B/7euI15E31g+00P01fLmVG: type_Idea

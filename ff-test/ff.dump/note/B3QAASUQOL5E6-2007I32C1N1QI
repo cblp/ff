@@ -1,22 +1,18 @@
-note:
-  note_start: 2019-03-19
-  note_track:
-    track_url: https://github.com/ff-notes/ff/issues/142
-    track_source: ff-notes/ff
-    track_externalId: '142'
-    track_provider: github
-  note_links: []
-  note_text: |-
-    Add option to build in an isolated environment
+note_start: 2019-03-19
+note_track:
+  track_url: https://github.com/ff-notes/ff/issues/142
+  track_source: ff-notes/ff
+  track_externalId: '142'
+  track_provider: github
+note_links: []
+note_text: |-
+  Add option to build in an isolated environment
 
-    Add Docker config
-  note_end: null
-  note_status:
-    tag: TaskStatus
-    contents: Active
-  note_tags:
-  - B/7euI15DBES+00P01fLmVG
-  - B/7euI15DnJz+00P01fLmVG
-tags:
+  Add Docker config
+note_end: null
+note_status:
+  tag: TaskStatus
+  contents: Active
+note_tags:
   B/7euI15DBES+00P01fLmVG: type_Enhancement
   B/7euI15DnJz+00P01fLmVG: level_Intermediate

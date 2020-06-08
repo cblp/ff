@@ -3,8 +3,8 @@ cabal-version: >= 1.10
 name: ff-core
 version: 0
 copyright:
-    2018 Yuriy Syrovetskiy, Nikolay Loginov;
-    2019 Yuriy Syrovetskiy
+    2018      Yuriy Syrovetskiy, Nikolay Loginov;
+    2019-2020 Yuriy Syrovetskiy
 
 build-type: Simple
 
@@ -12,6 +12,7 @@ library
     build-depends:
         -- global
         aeson,
+        aeson-pretty,
         async,
         base,
         bytestring,

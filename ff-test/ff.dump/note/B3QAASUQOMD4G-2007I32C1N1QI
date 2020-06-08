@@ -1,20 +1,16 @@
-note:
-  note_start: 2019-03-19
-  note_track:
-    track_url: https://github.com/ff-notes/ff/issues/138
-    track_source: ff-notes/ff
-    track_externalId: '138'
-    track_provider: github
-  note_links: []
-  note_text: "Publish ff on Hackage (?)\n\nto install with just\r\n\r\n    cabal install\r\n\r\nor\r\n\r\n
-    \   stack install"
-  note_end: null
-  note_status:
-    tag: TaskStatus
-    contents: Active
-  note_tags:
-  - B/7euI15E31g+00P01fLmVG
-  - B/7euI15E2jb+00P01fLmVG
-tags:
+note_start: 2019-03-19
+note_track:
+  track_url: https://github.com/ff-notes/ff/issues/138
+  track_source: ff-notes/ff
+  track_externalId: '138'
+  track_provider: github
+note_links: []
+note_text: "Publish ff on Hackage (?)\n\nto install with just\r\n\r\n    cabal install\r\n\r\nor\r\n\r\n
+  \   stack install"
+note_end: null
+note_status:
+  tag: TaskStatus
+  contents: Active
+note_tags:
   B/7euI15E2jb+00P01fLmVG: level_Research
   B/7euI15E31g+00P01fLmVG: type_Idea

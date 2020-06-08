@@ -1,21 +1,19 @@
-note:
-  note_start: 2018-10-09
-  note_track:
-    track_url: https://github.com/ff-notes/ff/pull/99
-    track_source: ff-notes/ff
-    track_externalId: '99'
-    track_provider: github
-  note_links: []
-  note_text: "Search in all docs\n\nПеределал немного wiki вывод, чтобы он не захватывал
-    `mode`, который для него не актуален.\r\nВ связи с этим ряд других функций оптимизировал.
-    \r\n- [x] Но вот как `shuffleItems` под вики, пока не понял.\r\n- [x] И остается
-    еще специализированный поиск, отдельно по каждому списоку документов.\r\n\r\n<!--
-    Reviewable:start -->\r\n---\r\nThis change is [<img src=\"https://reviewable.io/review_button.svg\"
-    height=\"34\" align=\"absmiddle\" alt=\"Reviewable\"/>](https://reviewable.io/reviews/ff-notes/ff/99)\r\n<!--
-    Reviewable:end -->\r\n"
-  note_end: null
-  note_status:
-    tag: TaskStatus
-    contents: Archived
-  note_tags: []
-tags: {}
+note_start: 2018-10-09
+note_track:
+  track_url: https://github.com/ff-notes/ff/pull/99
+  track_source: ff-notes/ff
+  track_externalId: '99'
+  track_provider: github
+note_links: []
+note_text: "Search in all docs\n\nПеределал немного wiki вывод, чтобы он не захватывал
+  `mode`, который для него не актуален.\r\nВ связи с этим ряд других функций оптимизировал.
+  \r\n- [x] Но вот как `shuffleItems` под вики, пока не понял.\r\n- [x] И остается
+  еще специализированный поиск, отдельно по каждому списоку документов.\r\n\r\n<!--
+  Reviewable:start -->\r\n---\r\nThis change is [<img src=\"https://reviewable.io/review_button.svg\"
+  height=\"34\" align=\"absmiddle\" alt=\"Reviewable\"/>](https://reviewable.io/reviews/ff-notes/ff/99)\r\n<!--
+  Reviewable:end -->\r\n"
+note_end: null
+note_status:
+  tag: TaskStatus
+  contents: Archived
+note_tags: {}

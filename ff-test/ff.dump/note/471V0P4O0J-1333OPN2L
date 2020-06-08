@@ -1,19 +1,17 @@
-note:
-  note_start: 2018-01-11
-  note_track:
-    track_url: https://github.com/ff-notes/ff/issues/28
-    track_source: ff-notes/ff
-    track_externalId: '28'
-    track_provider: github
-  note_links: []
-  note_text: "Use a git repository as a storage\n\nShould be useful for software projects\r\n\r\nNecessary:\r\n-
-    Find data dir based on git: look for `.git`/`.hg`/`.svn`, else take dataDir from
-    config\r\n\r\nOptional:\r\n- Commit automatically on editing.\r\n- `ff --global`
-    — do not look for `.ff`, use dataDir only from config\r\n- `ff --vcs` — look for
-    `.git`/`.hg`/`.svn`, create `.ff` there"
-  note_end: null
-  note_status:
-    tag: TaskStatus
-    contents: Archived
-  note_tags: []
-tags: {}
+note_start: 2018-01-11
+note_track:
+  track_url: https://github.com/ff-notes/ff/issues/28
+  track_source: ff-notes/ff
+  track_externalId: '28'
+  track_provider: github
+note_links: []
+note_text: "Use a git repository as a storage\n\nShould be useful for software projects\r\n\r\nNecessary:\r\n-
+  Find data dir based on git: look for `.git`/`.hg`/`.svn`, else take dataDir from
+  config\r\n\r\nOptional:\r\n- Commit automatically on editing.\r\n- `ff --global`
+  — do not look for `.ff`, use dataDir only from config\r\n- `ff --vcs` — look for
+  `.git`/`.hg`/`.svn`, create `.ff` there"
+note_end: null
+note_status:
+  tag: TaskStatus
+  contents: Archived
+note_tags: {}

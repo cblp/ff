@@ -1,20 +1,17 @@
-note:
-  note_start: 2020-02-20
-  note_track:
-    track_url: https://github.com/ff-notes/ff/issues/226
-    track_source: ff-notes/ff
-    track_externalId: '226'
-    track_provider: github
-  note_links: []
-  note_text: |-
-    Add flatpak packaging
+note_start: 2020-02-20
+note_track:
+  track_url: https://github.com/ff-notes/ff/issues/226
+  track_source: ff-notes/ff
+  track_externalId: '226'
+  track_provider: github
+note_links: []
+note_text: |-
+  Add flatpak packaging
 
-    https://hackage.haskell.org/package/cabal-flatpak
-  note_end: null
-  note_status:
-    tag: TaskStatus
-    contents: Active
-  note_tags:
-  - B/7euI15E31g+00P01fLmVG
-tags:
+  https://hackage.haskell.org/package/cabal-flatpak
+note_end: null
+note_status:
+  tag: TaskStatus
+  contents: Active
+note_tags:
   B/7euI15E31g+00P01fLmVG: type_Idea

@@ -1,24 +1,19 @@
-note:
-  note_start: 2019-03-19
-  note_track:
-    track_url: https://github.com/ff-notes/ff/issues/137
-    track_source: ff-notes/ff
-    track_externalId: '137'
-    track_provider: github
-  note_links: []
-  note_text: "Add `--color=auto/always/never`\n\nAs in git\r\n\r\nAlso, check terminal
-    detection under docker.\r\n\r\nalways — colorize the output unconditionally\r\nnever
-    — do not colorize the output\r\nauto [default] — detect if we are running in a
-    terminal (isatty?) and colorize only if in terminal"
-  note_end: null
-  note_status:
-    tag: TaskStatus
-    contents: Active
-  note_tags:
-  - B/7euI15DBES+00P01fLmVG
-  - B/7euI15DGwV+00P01fLmVG
-  - B/7euI15DAyL+00P01fLmVG
-tags:
+note_start: 2019-03-19
+note_track:
+  track_url: https://github.com/ff-notes/ff/issues/137
+  track_source: ff-notes/ff
+  track_externalId: '137'
+  track_provider: github
+note_links: []
+note_text: "Add `--color=auto/always/never`\n\nAs in git\r\n\r\nAlso, check terminal
+  detection under docker.\r\n\r\nalways — colorize the output unconditionally\r\nnever
+  — do not colorize the output\r\nauto [default] — detect if we are running in a terminal
+  (isatty?) and colorize only if in terminal"
+note_end: null
+note_status:
+  tag: TaskStatus
+  contents: Active
+note_tags:
   B/7euI15DAyL+00P01fLmVG: level_Beginner
   B/7euI15DBES+00P01fLmVG: type_Enhancement
   B/7euI15DGwV+00P01fLmVG: component_CLI

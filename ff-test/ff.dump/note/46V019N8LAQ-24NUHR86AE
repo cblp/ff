@@ -1,27 +1,22 @@
-note:
-  note_start: 2018-07-31
-  note_track:
-    track_url: https://github.com/ff-notes/ff/issues/27
-    track_source: ff-notes/ff
-    track_externalId: '27'
-    track_provider: github
-  note_links: []
-  note_text: "Add optional time to dates\n\n# Probable solution:\r\n\r\n```haskell\r\n--
-    | Day and Maybe Time\r\ntype DMT = Either Day UTCTime\r\n```\r\nDay is treated
-    in current time zone, UTCTime is UTC\r\n\r\n# With timezone\r\n\r\n> use a string.
-    Specifically, use the full qualified name in the Olson database, so something
-    like Australia/Adelaide or America/Los_Angeles. These are standardized descriptors
-    of the timezones used in the world, and you can use these in pretty much every
-    programming language ever used in the last few decades.\r\n\r\nhttps://en.wikipedia.org/wiki/List_of_tz_database_time_zones\r\n\r\nhttps://zachholman.com/talk/utc-is-enough-for-everyone-right"
-  note_end: null
-  note_status:
-    tag: TaskStatus
-    contents: Active
-  note_tags:
-  - B/7euI15DBES+00P01fLmVG
-  - B/7euI15DAJq+00P01fLmVG
-  - B/7euI15E2jb+00P01fLmVG
-tags:
+note_start: 2018-07-31
+note_track:
+  track_url: https://github.com/ff-notes/ff/issues/27
+  track_source: ff-notes/ff
+  track_externalId: '27'
+  track_provider: github
+note_links: []
+note_text: "Add optional time to dates\n\n# Probable solution:\r\n\r\n```haskell\r\n--
+  | Day and Maybe Time\r\ntype DMT = Either Day UTCTime\r\n```\r\nDay is treated in
+  current time zone, UTCTime is UTC\r\n\r\n# With timezone\r\n\r\n> use a string.
+  Specifically, use the full qualified name in the Olson database, so something like
+  Australia/Adelaide or America/Los_Angeles. These are standardized descriptors of
+  the timezones used in the world, and you can use these in pretty much every programming
+  language ever used in the last few decades.\r\n\r\nhttps://en.wikipedia.org/wiki/List_of_tz_database_time_zones\r\n\r\nhttps://zachholman.com/talk/utc-is-enough-for-everyone-right"
+note_end: null
+note_status:
+  tag: TaskStatus
+  contents: Active
+note_tags:
   B/7euI15E2jb+00P01fLmVG: level_Research
   B/7euI15DAJq+00P01fLmVG: component_Core
   B/7euI15DBES+00P01fLmVG: type_Enhancement

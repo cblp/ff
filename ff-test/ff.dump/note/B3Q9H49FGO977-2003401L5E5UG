@@ -1,21 +1,17 @@
-note:
-  note_start: 2019-02-07
-  note_track:
-    track_url: https://github.com/ff-notes/ff/issues/118
-    track_source: ff-notes/ff
-    track_externalId: '118'
-    track_provider: github
-  note_links: []
-  note_text: "org-mode-like UI\n\nPossible ways:\r\n1. Clone Emacs and org-mode with
-    vty/brick/reflex-vty.\r\n2. Write an Emacs mode with https://github.com/knupfer/haskell-emacs\r\n\r\nSee
-    also:\r\n- #119\r\n- #120"
-  note_end: null
-  note_status:
-    tag: TaskStatus
-    contents: Active
-  note_tags:
-  - B/7euI15Dna7+00P01fLmVG
-  - B/7euI15DnJz+00P01fLmVG
-tags:
+note_start: 2019-02-07
+note_track:
+  track_url: https://github.com/ff-notes/ff/issues/118
+  track_source: ff-notes/ff
+  track_externalId: '118'
+  track_provider: github
+note_links: []
+note_text: "org-mode-like UI\n\nPossible ways:\r\n1. Clone Emacs and org-mode with
+  vty/brick/reflex-vty.\r\n2. Write an Emacs mode with https://github.com/knupfer/haskell-emacs\r\n\r\nSee
+  also:\r\n- #119\r\n- #120"
+note_end: null
+note_status:
+  tag: TaskStatus
+  contents: Active
+note_tags:
   B/7euI15Dna7+00P01fLmVG: type_Task
   B/7euI15DnJz+00P01fLmVG: level_Intermediate

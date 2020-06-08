@@ -1,11 +1,9 @@
-note:
-  note_start: 2018-07-05
-  note_track: null
-  note_links: []
-  note_text: 'git: stage versions unconditionally, even if working in the same branch'
-  note_end: null
-  note_status:
-    tag: TaskStatus
-    contents: Archived
-  note_tags: []
-tags: {}
+note_start: 2018-07-05
+note_track: null
+note_links: []
+note_text: 'git: stage versions unconditionally, even if working in the same branch'
+note_end: null
+note_status:
+  tag: TaskStatus
+  contents: Archived
+note_tags: {}

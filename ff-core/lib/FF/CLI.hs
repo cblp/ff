@@ -9,6 +9,10 @@ import           Control.Concurrent.Async (race)
 import           Control.Monad (forever, guard, when)
 import           Control.Monad.Except (runExceptT)
 import           Control.Monad.IO.Class (MonadIO, liftIO)
+import           Data.Aeson (ToJSON, (.=))
+import qualified Data.Aeson as JSON
+import qualified Data.Aeson.Encode.Pretty as JSON
+import qualified Data.ByteString.Lazy.Char8 as BSL
 import           Data.Foldable (asum, for_, toList)
 import           Data.Functor (($>))
 import           Data.Maybe (isNothing)
@@ -33,12 +37,13 @@ import           FF (cmdDeleteContact, cmdDeleteNote, cmdDone, cmdEdit,
 import           FF.Config (Config (..), ConfigUI (..), appName, loadConfig,
                             printConfig, saveConfig)
 import           FF.Github (getIssueViews, getOpenIssueSamples)
-import           FF.Options (Agenda (..), Cmd (..), CmdAction (..),
-                             Contact (..), DataDir (..), Options (..),
-                             Search (..), Shuffle (..), Tags (Tags), Track (..),
-                             parseOptions)
+import           FF.Options (ActionOptions (..), Agenda (..), Cmd (..),
+                             CmdAction (..), Contact (..), DataDir (..),
+                             Options (..), Search (..), Shuffle (..),
+                             Tags (Tags), Track (..), parseOptions)
 import qualified FF.Options as Options
-import           FF.Types (Status (Active), loadNote)
+import           FF.Types (Status (Active), entitiesToJson, loadNote)
+import qualified FF.Types as Sample (Sample (items))
 import           FF.UI (prettyContact, prettyContactSample, prettyNote,
                         prettyNoteList, prettyPath, prettyTagsList,
                         prettyTaskSections, prettyTasksWikisContacts,
@@ -57,10 +62,10 @@ import           System.Pager (printOrPage)
 
 cli :: Version -> IO ()
 cli version = do
-  cfg@Config {ui} <- loadConfig
+  cfg@Config{ui} <- loadConfig
   dataDir <- getDataDir cfg
   handle' <- traverse StorageFS.newHandle dataDir
-  Options {brief, customDir, cmd} <- parseOptions handle'
+  Options{customDir, cmd, actionOptions} <- parseOptions handle'
   (handle, dataPath) <-
     case customDir of
       Nothing -> pure (handle', dataDir)
@@ -72,10 +77,10 @@ cli version = do
     CmdVersion -> runCmdVersion version
     CmdAction action -> case handle of
       Nothing -> fail noDataDirectoryMessage
-      Just h -> runStorage h $ runCmdAction ui action brief dataPath
+      Just h -> runStorage h $ runCmdAction ui action actionOptions dataPath
 
 runCmdConfig :: Config -> Maybe Options.Config -> IO ()
-runCmdConfig cfg@Config {dataDir, externalEditor, ui} = \case
+runCmdConfig cfg@Config{dataDir, externalEditor, ui} = \case
   Nothing -> printConfig cfg
   Just (Options.ConfigDataDir mDir) -> do
     dir <-
@@ -85,9 +90,9 @@ runCmdConfig cfg@Config {dataDir, externalEditor, ui} = \case
         Just DataDirYandexDisk -> do
           home <- getHomeDirectory
           asum
-            [ trySaveDataDir $ home </> "Yandex.Disk",
-              trySaveDataDir $ home </> "Yandex.Disk.localized",
-              fail "Cant't detect Yandex.Disk directory"
+            [ trySaveDataDir $ home </> "Yandex.Disk"
+            , trySaveDataDir $ home </> "Yandex.Disk.localized"
+            , fail "Cant't detect Yandex.Disk directory"
             ]
     printConfig dir
   Just (Options.ConfigExternalEditor mPath) -> do
@@ -116,53 +121,60 @@ runCmdConfig cfg@Config {dataDir, externalEditor, ui} = \case
 
 runCmdAction ::
   (MonadIO m, MonadStorage m) =>
-  ConfigUI -> CmdAction -> Bool -> Maybe FilePath -> m ()
-runCmdAction ui cmd isBrief path = do
+  ConfigUI -> CmdAction -> ActionOptions -> Maybe FilePath -> m ()
+runCmdAction ui cmd ActionOptions{brief, json} path = do
   today <- getUtcToday
   case cmd of
-    CmdAgenda Agenda {limit, tags, withoutTags} -> do
-      notes <- loadAllNotes
+    CmdAgenda Agenda{limit, tags, withoutTags} -> do
+      notes   <- loadAllNotes
       samples <- viewTaskSamples Active ui limit today tags withoutTags notes
-      pprint $ prettyTaskSections isBrief tags samples <//> prettyPath path
-    CmdContact contact -> cmdContact isBrief path contact
+      if json then
+        jprint $
+          JSON.object
+            [ "notes"    .= entitiesToJson (foldMap Sample.items samples)
+            , "database" .= path
+            ]
+      else
+        pprint $ prettyTaskSections brief tags samples <//> prettyPath path
+    CmdContact contact -> cmdContact brief path contact
     CmdDelete notes ->
       for_ notes $ \noteId -> do
         note <- cmdDeleteNote noteId
         noteview <- viewNote note
         pprint $
-                withHeader "Deleted:" (prettyNote isBrief noteview)
+                withHeader "Deleted:" (prettyNote brief noteview)
           <//>  prettyPath path
     CmdDone notes ->
       for_ notes $ \noteId -> do
         note <- cmdDone noteId
         noteview <- viewNote note
         pprint $
-                withHeader "Archived:" (prettyNote isBrief noteview)
+                withHeader "Archived:" (prettyNote brief noteview)
           <//>  prettyPath path
     CmdEdit edit -> do
       notes <- cmdEdit edit
       notes' <- traverse viewNote notes
       pprint $
-              withHeader "Edited:" (prettyNoteList isBrief notes')
+              withHeader "Edited:" (prettyNoteList brief notes')
         <//>  prettyPath path
     CmdNew new -> do
       note <- cmdNewNote new today
       noteview <- viewNote note
       pprint $
-        withHeader "Added:" (prettyNote isBrief noteview) <//> prettyPath path
+        withHeader "Added:" (prettyNote brief noteview) <//> prettyPath path
     CmdPostpone notes ->
       for_ notes $ \noteId -> do
         note <- cmdPostpone noteId
         noteview <- viewNote note
         pprint $
-                withHeader "Postponed:" (prettyNote isBrief noteview)
+                withHeader "Postponed:" (prettyNote brief noteview)
           <//>  prettyPath path
     CmdSearch Search {..} -> do
       (tasks, wikis, contacts) <-
         cmdSearch text status ui limit today tags withoutTags
       pprint $
               prettyTasksWikisContacts
-                isBrief
+                brief
                 tasks
                 wikis
                 contacts
@@ -174,19 +186,19 @@ runCmdAction ui cmd isBrief path = do
     CmdShow noteIds -> do
       notes <- for noteIds loadNote
       notes' <- traverse viewNote notes
-      pprint $ prettyNoteList isBrief (toList notes') <//> prettyPath path
+      pprint $ prettyNoteList brief (toList notes') <//> prettyPath path
     CmdTags -> do
       allTags <- loadAllTagTexts
       pprint $ prettyTagsList allTags <//> prettyPath path
     CmdSponsors -> pprint $ withHeader "Sponsors" $ vsep $ map pretty sponsors
     CmdTrack track ->
-      cmdTrack track today isBrief
+      cmdTrack track today brief
     CmdUnarchive tasks ->
       for_ tasks $ \taskId -> do
         task <- cmdUnarchive taskId
         noteview <- viewNote task
         pprint $
-                withHeader "Unarchived:" (prettyNote isBrief noteview)
+                withHeader "Unarchived:" (prettyNote brief noteview)
           <//>  prettyPath path
     CmdUpgrade -> do
       upgradeDatabase
@@ -194,14 +206,14 @@ runCmdAction ui cmd isBrief path = do
     CmdWiki mlimit -> do
       notes <- loadAllNotes
       wikis <- viewWikiSamples ui mlimit today notes
-      pprint $ prettyWikiSample isBrief wikis <//> prettyPath path
+      pprint $ prettyWikiSample brief wikis <//> prettyPath path
 
 cmdTrack :: (MonadIO m, MonadStorage m) => Track -> Day -> Bool -> m ()
-cmdTrack Track {dryRun, address, limit} today isBrief
+cmdTrack Track {dryRun, address, limit} today brief
   | dryRun =
     liftIO $ do
       samples <- run $ getOpenIssueSamples address limit today
-      pprint $ prettyTaskSections isBrief (Tags mempty) samples
+      pprint $ prettyTaskSections brief (Tags mempty) samples
   | otherwise =
     do
       notes <- liftIO $ run $ getIssueViews address limit
@@ -226,18 +238,18 @@ cmdTrack Track {dryRun, address, limit} today isBrief
 
 cmdContact ::
   (MonadIO m, MonadStorage m) => Bool -> Maybe FilePath -> Maybe Contact -> m ()
-cmdContact isBrief path= \case
+cmdContact brief path= \case
   Just (Add name) -> do
     contact <- cmdNewContact name
     pprint $
-      withHeader "Added:" (prettyContact isBrief contact) <//> prettyPath path
+      withHeader "Added:" (prettyContact brief contact) <//> prettyPath path
   Just (Delete cid) -> do
     contact <- cmdDeleteContact cid
     pprint $
-      withHeader "Deleted:" (prettyContact isBrief contact) <//> prettyPath path
+      withHeader "Deleted:" (prettyContact brief contact) <//> prettyPath path
   Nothing -> do
     contacts <- getContactSamples Active
-    pprint $ prettyContactSample isBrief contacts <//> prettyPath path
+    pprint $ prettyContactSample brief contacts <//> prettyPath path
 
 -- | Template taken from stack:
 -- "Version 1.7.1, Git revision 681c800873816c022739ca7ed14755e8 (5807 commits)"
@@ -264,3 +276,6 @@ pprint doc = liftIO $ do
 
 fromEither :: Either a a -> a
 fromEither = either id id
+
+jprint :: (ToJSON a, MonadIO io) => a -> io ()
+jprint = liftIO . BSL.putStrLn . JSON.encodePretty

@@ -7,7 +7,8 @@
 {-# LANGUAGE TypeApplications #-}
 
 module FF.Options
-  ( Agenda (..),
+  ( ActionOptions (..),
+    Agenda (..),
     Assign (..),
     Cmd (..),
     CmdAction (..),
@@ -77,10 +78,15 @@ data CmdAction
   | CmdWiki (Maybe Limit)
 
 data Options = Options
-  { brief     :: Bool
-  , customDir :: Maybe FilePath
-  , cmd       :: Cmd
-  , json      :: Bool
+  { customDir     :: Maybe FilePath
+  , cmd           :: Cmd
+  , actionOptions :: ActionOptions
+    -- ^ 'CmdAction'-specific options
+  }
+
+data ActionOptions = ActionOptions
+  { brief :: Bool
+  , json  :: Bool
   }
 
 data Track
@@ -168,7 +174,7 @@ parser h =
     json      <- jsonOption
     customDir <- customDirOption
     cmd       <- version <|> subparser commands <|> (CmdAction <$> cmdAgenda)
-    pure Options{..}
+    pure Options{actionOptions = ActionOptions{..}, ..}
   where
     commands =
       mconcat

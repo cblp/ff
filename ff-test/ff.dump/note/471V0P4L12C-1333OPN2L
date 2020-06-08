@@ -1,28 +1,25 @@
-note:
-  note_start: 2018-06-26
-  note_track:
-    track_url: https://github.com/ff-notes/ff/pull/63
-    track_source: ff-notes/ff
-    track_externalId: '63'
-    track_provider: github
-  note_links: []
-  note_text: "Add test for github list\n\nТест не проходит:\r\n```haskell\r\n> case_repo\r\n***
-    Exception: HUnitFailure (Just (SrcLoc {srcLocPackage = \"main\", srcLocModule
-    = \"Main\", srcLocFile = \"/media/metaxis/stock/Coding/Haskell/ff/ff-core/test/Main.hs\",
-    srcLocStartLine = 262, srcLocStartCol = 5, srcLocEndLine = 262, srcLocEndCol =
-    21})) \r\n\r\n\"expected: \r\nfromList [(Starting 365374,Sample {notes = [NoteView
-    {nid = 334520780, status = Active, text = \\\"import issues (GitHub -> ff)\\\\nurl
-    https://github.com/ff-notes/ff/issues/60\\\", start = 2018-06-21, end = Just 2018-06-15}],
-    total = 1})]\\n \r\n\r\nbut got: \r\nfromList [(Overdue 10,Sample {notes = [NoteView
-    {nid = 334520780, status = Active, text = \\\"import issues (GitHub -> ff)\\\\nurl
-    \           https://github.com/ff-notes/ff/issues/60\\\", start = 2018-06-21,
-    end = Just 2018-06-15}], total = 1})]\"\r\n```\r\n\r\n<!-- Reviewable:start -->\r\n---\r\nThis
-    change is [<img src=\"https://reviewable.io/review_button.svg\" height=\"34\"
-    align=\"absmiddle\" alt=\"Reviewable\"/>](https://reviewable.io/reviews/ff-notes/ff/63)\r\n<!--
-    Reviewable:end -->\r\n"
-  note_end: null
-  note_status:
-    tag: TaskStatus
-    contents: Archived
-  note_tags: []
-tags: {}
+note_start: 2018-06-26
+note_track:
+  track_url: https://github.com/ff-notes/ff/pull/63
+  track_source: ff-notes/ff
+  track_externalId: '63'
+  track_provider: github
+note_links: []
+note_text: "Add test for github list\n\nТест не проходит:\r\n```haskell\r\n> case_repo\r\n***
+  Exception: HUnitFailure (Just (SrcLoc {srcLocPackage = \"main\", srcLocModule =
+  \"Main\", srcLocFile = \"/media/metaxis/stock/Coding/Haskell/ff/ff-core/test/Main.hs\",
+  srcLocStartLine = 262, srcLocStartCol = 5, srcLocEndLine = 262, srcLocEndCol = 21}))
+  \r\n\r\n\"expected: \r\nfromList [(Starting 365374,Sample {notes = [NoteView {nid
+  = 334520780, status = Active, text = \\\"import issues (GitHub -> ff)\\\\nurl https://github.com/ff-notes/ff/issues/60\\\",
+  start = 2018-06-21, end = Just 2018-06-15}], total = 1})]\\n \r\n\r\nbut got: \r\nfromList
+  [(Overdue 10,Sample {notes = [NoteView {nid = 334520780, status = Active, text =
+  \\\"import issues (GitHub -> ff)\\\\nurl            https://github.com/ff-notes/ff/issues/60\\\",
+  start = 2018-06-21, end = Just 2018-06-15}], total = 1})]\"\r\n```\r\n\r\n<!-- Reviewable:start
+  -->\r\n---\r\nThis change is [<img src=\"https://reviewable.io/review_button.svg\"
+  height=\"34\" align=\"absmiddle\" alt=\"Reviewable\"/>](https://reviewable.io/reviews/ff-notes/ff/63)\r\n<!--
+  Reviewable:end -->\r\n"
+note_end: null
+note_status:
+  tag: TaskStatus
+  contents: Archived
+note_tags: {}

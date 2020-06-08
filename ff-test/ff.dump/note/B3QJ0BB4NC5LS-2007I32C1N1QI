@@ -1,22 +1,20 @@
-note:
-  note_start: 2019-12-21
-  note_track:
-    track_url: https://github.com/ff-notes/ff/pull/224
-    track_source: ff-notes/ff
-    track_externalId: '224'
-    track_provider: github
-  note_links: []
-  note_text: |
-    ff-qtah: Make task widget scrollable
+note_start: 2019-12-21
+note_track:
+  track_url: https://github.com/ff-notes/ff/pull/224
+  track_source: ff-notes/ff
+  track_externalId: '224'
+  track_provider: github
+note_links: []
+note_text: |
+  ff-qtah: Make task widget scrollable
 
 
 
-    <!-- Reviewable:start -->
-    This change is [<img src="https://reviewable.io/review_button.svg" height="34" align="absmiddle" alt="Reviewable"/>](https://reviewable.io/reviews/ff-notes/ff/224)
-    <!-- Reviewable:end -->
-  note_end: null
-  note_status:
-    tag: TaskStatus
-    contents: Archived
-  note_tags: []
-tags: {}
+  <!-- Reviewable:start -->
+  This change is [<img src="https://reviewable.io/review_button.svg" height="34" align="absmiddle" alt="Reviewable"/>](https://reviewable.io/reviews/ff-notes/ff/224)
+  <!-- Reviewable:end -->
+note_end: null
+note_status:
+  tag: TaskStatus
+  contents: Archived
+note_tags: {}

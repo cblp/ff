@@ -1,18 +1,16 @@
-note:
-  note_start: 2018-07-30
-  note_track:
-    track_url: https://github.com/ff-notes/ff/issues/84
-    track_source: ff-notes/ff
-    track_externalId: '84'
-    track_provider: github
-  note_links: []
-  note_text: "Allow group modification\n\nAllow this\r\n```\r\nff delete ID1 ID2 ID3\r\nff
-    done ID1 ID2 ID3\r\nff edit --start START ID1 ID2 ID3\r\nff postpone ID1 ID2 ID3\r\nff
-    unarchive ID1 ID2 ID3\r\n```\r\n\r\nBut NOT this\r\n```\r\nff edit ID1 ID2 ID3\r\n```\r\nIt
-    is non-sense to set the same text for multiple notes."
-  note_end: null
-  note_status:
-    tag: TaskStatus
-    contents: Archived
-  note_tags: []
-tags: {}
+note_start: 2018-07-30
+note_track:
+  track_url: https://github.com/ff-notes/ff/issues/84
+  track_source: ff-notes/ff
+  track_externalId: '84'
+  track_provider: github
+note_links: []
+note_text: "Allow group modification\n\nAllow this\r\n```\r\nff delete ID1 ID2 ID3\r\nff
+  done ID1 ID2 ID3\r\nff edit --start START ID1 ID2 ID3\r\nff postpone ID1 ID2 ID3\r\nff
+  unarchive ID1 ID2 ID3\r\n```\r\n\r\nBut NOT this\r\n```\r\nff edit ID1 ID2 ID3\r\n```\r\nIt
+  is non-sense to set the same text for multiple notes."
+note_end: null
+note_status:
+  tag: TaskStatus
+  contents: Archived
+note_tags: {}

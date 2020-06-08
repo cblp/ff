@@ -1,16 +1,14 @@
-note:
-  note_start: 2018-06-21
-  note_track:
-    track_url: https://github.com/ff-notes/ff/issues/60
-    track_source: ff-notes/ff
-    track_externalId: '60'
-    track_provider: github
-  note_links: []
-  note_text: "import issues (GitHub -> ff)\n\n- [ ] implement this feature\r\n- [
-    ] import ff notes"
-  note_end: null
-  note_status:
-    tag: TaskStatus
-    contents: Archived
-  note_tags: []
-tags: {}
+note_start: 2018-06-21
+note_track:
+  track_url: https://github.com/ff-notes/ff/issues/60
+  track_source: ff-notes/ff
+  track_externalId: '60'
+  track_provider: github
+note_links: []
+note_text: "import issues (GitHub -> ff)\n\n- [ ] implement this feature\r\n- [ ]
+  import ff notes"
+note_end: null
+note_status:
+  tag: TaskStatus
+  contents: Archived
+note_tags: {}

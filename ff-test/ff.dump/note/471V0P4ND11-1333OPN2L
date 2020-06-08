@@ -1,24 +1,22 @@
-note:
-  note_start: 2018-02-25
-  note_track:
-    track_url: https://github.com/ff-notes/ff/pull/36
-    track_source: ff-notes/ff
-    track_externalId: '36'
-    track_provider: github
-  note_links: []
-  note_text: |
-    samplesInSections: Add "N task(s) omitted" message
+note_start: 2018-02-25
+note_track:
+  track_url: https://github.com/ff-notes/ff/pull/36
+  track_source: ff-notes/ff
+  track_externalId: '36'
+  track_provider: github
+note_links: []
+note_text: |
+  samplesInSections: Add "N task(s) omitted" message
 
-    This patch also makes "To see more tasks" message conditional: it's only
-    displayed when there some tasks were hidden due to limit.
+  This patch also makes "To see more tasks" message conditional: it's only
+  displayed when there some tasks were hidden due to limit.
 
-    <!-- Reviewable:start -->
-    ---
-    This change is [<img src="https://reviewable.io/review_button.svg" height="34" align="absmiddle" alt="Reviewable"/>](https://reviewable.io/reviews/ff-notes/ff/36)
-    <!-- Reviewable:end -->
-  note_end: null
-  note_status:
-    tag: TaskStatus
-    contents: Archived
-  note_tags: []
-tags: {}
+  <!-- Reviewable:start -->
+  ---
+  This change is [<img src="https://reviewable.io/review_button.svg" height="34" align="absmiddle" alt="Reviewable"/>](https://reviewable.io/reviews/ff-notes/ff/36)
+  <!-- Reviewable:end -->
+note_end: null
+note_status:
+  tag: TaskStatus
+  contents: Archived
+note_tags: {}

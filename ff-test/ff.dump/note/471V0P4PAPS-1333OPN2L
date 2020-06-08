@@ -1,18 +1,16 @@
-note:
-  note_start: 2018-01-08
-  note_track:
-    track_url: https://github.com/ff-notes/ff/issues/8
-    track_source: ff-notes/ff
-    track_externalId: '8'
-    track_provider: github
-  note_links: []
-  note_text: |-
-    Add search
+note_start: 2018-01-08
+note_track:
+  track_url: https://github.com/ff-notes/ff/issues/8
+  track_source: ff-notes/ff
+  track_externalId: '8'
+  track_provider: github
+note_links: []
+note_text: |-
+  Add search
 
-    A full-text search index would be ~nice~ life-saving.
-  note_end: null
-  note_status:
-    tag: TaskStatus
-    contents: Archived
-  note_tags: []
-tags: {}
+  A full-text search index would be ~nice~ life-saving.
+note_end: null
+note_status:
+  tag: TaskStatus
+  contents: Archived
+note_tags: {}

@@ -1,15 +1,13 @@
-note:
-  note_start: 2018-12-06
-  note_track:
-    track_url: https://github.com/ff-notes/ff/issues/106
-    track_source: ff-notes/ff
-    track_externalId: '106'
-    track_provider: github
-  note_links: []
-  note_text: Tutorial module
-  note_end: null
-  note_status:
-    tag: TaskStatus
-    contents: Archived
-  note_tags: []
-tags: {}
+note_start: 2018-12-06
+note_track:
+  track_url: https://github.com/ff-notes/ff/issues/106
+  track_source: ff-notes/ff
+  track_externalId: '106'
+  track_provider: github
+note_links: []
+note_text: Tutorial module
+note_end: null
+note_status:
+  tag: TaskStatus
+  contents: Archived
+note_tags: {}

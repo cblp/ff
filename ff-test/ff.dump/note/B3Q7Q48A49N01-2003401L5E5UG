@@ -1,19 +1,16 @@
-note:
-  note_start: 2018-12-07
-  note_track:
-    track_url: https://github.com/ff-notes/ff/issues/109
-    track_source: ff-notes/ff
-    track_externalId: '109'
-    track_provider: github
-  note_links: []
-  note_text: "Option to specify work directory\n\n`ff --data-dir=bla` использует каталог
-    `bla` для данных только на один раз, при этом значение по умолчанию остаётся нетронутым\r\n\r\nкак
-    `git -C`"
-  note_end: null
-  note_status:
-    tag: TaskStatus
-    contents: Archived
-  note_tags:
-  - B/7euI15DAyL+00P01fLmVG
-tags:
+note_start: 2018-12-07
+note_track:
+  track_url: https://github.com/ff-notes/ff/issues/109
+  track_source: ff-notes/ff
+  track_externalId: '109'
+  track_provider: github
+note_links: []
+note_text: "Option to specify work directory\n\n`ff --data-dir=bla` использует каталог
+  `bla` для данных только на один раз, при этом значение по умолчанию остаётся нетронутым\r\n\r\nкак
+  `git -C`"
+note_end: null
+note_status:
+  tag: TaskStatus
+  contents: Archived
+note_tags:
   B/7euI15DAyL+00P01fLmVG: level_Beginner

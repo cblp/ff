@@ -282,12 +282,10 @@ viewTaskSamplesWith
             -- in sorting by entityId no business-logic is involved,
             -- it's just for determinism
             fmap $
-              sortOn
-                ( \ Entity
-                      {entityId, entityVal = NoteView{note = Note{note_start}}}
-                  ->
-                    (note_start, entityId)
-                )
+            sortOn $
+              \Entity{entityId, entityVal = NoteView{note = Note{note_start}}}
+              ->
+                (note_start, entityId)
 
       notePredicate Entity{entityVal = Note{note_text}} =
         textPredicate $ Text.pack $ fromRgaM note_text

@@ -1,15 +1,13 @@
-note:
-  note_start: 2018-01-27
-  note_track:
-    track_url: https://github.com/ff-notes/ff/pull/31
-    track_source: ff-notes/ff
-    track_externalId: '31'
-    track_provider: github
-  note_links: []
-  note_text: Search subcommand
-  note_end: null
-  note_status:
-    tag: TaskStatus
-    contents: Archived
-  note_tags: []
-tags: {}
+note_start: 2018-01-27
+note_track:
+  track_url: https://github.com/ff-notes/ff/pull/31
+  track_source: ff-notes/ff
+  track_externalId: '31'
+  track_provider: github
+note_links: []
+note_text: Search subcommand
+note_end: null
+note_status:
+  tag: TaskStatus
+  contents: Archived
+note_tags: {}

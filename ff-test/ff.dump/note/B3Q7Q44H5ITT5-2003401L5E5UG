@@ -1,21 +1,16 @@
-note:
-  note_start: 2018-11-27
-  note_track:
-    track_url: https://github.com/ff-notes/ff/issues/105
-    track_source: ff-notes/ff
-    track_externalId: '105'
-    track_provider: github
-  note_links: []
-  note_text: Show data dir in any output
-  note_end: null
-  note_status:
-    tag: TaskStatus
-    contents: Archived
-  note_tags:
-  - B/7euI15DBES+00P01fLmVG
-  - B/7euI15DGwV+00P01fLmVG
-  - B/7euI15DAyL+00P01fLmVG
-tags:
+note_start: 2018-11-27
+note_track:
+  track_url: https://github.com/ff-notes/ff/issues/105
+  track_source: ff-notes/ff
+  track_externalId: '105'
+  track_provider: github
+note_links: []
+note_text: Show data dir in any output
+note_end: null
+note_status:
+  tag: TaskStatus
+  contents: Archived
+note_tags:
   B/7euI15DAyL+00P01fLmVG: level_Beginner
   B/7euI15DBES+00P01fLmVG: type_Enhancement
   B/7euI15DGwV+00P01fLmVG: component_CLI

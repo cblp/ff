@@ -1,22 +1,20 @@
-note:
-  note_start: 2019-10-24
-  note_track:
-    track_url: https://github.com/ff-notes/ff/issues/203
-    track_source: ff-notes/ff
-    track_externalId: '203'
-    track_provider: github
-  note_links: []
-  note_text: |+
-    (2018-10-22, https://github.com/ff-notes/ron/issues/116, cblp) index
+note_start: 2019-10-24
+note_track:
+  track_url: https://github.com/ff-notes/ff/issues/203
+  track_source: ff-notes/ff
+  track_externalId: '203'
+  track_provider: github
+note_links: []
+note_text: |+
+  (2018-10-22, https://github.com/ff-notes/ron/issues/116, cblp) index
 
-    notes by track in the database and select specific note by its track
-    https://github.com/ff-notes/ff/blob/90c02766fd7bfaa4e87ab6bcbbb4b849221c35a0/ff-core/lib/FF.hs#L386-L388
+  notes by track in the database and select specific note by its track
+  https://github.com/ff-notes/ff/blob/90c02766fd7bfaa4e87ab6bcbbb4b849221c35a0/ff-core/lib/FF.hs#L386-L388
 
-    * Found on master
+  * Found on master
 
-  note_end: null
-  note_status:
-    tag: TaskStatus
-    contents: Active
-  note_tags: []
-tags: {}
+note_end: null
+note_status:
+  tag: TaskStatus
+  contents: Active
+note_tags: {}

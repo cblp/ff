@@ -1,19 +1,16 @@
-note:
-  note_start: 2019-10-04
-  note_track:
-    track_url: https://github.com/ff-notes/ff/issues/188
-    track_source: ff-notes/ff
-    track_externalId: '188'
-    track_provider: github
-  note_links: []
-  note_text: "Table to check test coverage\n\nTable view:\r\nfeature1 | test1\r\nfeature2
-    | test1\r\nfeature3 | test2\r\n...\r\n\r\nThis table will serve for show what
-    tests are absent and which ones should be realised."
-  note_end: null
-  note_status:
-    tag: TaskStatus
-    contents: Active
-  note_tags:
-  - B/7euI15E31g+00P01fLmVG
-tags:
+note_start: 2019-10-04
+note_track:
+  track_url: https://github.com/ff-notes/ff/issues/188
+  track_source: ff-notes/ff
+  track_externalId: '188'
+  track_provider: github
+note_links: []
+note_text: "Table to check test coverage\n\nTable view:\r\nfeature1 | test1\r\nfeature2
+  | test1\r\nfeature3 | test2\r\n...\r\n\r\nThis table will serve for show what tests
+  are absent and which ones should be realised."
+note_end: null
+note_status:
+  tag: TaskStatus
+  contents: Active
+note_tags:
   B/7euI15E31g+00P01fLmVG: type_Idea

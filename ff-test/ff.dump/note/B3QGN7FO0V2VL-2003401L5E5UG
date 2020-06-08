@@ -1,23 +1,21 @@
-note:
-  note_start: 2019-11-14
-  note_track:
-    track_url: https://github.com/ff-notes/ff/pull/216
-    track_source: ff-notes/ff
-    track_externalId: '216'
-    track_provider: github
-  note_links: []
-  note_text: |
-    One time per delta or rare (and move end) #126
+note_start: 2019-11-14
+note_track:
+  track_url: https://github.com/ff-notes/ff/pull/216
+  track_source: ff-notes/ff
+  track_externalId: '216'
+  track_provider: github
+note_links: []
+note_text: |
+  One time per delta or rare (and move end) #126
 
-    Resolves #126
+  Resolves #126
 
-    <!-- Reviewable:start -->
-    ---
-    This change is [<img src="https://reviewable.io/review_button.svg" height="34" align="absmiddle" alt="Reviewable"/>](https://reviewable.io/reviews/ff-notes/ff/216)
-    <!-- Reviewable:end -->
-  note_end: null
-  note_status:
-    tag: TaskStatus
-    contents: Archived
-  note_tags: []
-tags: {}
+  <!-- Reviewable:start -->
+  ---
+  This change is [<img src="https://reviewable.io/review_button.svg" height="34" align="absmiddle" alt="Reviewable"/>](https://reviewable.io/reviews/ff-notes/ff/216)
+  <!-- Reviewable:end -->
+note_end: null
+note_status:
+  tag: TaskStatus
+  contents: Archived
+note_tags: {}

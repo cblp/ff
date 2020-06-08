@@ -1,24 +1,19 @@
-note:
-  note_start: 2019-02-07
-  note_track:
-    track_url: https://github.com/ff-notes/ff/issues/119
-    track_source: ff-notes/ff
-    track_externalId: '119'
-    track_provider: github
-  note_links: []
-  note_text: |-
-    export to org-mode format
+note_start: 2019-02-07
+note_track:
+  track_url: https://github.com/ff-notes/ff/issues/119
+  track_source: ff-notes/ff
+  track_externalId: '119'
+  track_provider: github
+note_links: []
+note_text: |-
+  export to org-mode format
 
-    with UUID as metadata
-  note_end: null
-  note_status:
-    tag: TaskStatus
-    contents: Active
-  note_tags:
-  - B/7euI15E31g+00P01fLmVG
-  - B/7euI15DnJz+00P01fLmVG
-  - B/7euI15DAJq+00P01fLmVG
-tags:
+  with UUID as metadata
+note_end: null
+note_status:
+  tag: TaskStatus
+  contents: Active
+note_tags:
   B/7euI15DAJq+00P01fLmVG: component_Core
   B/7euI15E31g+00P01fLmVG: type_Idea
   B/7euI15DnJz+00P01fLmVG: level_Intermediate

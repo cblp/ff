@@ -1,18 +1,16 @@
-note:
-  note_start: 2018-06-22
-  note_track:
-    track_url: https://github.com/ff-notes/ff/pull/62
-    track_source: ff-notes/ff
-    track_externalId: '62'
-    track_provider: github
-  note_links: []
-  note_text: "Fix fetch counting \n\nno divide by 30 needed\n\n<!-- Reviewable:start
-    -->\n---\nThis change is [<img src=\"https://reviewable.io/review_button.svg\"
-    height=\"34\" align=\"absmiddle\" alt=\"Reviewable\"/>](https://reviewable.io/reviews/ff-notes/ff/62)\n<!--
-    Reviewable:end -->\n"
-  note_end: null
-  note_status:
-    tag: TaskStatus
-    contents: Archived
-  note_tags: []
-tags: {}
+note_start: 2018-06-22
+note_track:
+  track_url: https://github.com/ff-notes/ff/pull/62
+  track_source: ff-notes/ff
+  track_externalId: '62'
+  track_provider: github
+note_links: []
+note_text: "Fix fetch counting \n\nno divide by 30 needed\n\n<!-- Reviewable:start
+  -->\n---\nThis change is [<img src=\"https://reviewable.io/review_button.svg\" height=\"34\"
+  align=\"absmiddle\" alt=\"Reviewable\"/>](https://reviewable.io/reviews/ff-notes/ff/62)\n<!--
+  Reviewable:end -->\n"
+note_end: null
+note_status:
+  tag: TaskStatus
+  contents: Archived
+note_tags: {}

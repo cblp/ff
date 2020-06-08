@@ -1,18 +1,15 @@
-note:
-  note_start: 2018-07-31
-  note_track:
-    track_url: https://github.com/ff-notes/ff/issues/22
-    track_source: ff-notes/ff
-    track_externalId: '22'
-    track_provider: github
-  note_links: []
-  note_text: "Contacts\n\nA contact is a document in the _ff_ database.\r\n\r\nIt
-    must contain one text field (RgaText) — for a human name.\r\n\r\nA note must have
-    a field \"assignee\" of type `[Contact]`, containing a reference (id) to a contact
-    object."
-  note_end: null
-  note_status:
-    tag: TaskStatus
-    contents: Archived
-  note_tags: []
-tags: {}
+note_start: 2018-07-31
+note_track:
+  track_url: https://github.com/ff-notes/ff/issues/22
+  track_source: ff-notes/ff
+  track_externalId: '22'
+  track_provider: github
+note_links: []
+note_text: "Contacts\n\nA contact is a document in the _ff_ database.\r\n\r\nIt must
+  contain one text field (RgaText) — for a human name.\r\n\r\nA note must have a field
+  \"assignee\" of type `[Contact]`, containing a reference (id) to a contact object."
+note_end: null
+note_status:
+  tag: TaskStatus
+  contents: Archived
+note_tags: {}

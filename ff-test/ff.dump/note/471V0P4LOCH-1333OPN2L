@@ -1,19 +1,17 @@
-note:
-  note_start: 2018-06-12
-  note_track:
-    track_url: https://github.com/ff-notes/ff/pull/55
-    track_source: ff-notes/ff
-    track_externalId: '55'
-    track_provider: github
-  note_links: []
-  note_text: "Github issues to noteview render\n\nLimit игнорируется почему-то, воводится
-    всё сразу.\r\nИ по TaskMode вопрос в коде.\n\n<!-- Reviewable:start -->\n---\nThis
-    change is [<img src=\"https://reviewable.io/review_button.svg\" height=\"34\"
-    align=\"absmiddle\" alt=\"Reviewable\"/>](https://reviewable.io/reviews/ff-notes/ff/55)\n<!--
-    Reviewable:end -->\n"
-  note_end: null
-  note_status:
-    tag: TaskStatus
-    contents: Archived
-  note_tags: []
-tags: {}
+note_start: 2018-06-12
+note_track:
+  track_url: https://github.com/ff-notes/ff/pull/55
+  track_source: ff-notes/ff
+  track_externalId: '55'
+  track_provider: github
+note_links: []
+note_text: "Github issues to noteview render\n\nLimit игнорируется почему-то, воводится
+  всё сразу.\r\nИ по TaskMode вопрос в коде.\n\n<!-- Reviewable:start -->\n---\nThis
+  change is [<img src=\"https://reviewable.io/review_button.svg\" height=\"34\" align=\"absmiddle\"
+  alt=\"Reviewable\"/>](https://reviewable.io/reviews/ff-notes/ff/55)\n<!-- Reviewable:end
+  -->\n"
+note_end: null
+note_status:
+  tag: TaskStatus
+  contents: Archived
+note_tags: {}

@@ -1,16 +1,14 @@
-note:
-  note_start: 2018-08-22
-  note_track:
-    track_url: https://github.com/ff-notes/ff/issues/88
-    track_source: ff-notes/ff
-    track_externalId: '88'
-    track_provider: github
-  note_links: []
-  note_text: "Add Wiki\n\n1. new status `Wiki`\r\n1. `add` adds task\r\n1. `add --wiki`
-    adds wiki\r\n1. `edit` works with both\r\n1. `agenda` doesn't list wikis"
-  note_end: null
-  note_status:
-    tag: TaskStatus
-    contents: Archived
-  note_tags: []
-tags: {}
+note_start: 2018-08-22
+note_track:
+  track_url: https://github.com/ff-notes/ff/issues/88
+  track_source: ff-notes/ff
+  track_externalId: '88'
+  track_provider: github
+note_links: []
+note_text: "Add Wiki\n\n1. new status `Wiki`\r\n1. `add` adds task\r\n1. `add --wiki`
+  adds wiki\r\n1. `edit` works with both\r\n1. `agenda` doesn't list wikis"
+note_end: null
+note_status:
+  tag: TaskStatus
+  contents: Archived
+note_tags: {}

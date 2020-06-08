@@ -1,23 +1,17 @@
-note:
-  note_start: 2019-10-21
-  note_track:
-    track_url: https://github.com/ff-notes/ff/issues/199
-    track_source: ff-notes/ff
-    track_externalId: '199'
-    track_provider: github
-  note_links: []
-  note_text: "Error or warning when delete a note\n\n```shell\r\n$ ff delete B3QFJTNN0N35A-2007GRROP9V0V\r\nff:
-    Maybe.fromJust: Nothing\r\n```"
-  note_end: null
-  note_status:
-    tag: TaskStatus
-    contents: Active
-  note_tags:
-  - B/7euI15DnJz+00P01fLmVG
-  - B/7euI15DXH1+00P01fLmVG
-  - B/7euI15DGwV+00P01fLmVG
-  - B/7euI15DAJq+00P01fLmVG
-tags:
+note_start: 2019-10-21
+note_track:
+  track_url: https://github.com/ff-notes/ff/issues/199
+  track_source: ff-notes/ff
+  track_externalId: '199'
+  track_provider: github
+note_links: []
+note_text: "Error or warning when delete a note\n\n```shell\r\n$ ff delete B3QFJTNN0N35A-2007GRROP9V0V\r\nff:
+  Maybe.fromJust: Nothing\r\n```"
+note_end: null
+note_status:
+  tag: TaskStatus
+  contents: Active
+note_tags:
   B/7euI15DAJq+00P01fLmVG: component_Core
   B/7euI15DXH1+00P01fLmVG: type_Bug
   B/7euI15DnJz+00P01fLmVG: level_Intermediate

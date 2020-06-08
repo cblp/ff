@@ -1,17 +1,14 @@
-note:
-  note_start: 2019-03-31
-  note_track:
-    track_url: https://github.com/ff-notes/ff/issues/145
-    track_source: ff-notes/ff
-    track_externalId: '145'
-    track_provider: github
-  note_links: []
-  note_text: ff-qt not buildable under 18.04 Ubuntu and qt-5.9.5
-  note_end: null
-  note_status:
-    tag: TaskStatus
-    contents: Archived
-  note_tags:
-  - B/7euI15F4CR+00P01fLmVG
-tags:
+note_start: 2019-03-31
+note_track:
+  track_url: https://github.com/ff-notes/ff/issues/145
+  track_source: ff-notes/ff
+  track_externalId: '145'
+  track_provider: github
+note_links: []
+note_text: ff-qt not buildable under 18.04 Ubuntu and qt-5.9.5
+note_end: null
+note_status:
+  tag: TaskStatus
+  contents: Archived
+note_tags:
   B/7euI15F4CR+00P01fLmVG: resolution_Duplicate

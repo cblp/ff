@@ -1,23 +1,21 @@
-note:
-  note_start: 2018-08-22
-  note_track:
-    track_url: https://github.com/ff-notes/ff/pull/90
-    track_source: ff-notes/ff
-    track_externalId: '90'
-    track_provider: github
-  note_links: []
-  note_text: |
-    [#88] Add wiki notes
+note_start: 2018-08-22
+note_track:
+  track_url: https://github.com/ff-notes/ff/pull/90
+  track_source: ff-notes/ff
+  track_externalId: '90'
+  track_provider: github
+note_links: []
+note_text: |
+  [#88] Add wiki notes
 
-    Resolves [#88](https://github.com/ff-notes/ff/issues/88)
+  Resolves [#88](https://github.com/ff-notes/ff/issues/88)
 
-    <!-- Reviewable:start -->
-    ---
-    This change is [<img src="https://reviewable.io/review_button.svg" height="34" align="absmiddle" alt="Reviewable"/>](https://reviewable.io/reviews/ff-notes/ff/90)
-    <!-- Reviewable:end -->
-  note_end: null
-  note_status:
-    tag: TaskStatus
-    contents: Archived
-  note_tags: []
-tags: {}
+  <!-- Reviewable:start -->
+  ---
+  This change is [<img src="https://reviewable.io/review_button.svg" height="34" align="absmiddle" alt="Reviewable"/>](https://reviewable.io/reviews/ff-notes/ff/90)
+  <!-- Reviewable:end -->
+note_end: null
+note_status:
+  tag: TaskStatus
+  contents: Archived
+note_tags: {}

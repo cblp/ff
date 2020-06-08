@@ -1,25 +1,22 @@
-note:
-  note_start: 2019-10-07
-  note_track:
-    track_url: https://github.com/ff-notes/ff/pull/193
-    track_source: ff-notes/ff
-    track_externalId: '193'
-    track_provider: github
-  note_links: []
-  note_text: |
-    Without specific tags option (#179)
+note_start: 2019-10-07
+note_track:
+  track_url: https://github.com/ff-notes/ff/pull/193
+  track_source: ff-notes/ff
+  track_externalId: '193'
+  track_provider: github
+note_links: []
+note_text: |
+  Without specific tags option (#179)
 
-    Resolves #179
+  Resolves #179
 
-    <!-- Reviewable:start -->
-    ---
-    This change is [<img src="https://reviewable.io/review_button.svg" height="34" align="absmiddle" alt="Reviewable"/>](https://reviewable.io/reviews/ff-notes/ff/193)
-    <!-- Reviewable:end -->
-  note_end: null
-  note_status:
-    tag: TaskStatus
-    contents: Archived
-  note_tags:
-  - B/7euI15DBES+00P01fLmVG
-tags:
+  <!-- Reviewable:start -->
+  ---
+  This change is [<img src="https://reviewable.io/review_button.svg" height="34" align="absmiddle" alt="Reviewable"/>](https://reviewable.io/reviews/ff-notes/ff/193)
+  <!-- Reviewable:end -->
+note_end: null
+note_status:
+  tag: TaskStatus
+  contents: Archived
+note_tags:
   B/7euI15DBES+00P01fLmVG: type_Enhancement

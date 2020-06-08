@@ -1,23 +1,21 @@
-note:
-  note_start: 2018-12-06
-  note_track:
-    track_url: https://github.com/ff-notes/ff/pull/108
-    track_source: ff-notes/ff
-    track_externalId: '108'
-    track_provider: github
-  note_links: []
-  note_text: |
-    Add catchError
+note_start: 2018-12-06
+note_track:
+  track_url: https://github.com/ff-notes/ff/pull/108
+  track_source: ff-notes/ff
+  track_externalId: '108'
+  track_provider: github
+note_links: []
+note_text: |
+  Add catchError
 
-    Resolve #92
+  Resolve #92
 
-    <!-- Reviewable:start -->
-    ---
-    This change is [<img src="https://reviewable.io/review_button.svg" height="34" align="absmiddle" alt="Reviewable"/>](https://reviewable.io/reviews/ff-notes/ff/108)
-    <!-- Reviewable:end -->
-  note_end: null
-  note_status:
-    tag: TaskStatus
-    contents: Archived
-  note_tags: []
-tags: {}
+  <!-- Reviewable:start -->
+  ---
+  This change is [<img src="https://reviewable.io/review_button.svg" height="34" align="absmiddle" alt="Reviewable"/>](https://reviewable.io/reviews/ff-notes/ff/108)
+  <!-- Reviewable:end -->
+note_end: null
+note_status:
+  tag: TaskStatus
+  contents: Archived
+note_tags: {}

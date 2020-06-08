@@ -1,24 +1,19 @@
-note:
-  note_start: 2018-12-06
-  note_track:
-    track_url: https://github.com/ff-notes/ff/issues/107
-    track_source: ff-notes/ff
-    track_externalId: '107'
-    track_provider: github
-  note_links: []
-  note_text: |-
-    Write a Tutorial
+note_start: 2018-12-06
+note_track:
+  track_url: https://github.com/ff-notes/ff/issues/107
+  track_source: ff-notes/ff
+  track_externalId: '107'
+  track_provider: github
+note_links: []
+note_text: |-
+  Write a Tutorial
 
-    Maybe as a Haskell module
-  note_end: null
-  note_status:
-    tag: TaskStatus
-    contents: Active
-  note_tags:
-  - B/7euI15Dna7+00P01fLmVG
-  - B/7euI15DnJz+00P01fLmVG
-  - B/7euI15DGwV+00P01fLmVG
-tags:
+  Maybe as a Haskell module
+note_end: null
+note_status:
+  tag: TaskStatus
+  contents: Active
+note_tags:
   B/7euI15Dna7+00P01fLmVG: type_Task
   B/7euI15DnJz+00P01fLmVG: level_Intermediate
   B/7euI15DGwV+00P01fLmVG: component_CLI

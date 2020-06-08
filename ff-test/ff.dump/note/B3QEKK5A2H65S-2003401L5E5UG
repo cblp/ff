@@ -1,18 +1,16 @@
-note:
-  note_start: 2019-09-01
-  note_track:
-    track_url: https://github.com/ff-notes/ff/issues/168
-    track_source: ff-notes/ff
-    track_externalId: '168'
-    track_provider: github
-  note_links: []
-  note_text: |-
-    Fetch github tags when tracking
+note_start: 2019-09-01
+note_track:
+  track_url: https://github.com/ff-notes/ff/issues/168
+  track_source: ff-notes/ff
+  track_externalId: '168'
+  track_provider: github
+note_links: []
+note_text: |-
+  Fetch github tags when tracking
 
-    Look at `issueToNote` of `Github.hs`
-  note_end: null
-  note_status:
-    tag: TaskStatus
-    contents: Archived
-  note_tags: []
-tags: {}
+  Look at `issueToNote` of `Github.hs`
+note_end: null
+note_status:
+  tag: TaskStatus
+  contents: Archived
+note_tags: {}

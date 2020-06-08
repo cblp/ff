@@ -1,19 +1,17 @@
-note:
-  note_start: 2018-10-09
-  note_track:
-    track_url: https://github.com/ff-notes/ff/pull/98
-    track_source: ff-notes/ff
-    track_externalId: '98'
-    track_provider: github
-  note_links: []
-  note_text: "[#91] Add wiki show\n\nResolves [#97](https://github.com/ff-notes/ff/issues/97)\r\nResolves
-    [#91](https://github.com/ff-notes/ff/issues/91)\n\n<!-- Reviewable:start -->\n---\nThis
-    change is [<img src=\"https://reviewable.io/review_button.svg\" height=\"34\"
-    align=\"absmiddle\" alt=\"Reviewable\"/>](https://reviewable.io/reviews/ff-notes/ff/98)\n<!--
-    Reviewable:end -->\n"
-  note_end: null
-  note_status:
-    tag: TaskStatus
-    contents: Archived
-  note_tags: []
-tags: {}
+note_start: 2018-10-09
+note_track:
+  track_url: https://github.com/ff-notes/ff/pull/98
+  track_source: ff-notes/ff
+  track_externalId: '98'
+  track_provider: github
+note_links: []
+note_text: "[#91] Add wiki show\n\nResolves [#97](https://github.com/ff-notes/ff/issues/97)\r\nResolves
+  [#91](https://github.com/ff-notes/ff/issues/91)\n\n<!-- Reviewable:start -->\n---\nThis
+  change is [<img src=\"https://reviewable.io/review_button.svg\" height=\"34\" align=\"absmiddle\"
+  alt=\"Reviewable\"/>](https://reviewable.io/reviews/ff-notes/ff/98)\n<!-- Reviewable:end
+  -->\n"
+note_end: null
+note_status:
+  tag: TaskStatus
+  contents: Archived
+note_tags: {}
