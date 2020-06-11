@@ -1,10 +1,23 @@
 {-# OPTIONS_GHC -Wno-orphans #-}
 
-{-# LANGUAGE DeriveAnyClass, DeriveFunctor, DeriveGeneric, FlexibleContexts,
-             FlexibleInstances, GADTs, LambdaCase, NamedFieldPuns,
-             OverloadedStrings, ParallelListComp, PatternSynonyms, QuasiQuotes,
-             RecordWildCards, ScopedTypeVariables, StandaloneDeriving,
-             TemplateHaskell, TypeApplications, TypeFamilies #-}
+{-# LANGUAGE DeriveAnyClass #-}
+{-# LANGUAGE DeriveFunctor #-}
+{-# LANGUAGE DeriveGeneric #-}
+{-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE FlexibleInstances #-}
+{-# LANGUAGE GADTs #-}
+{-# LANGUAGE LambdaCase #-}
+{-# LANGUAGE NamedFieldPuns #-}
+{-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE ParallelListComp #-}
+{-# LANGUAGE PatternSynonyms #-}
+{-# LANGUAGE QuasiQuotes #-}
+{-# LANGUAGE RecordWildCards #-}
+{-# LANGUAGE ScopedTypeVariables #-}
+{-# LANGUAGE StandaloneDeriving #-}
+{-# LANGUAGE TemplateHaskell #-}
+{-# LANGUAGE TypeApplications #-}
+{-# LANGUAGE TypeFamilies #-}
 
 module FF.Types where
 
@@ -60,7 +73,7 @@ import           RON.Types (Atom (AUuid),
 import qualified RON.UUID as UUID
 
 instance ToJSON UUID where
-  toJSON = JSON.String . Text.dropAround (== '"') . Text.pack . show
+  toJSON = JSON.String . uuidToText
 
 data NoteStatus = TaskStatus Status | Wiki
   deriving (Eq, Show)
@@ -219,14 +232,6 @@ entityToJson Entity{entityId = DocId entityId, entityVal} = key .= entityVal
 
 entitiesToJson :: ToJSON val => [Entity doc val] -> JSON.Value
 entitiesToJson = JSON.object . map entityToJson
-
-wrapInObjectIfNeeded :: Text -> JSON.Value -> JSON.Object
-wrapInObjectIfNeeded valueName = \case
-  JSON.Object obj -> obj
-  value           -> valueName .= value
-
-objectUpdate :: [JSON.Pair] -> JSON.Object -> JSON.Value
-objectUpdate pairs obj = JSON.Object $ HashMap.fromList pairs <> obj
 
 type EntityDoc doc = Entity doc doc
 
