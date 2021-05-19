@@ -5,47 +5,57 @@
 
 packages:
 - completed:
-    hackage: crdt-10.5@sha256:e0f018a7dd046f3d66e5affbafb84f7b4d16d9b63e193f3f7ffb3572a7468988,2134
+    subdir: ron
+    name: ron
+    version: '0.11'
+    git: https://github.com/ff-notes/ron.git
     pantry-tree:
-      size: 1500
-      sha256: 182f4cf67ae70feb9bb5cd44834e57dc8bb519d3d0cb5c06862733f482ce61a2
+      size: 1696
+      sha256: 954dffaaad96167925fd024edb6f81b201cb1a67f450110aef9049ccf275bbef
+    commit: f600cef831de2f52b7f89102b893c215a65941cf
   original:
-    hackage: crdt-10.5
+    subdir: ron
+    git: https://github.com/ff-notes/ron.git
+    commit: f600cef831de2f52b7f89102b893c215a65941cf
 - completed:
-    hackage: github-0.24@sha256:4bf5a06289d36f78bf347b6a4f9906f659be7335cde78386a6c95568714a730b,6955
+    subdir: ron-rdt
+    name: ron-rdt
+    version: '0.10'
+    git: https://github.com/ff-notes/ron.git
     pantry-tree:
-      size: 7105
-      sha256: e0f84d7a3cdd76c6bd5395c8c72d24a1dda9616f857291820b08947c8290f042
+      size: 979
+      sha256: 2f93e1d42ae311e3625416c245ce882d7f6f1bf658ebc1ae46bd42a21f4bba51
+    commit: f600cef831de2f52b7f89102b893c215a65941cf
   original:
-    hackage: github-0.24
+    subdir: ron-rdt
+    git: https://github.com/ff-notes/ron.git
+    commit: f600cef831de2f52b7f89102b893c215a65941cf
 - completed:
-    hackage: ron-0.10@sha256:af4f8a018a704f15e4304ad4a028618f0a5a017148b95322cb3bd34c1379c7b0,1912
-    pantry-tree:
-      size: 1483
-      sha256: 64178d53f446b3aaaef05ebed6bfff782c335a77550a229c9d71e3d55f4f45ab
-  original:
-    hackage: ron-0.10
-- completed:
-    hackage: ron-rdt-0.10@sha256:5c0c1f22827002c47c7f56b4c510150a68d407903d0aa1fb1967aedab4da8e3a,1304
-    pantry-tree:
-      size: 594
-      sha256: e8be7ec26511ab3cbff7263bad700d703dff71d7693ee771b06efbfa703f1efc
-  original:
-    hackage: ron-rdt-0.10
-- completed:
-    hackage: ron-schema-0.9.1@sha256:43845da1fc66ac69079685565e40f32e979d933fbcc16f2c762b9dcc4f5d449a,1315
+    subdir: ron-schema
+    name: ron-schema
+    version: 0.9.1
+    git: https://github.com/ff-notes/ron.git
     pantry-tree:
       size: 542
-      sha256: fd485c063ac75e1e19c4714ad93fec75c95419c05605a2701da0092d682c8a15
+      sha256: 7c5598a1adfa30868757c000a84550ee47d6510e1cc1bce9470fe141f654bb1c
+    commit: f600cef831de2f52b7f89102b893c215a65941cf
   original:
-    hackage: ron-schema-0.9.1
+    subdir: ron-schema
+    git: https://github.com/ff-notes/ron.git
+    commit: f600cef831de2f52b7f89102b893c215a65941cf
 - completed:
-    hackage: ron-storage-0.11@sha256:463e29e339ef88096248ce58f3c99602ad996b2e706c64092abc147f76d30c2d,1310
+    subdir: ron-storage
+    name: ron-storage
+    version: '0.11'
+    git: https://github.com/ff-notes/ron.git
     pantry-tree:
-      size: 414
-      sha256: a7a2b890958a6d6579f16c4f155d410b5bed0a91ef040dcf57a1fae1cb24be87
+      size: 477
+      sha256: a311321974fcef9e9c829f0ffcd9e816fb05cbe43140b7fd856474cadec45895
+    commit: f600cef831de2f52b7f89102b893c215a65941cf
   original:
-    hackage: ron-storage-0.11
+    subdir: ron-storage
+    git: https://github.com/ff-notes/ron.git
+    commit: f600cef831de2f52b7f89102b893c215a65941cf
 - completed:
     hackage: shellwords-0.1.2.2@sha256:fbcdec62b665eab3e30eadde91becbeacec735bb3780988eaae52f9b8c91b09b,1412
     pantry-tree:
@@ -54,26 +64,26 @@ packages:
   original:
     hackage: shellwords-0.1.2.2
 - completed:
-    hackage: gi-gtk-declarative-0.6.3@sha256:8db2e8a9fa20673406e4500e5040d4384eb76e362d45ffe69116575ae03ff1e3,4411
+    hackage: gi-gtk-declarative-0.7.0@sha256:7e6318ad162a97dc19af79499eb7bbb72022aa4ac3368e8a20fa199a7e8db2c6,4417
     pantry-tree:
       size: 2393
-      sha256: 5871aca72517a320f9ab3b7b122daa156dc18467a1b9d65fd2b2c45ec675ed09
+      sha256: eba1ca9b183eabe6f6b3ab2be9250428c97d2982d303f7abc0a431e5eaada73f
   original:
-    hackage: gi-gtk-declarative-0.6.3
+    hackage: gi-gtk-declarative-0.7.0
 - completed:
-    hackage: gi-gtk-declarative-app-simple-0.6.3@sha256:2b201371acd292ef8d980be02809787293f7c30e505c84910b57e307af999cc9,1818
+    hackage: gi-gtk-declarative-app-simple-0.7.0@sha256:bc14f7cee5b933ce448f7ff5af13bd2cf63c657426003a8b41457556997ac39f,2276
     pantry-tree:
-      size: 257
-      sha256: a0d8f5953711f24c26237be319ddd4107e00291c117e038bd693faeffbb032f7
+      size: 310
+      sha256: 06ceda071cbb81f20e41a3ac1d7291d63b040aacce428817c31a6aea8ca94c2d
   original:
-    hackage: gi-gtk-declarative-app-simple-0.6.3
+    hackage: gi-gtk-declarative-app-simple-0.7.0
 - completed:
-    hackage: binary-instances-1@sha256:b17565598b8df3241f9b46fa8e3a3368ecc8e3f2eb175d7c28f319042a6f5c79,2613
+    hackage: haskell-src-1.0.3.1@sha256:6601bb4165fc5d66fb9ffc95912f770ceb1b59fce2248dd3cab4a4fa6a8b5942,1622
     pantry-tree:
-      size: 1035
-      sha256: 938ffc6990cac12681c657f7afa93737eecf335e6f0212d8c0b7c1ea3e0f40f4
+      size: 621
+      sha256: 66c93cb9b354563c10ded033976f71f6d090c53a9ac8ecd1945e63f518bee7be
   original:
-    hackage: binary-instances-1
+    hackage: haskell-src-1.0.3.1
 - completed:
     hackage: hoppy-generator-0.8.0@sha256:0bde228c625e307f836adf2be71e34e8bf74fc7658b19f8a04901fc81a482e2a,2178
     pantry-tree:
@@ -118,7 +128,7 @@ packages:
     hackage: qtah-qt5-0.8.0
 snapshots:
 - completed:
-    size: 524154
-    url: https://raw.githubusercontent.com/commercialhaskell/stackage-snapshots/master/lts/14/20.yaml
-    sha256: 2f5099f69ddb6abfe64400fe1e6a604e8e628f55e6837211cd70a81eb0a8fa4d
-  original: lts-14.20
+    size: 563100
+    url: https://raw.githubusercontent.com/commercialhaskell/stackage-snapshots/master/lts/17/0.yaml
+    sha256: e93a85871577ea3423d5f3454b2b6bd37c2c2123c79faf511dfb64f5b49a9f8b
+  original: lts-17.0

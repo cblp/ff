@@ -20,9 +20,8 @@ executable ff-gtk
         -- global
         base,
         containers,
-        haskell-gi >= 0.22.4,
-            -- not direct dependency, but via gi-gtk-declarative
-            -- 0.22.4 fixes https://github.com/haskell-gi/haskell-gi/issues/230
+        haskell-gi >= 0.24.5,
+            -- https://github.com/haskell-gi/haskell-gi/issues/335
         gi-gtk,
         gi-gtk-declarative,
         gi-gtk-declarative-app-simple,

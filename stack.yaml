@@ -1,4 +1,4 @@
-resolver: lts-14.20
+resolver: lts-17.0
 
 packages:
   - ff
@@ -9,23 +9,26 @@ packages:
 
 extra-deps:
   # ff-core:
-    - crdt-10.5
-    - github-0.24
-    - ron-0.10
-    - ron-rdt-0.10
-    - ron-schema-0.9.1
-    - ron-storage-0.11
-    # - {git: https://github.com/ff-notes/ron.git, commit:, subdirs: []}
+    # - crdt-10.5
+    # - github-0.24
+    # - ron-0.10
+    # - ron-rdt-0.10
+    # - ron-schema-0.9.1
+    # - ron-storage-0.11
+    - git: https://github.com/ff-notes/ron.git
+      commit: f600cef831de2f52b7f89102b893c215a65941cf
+      subdirs: [ron, ron-rdt, ron-schema, ron-storage]
     - shellwords-0.1.2.2
 
   # ff-gtk:
-    - gi-gtk-declarative-0.6.3
-    - gi-gtk-declarative-app-simple-0.6.3
+    - gi-gtk-declarative-0.7.0
+    - gi-gtk-declarative-app-simple-0.7.0
 
   # github:
-    - binary-instances-1
+    # - binary-instances-1
 
   # ff-qtah:
+    - haskell-src-1.0.3.1
     - hoppy-generator-0.8.0
     - hoppy-runtime-0.8.0
     - hoppy-std-0.8.0

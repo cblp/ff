@@ -12,7 +12,7 @@ import qualified Data.Yaml as Yaml
 import           System.Directory (XdgDirectory (XdgConfig),
                                    createDirectoryIfMissing, doesFileExist,
                                    getXdgDirectory)
-import           System.FilePath (FilePath, takeDirectory, (</>))
+import           System.FilePath (takeDirectory, (</>))
 
 data Config = Config
     { dataDir :: Maybe FilePath

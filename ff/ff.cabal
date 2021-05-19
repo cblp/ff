@@ -11,7 +11,7 @@ build-type: Simple
 executable ff
     build-depends:
         -- global
-        base >= 4 && < 4.13,
+        base >= 4 && < 4.15,
 
         -- project
         ff-core
