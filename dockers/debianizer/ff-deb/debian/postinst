@@ -1,0 +1,10 @@
+#!/bin/sh
+# postinst script
+#
+# see: dh_installdeb(1)
+
+set -e
+
+ln -sf /opt/ff/ff /usr/bin/ff
+
+exit 0

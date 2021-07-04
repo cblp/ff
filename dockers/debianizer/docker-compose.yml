@@ -1,0 +1,14 @@
+version: "3"
+services:
+
+  ff:
+    image: ff-deb
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        EULER_UID: ${EULER_UID}
+        EULER_GID: ${EULER_GID}
+        STACK_RESOLVER: ${STACK_RESOLVER}
+    stdin_open: true
+    tty: true

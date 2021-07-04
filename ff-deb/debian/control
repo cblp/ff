@@ -1,0 +1,12 @@
+Source: ff
+Section: text
+Priority: optional
+Maintainer: Yuriy Syrovetskiy <ff@cblp.su>
+Standards-Version: 0.13
+
+Package: ff
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}
+Homepage: https://github.com/ff-notes/ff
+Description: Distributed note taker and task manager.
+ Available offline and synchronizes without conflicts.
